@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>COMS · Charity Management System | Page Tree & Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #F4F2FF;
+            font-family: 'Inter', sans-serif;
+            color: #1E1B3C;
+            line-height: 1.4;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* header area */
+        .hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .hero h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #4F46E5, #7C3AED);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.01em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .hero p {
+            color: #5B5B7A;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        .badge-stack {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 1.2rem 0 0.5rem;
+        }
+        .badge {
+            background: white;
+            border-radius: 100px;
+            padding: 0.3rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #4F46E5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            border: 1px solid #e0def5;
+        }
+
+        /* tree layout - modern card + flex hierarchy */
+        .tree-wrapper {
+            background: transparent;
+            overflow-x: auto;
+            padding: 1rem 0.5rem;
+        }
+        .tree {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 900px;
+        }
+        /* root */
+        .root-card {
+            background: linear-gradient(135deg, #1E1B3C 0%, #2D2A5E 100%);
+            border-radius: 2rem;
+            padding: 1.2rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            color: white;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 12px 25px -10px rgba(0,0,0,0.2);
+        }
+        .root-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .root-title i {
+            font-size: 2rem;
+            color: #C4B5FD;
+        }
+        .root-sub {
+            background: rgba(255,255,255,0.15);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* level row */
+        .level-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: flex-start;
+            margin: 1rem 0 0.5rem;
+        }
+        .category-group {
+            flex: 1;
+            min-width: 240px;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            overflow: hidden;
+            border: 1px solid #EDEBFA;
+            transition: transform 0.1s ease;
+        }
+        .category-header {
+            background: #F9F8FF;
+            padding: 0.9rem 1.2rem;
+            border-bottom: 2px solid #E0DCFA;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #2D2A5E;
+        }
+        .category-header i {
+            font-size: 1.2rem;
+            color: #6D28D9;
+        }
+        .page-list {
+            padding: 0.6rem 0.2rem 0.8rem 0;
+        }
+        .page-item {
+            padding: 0.55rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            border-bottom: 1px solid #F0EEFA;
+            transition: background 0.1s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2C2A4A;
+        }
+        .page-item i {
+            width: 1.6rem;
+            color: #8B5CF6;
+            font-size: 0.9rem;
+        }
+        .page-item .desc {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: #6F6E8B;
+            margin-left: auto;
+        }
+        .page-item:hover {
+            background: #F5F3FF;
+        }
+        .subnote {
+            background: #FEFCE8;
+            border-left: 3px solid #EAB308;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            margin: 0.5rem 0.8rem 0.8rem;
+            border-radius: 12px;
+            color: #854D0E;
+        }
+
+        /* Shared infra section */
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        .infra-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.02);
+            border: 1px solid #E9E6FA;
+            transition: all 0.2s;
+        }
+        .infra-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .infra-card p {
+            font-size: 0.8rem;
+            color: #5F5D82;
+            line-height: 1.4;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-left: 4px solid #6D28D9;
+            padding-left: 1rem;
+        }
+        hr {
+            margin: 1.2rem 0;
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, #DDD9F5, transparent);
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            background: #F1EFFC;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .legend span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            font-size: 0.75rem;
+            color: #7A779B;
+        }
+        @media (max-width: 760px) {
+            body { padding: 1rem; }
+            .root-card { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1><i class="fas fa-tree"></i> Charity Org. Management System</h1>
+        <p>Complete page tree · shared infrastructure · role-based navigation</p>
+        <div class="badge-stack">
+            <span class="badge"><i class="fas fa-home"></i> Home + Setup wizard</span>
+            <span class="badge"><i class="fas fa-chalkboard-user"></i> Dashboard analytics</span>
+            <span class="badge"><i class="fas fa-shield-alt"></i> Soft-delete audit</span>
+            <span class="badge"><i class="fas fa-language"></i> Bilingual AR/EN</span>
+            <span class="badge"><i class="fab fa-google"></i> Google Sheets core</span>
+        </div>
+    </div>
+
+    <!-- PAGE TREE VISUALIZATION (main hierarchy) -->
+    <div class="tree-wrapper">
+        <div class="tree">
+            <!-- Root: Home.html -->
+            <div class="root-card">
+                <div class="root-title">
+                    <i class="fas fa-door-open"></i> 
+                    <span>🏠 Home.html</span>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span class="root-sub"><i class="fas fa-sign-in-alt"></i> Google OAuth Sign-in</span>
+                    <span class="root-sub"><i class="fas fa-magic"></i> First-run spreadsheet wizard</span>
+                </div>
+            </div>
+
+            <!-- Level 1: Core operational modules grouped -->
+            <div class="level-row">
+                <!-- Dashboard & Reports Group -->
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-chart-line"></i> Analytics & Reports</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-tachometer-alt"></i> Dashboard.html <span class="desc">KPIs, charts, inventory alerts</span></div>
+                        <div class="page-item"><i class="fas fa-file-alt"></i> Reports.html <span class="desc">Monthly · Annual · Zakat report</span></div>
+                        <div class="subnote"><i class="fas fa-chart-pie"></i> Financial summary, Islamic breakdown, project status</div>
+                    </div>
+                </div>
+                <!-- Donors & Beneficiaries -->
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-users"></i> Registries</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-hand-holding-usd"></i> Donors.html <span class="desc">Donor registry + total donated</span></div>
+                        <div class="page-item"><i class="fas fa-hands-helping"></i> Beneficiaries.html <span class="desc">Case management, need types</span></div>
+                        <div class="subnote"><i class="fas fa-phone-alt"></i> Sensitive data · case verification</div>
+                    </div>
+                </div>
+                <!-- Financial & Transactions -->
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-exchange-alt"></i> Financial Core</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-receipt"></i> Transactions.html <span class="desc">IN/OUT log, cash & in-kind</span></div>
+                        <div class="page-item"><i class="fas fa-file-invoice"></i> Receipts.html <span class="desc">Issuance for donors/beneficiaries</span></div>
+                        <div class="page-item"><i class="fas fa-calendar-check"></i> Installments.html <span class="desc">Pledged installments tracking</span></div>
+                        <div class="page-item"><i class="fas fa-sync-alt"></i> Recurring.html <span class="desc">Scheduled expenses (rent, salaries)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second row: Inventory, Projects + Lookup pages -->
+            <div class="level-row">
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-boxes"></i> Operations</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-warehouse"></i> Inventory.html <span class="desc">In-kind stock, expiry, unit value</span></div>
+                        <div class="page-item"><i class="fas fa-project-diagram"></i> Projects.html <span class="desc">Charity projects, budget tracking</span></div>
+                        <div class="subnote"><i class="fas fa-chart-simple"></i> Project status, category, funding linkage</div>
+                    </div>
+                </div>
+                <!-- Dynamic Lookup Pages (10+) -->
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-list-ul"></i> 📚 Lookup Management</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-tag"></i> LookupCategories.html <span class="desc">Income/Expense categories</span></div>
+                        <div class="page-item"><i class="fas fa-building"></i> LookupDonorTypes.html <span class="desc">Individual, Corporate, NGO...</span></div>
+                        <div class="page-item"><i class="fas fa-mosque"></i> LookupIslamicClasses.html <span class="desc">Zakat, Sadaqah, Tabarru...</span></div>
+                        <div class="page-item"><i class="fas fa-notes-medical"></i> LookupNeedTypes.html <span class="desc">Beneficiary needs</span></div>
+                        <div class="page-item"><i class="fas fa-credit-card"></i> LookupPaymentMethods.html <span class="desc">Cash, bank transfer, etc</span></div>
+                        <div class="page-item"><i class="fas fa-calendar-week"></i> LookupAidFrequencies.html <span class="desc">Monthly, one-time, emergency</span></div>
+                        <div class="page-item"><i class="fas fa-chart-simple"></i> LookupProjectStatuses.html</div>
+                        <div class="page-item"><i class="fas fa-map-marker-alt"></i> LookupGovernates.html <span class="desc">Egypt governorates</span></div>
+                        <div class="page-item"><i class="fas fa-bell"></i> LookupNotificationPrefs.html</div>
+                        <div class="subnote"><i class="fas fa-database"></i> All dropdowns dynamic · no hardcoded values</div>
+                    </div>
+                </div>
+                <!-- Admin & Settings -->
+                <div class="category-group">
+                    <div class="category-header"><i class="fas fa-cog"></i> Admin & Security</div>
+                    <div class="page-list">
+                        <div class="page-item"><i class="fas fa-sliders-h"></i> Settings.html <span class="desc">System config (all users)</span></div>
+                        <div class="page-item"><i class="fas fa-lock"></i> Permissions.html <span class="desc"><i class="fas fa-crown"></i> SuperAdmin only · RBAC matrix</span></div>
+                        <div class="subnote"><i class="fas fa-user-shield"></i> User roles: Director, AccountManager, CaseManager, DataEntry, Viewer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARED INFRASTRUCTURE SECTION (loaded on every page) -->
+    <div class="section-title">
+        <i class="fas fa-cubes"></i> Shared Infrastructure — loaded on every page
+    </div>
+    <div class="infra-grid">
+        <div class="infra-card">
+            <h3><i class="fab fa-js" style="color:#F7DF1E;"></i> utils.js</h3>
+            <p>generateRecordID() · getCurrentTimestamp() · readSheet/appendRow/updateRow · softDelete() · restoreRecord() · loadLookup() · showToast() · serializeForm · validateRequired · checkPagePermissions() · renderActionButtons()</p>
+        </div>
+        <div class="infra-card">
+            <h3><i class="fab fa-css3-alt" style="color:#2965F1;"></i> styles.css</h3>
+            <p>Design system: #5B5EF4 primary, .data-table, .card, .modal, .btn-* , .soft-deleted-row, rtl-support, toast, loading spinner, permission-disabled.</p>
+        </div>
+        <div class="infra-card">
+            <h3><i class="fas fa-key"></i> auth.js</h3>
+            <p>Google OAuth 2.0, token caching (sessionStorage), initPageAuth(), onLoadLocal / onReady, automatic token refresh, iOS Safari overlay, redirect to Home on missing token.</p>
+        </div>
+        <div class="infra-card">
+            <h3><i class="fas fa-dharmachakra"></i> PWA Manifest</h3>
+            <p>manifest.json + service worker, offline caching, local read cache (localStorage), installable as PWA on mobile/desktop.</p>
+        </div>
+    </div>
+
+    <!-- Additional architecture notes: Soft delete + Permissions + Lookup principle -->
+    <div class="section-title">
+        <i class="fas fa-archive"></i> Core Design Principles
+    </div>
+    <div class="level-row" style="margin-bottom: 1rem;">
+        <div class="category-group" style="background:#FDFDFF;">
+            <div class="category-header" style="background:#F3F0FC;"><i class="fas fa-trash-restore"></i> Soft-Delete Architecture</div>
+            <div class="page-list">
+                <div class="page-item"><i class="fas fa-flag-checkered"></i> Every record has IsDeleted, DeletedAt, DeletedBy</div>
+                <div class="page-item"><i class="fas fa-eye-slash"></i> Default views hide deleted records</div>
+                <div class="page-item"><i class="fas fa-history"></i> "Show Deleted" toggle (if canViewDeleted)</div>
+                <div class="page-item"><i class="fas fa-undo-alt"></i> Restore action logs to AuditLog sheet</div>
+                <div class="subnote"><i class="fas fa-clipboard-list"></i> Full audit trail: CREATE, EDIT, DELETE, RESTORE tracked with timestamp & user</div>
+            </div>
+        </div>
+        <div class="category-group" style="background:#FDFDFF;">
+            <div class="category-header" style="background:#F3F0FC;"><i class="fas fa-shield-haltered"></i> RBAC Permissions Matrix</div>
+            <div class="page-list">
+                <div class="page-item"><i class="fas fa-table-list"></i> Permissions sheet stores: CanView, CanCreate, CanEdit, CanDelete, CanViewDeleted, CanViewSensitive, CanExport</div>
+                <div class="page-item"><i class="fas fa-user-tie"></i> Roles: SuperAdmin, Director, AccountManager, CaseManager, DataEntry, Viewer, InventoryManager</div>
+                <div class="page-item"><i class="fas fa-ban"></i> Sensitive fields hidden unless canViewSensitive = true</div>
+                <div class="subnote"><i class="fas fa-chalkboard"></i> Permissions.html allows live overrides (SuperAdmin only)</div>
+            </div>
+        </div>
+        <div class="category-group" style="background:#FDFDFF;">
+            <div class="category-header" style="background:#F3F0FC;"><i class="fas fa-database"></i> Google Sheets Data Layer</div>
+            <div class="page-list">
+                <div class="page-item"><i class="fas fa-table"></i> Single spreadsheet with 20+ sheets</div>
+                <div class="page-item"><i class="fas fa-chart-line"></i> Operational: Transactions, Donors, Beneficiaries, Receipts, Inventory, Projects, Installments, Recurring</div>
+                <div class="page-item"><i class="fas fa-search"></i> Lookup sheets: Categories, DonorTypes, IslamicClasses, NeedTypes, PaymentMethods, AidFrequencies, etc.</div>
+                <div class="page-item"><i class="fas fa-clipboard"></i> System: Permissions, AuditLog, Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation map & Icon legend (Roles flow) -->
+    <div class="section-title">
+        <i class="fas fa-sitemap"></i> Navigation Map & Role Visibility
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between;">
+        <div style="flex: 2; min-width: 240px; background: white; border-radius: 1.5rem; padding: 1rem; border: 1px solid #EAE6FD;">
+            <h4 style="margin-bottom: 0.8rem;"><i class="fas fa-eye"></i> Primary Navigation (based on permissions)</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-chart-line"></i> Dashboard</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-hand-holding-usd"></i> Donors</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-hands-helping"></i> Beneficiaries</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-exchange-alt"></i> Transactions</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-receipt"></i> Receipts</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-boxes"></i> Inventory</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-project-diagram"></i> Projects</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-calendar-alt"></i> Installments</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-sync-alt"></i> Recurring</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-file-alt"></i> Reports</span>
+                <span class="badge" style="background:#F0EDFF;"><i class="fas fa-cog"></i> Settings</span>
+            </div>
+            <div class="subnote" style="margin-top: 0.8rem;"><i class="fas fa-lock"></i> Lookup pages accessible via Settings > Manage Reference Data</div>
+        </div>
+        <div style="flex: 1.5; background: #F9F7FE; border-radius: 1.5rem; padding: 1rem; border: 1px solid #E6E2FC;">
+            <h4 style="margin-bottom: 0.6rem;"><i class="fas fa-user-tag"></i> Role hierarchy (example)</h4>
+            <ul style="list-style: none; font-size: 0.8rem;">
+                <li><i class="fas fa-crown" style="color:#F59E0B;"></i> <strong>SuperAdmin</strong> — full access, user mgmt, view deleted</li>
+                <li><i class="fas fa-chalkboard-user"></i> <strong>Director</strong> — full operational + soft-delete transactions</li>
+                <li><i class="fas fa-chart-simple"></i> <strong>AccountManager</strong> — finance modules (Transactions, Receipts, Recurring)</li>
+                <li><i class="fas fa-user-check"></i> <strong>CaseManager</strong> — Beneficiaries, Projects, view-only finance</li>
+                <li><i class="fas fa-pen"></i> <strong>DataEntry</strong> — create/edit on Donors/Beneficiaries/Transactions, no delete</li>
+                <li><i class="fas fa-glasses"></i> <strong>Viewer</strong> — Dashboard + Reports only, read-only</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer: Technical summary -->
+    <div class="legend">
+        <span><div class="color-dot" style="background:#4F46E5;"></div> Core operational page</span>
+        <span><div class="color-dot" style="background:#8B5CF6;"></div> Lookup / Admin page</span>
+        <span><div class="color-dot" style="background:#10B981;"></div> Shared infrastructure (utils/auth/styles)</span>
+        <span><i class="fas fa-google"></i> Google Sheets API v4 + Drive API v3</span>
+        <span><i class="fas fa-mobile-alt"></i> PWA ready (offline cache + manifest)</span>
+        <span><i class="fas fa-check-double"></i> Audit Log every action</span>
+    </div>
+    <footer>
+        <i class="fas fa-heart" style="color:#EF4444;"></i> Charity Organization Management System — Full audit, dynamic lookups, role-based access, soft-delete by design. <br/>
+        Based on specification: 8 universal fields, 10+ lookup sheets, complete RBAC matrix, Arabic/English ready.
+    </footer>
+</div>
+</body>
+</html>
