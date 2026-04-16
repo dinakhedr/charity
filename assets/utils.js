@@ -931,7 +931,6 @@ async function enforceViewPermission(pageName, spreadsheetId, userEmail) {
   const perms = await checkPagePermissions(pageName, spreadsheetId, userEmail);
   if (!perms.canView) {
     showToast('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
-    const isDashboardBuilt = false;
     setTimeout(() => {
       window.location.href = getRelativePath('pages/Home.html');
     }, 1500);
