@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الصلاحيات — نظام إدارة الجمعية</title>
+  <link rel="manifest" href="/charity/manifest.json">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../assets/styles.css">
+
+  <style>
+    /* ── Permission Matrix ──────────────────────────────────── */
+    .perm-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .perm-table th {
+      padding:10px 14px; font-size:0.72rem; font-weight:600;
+      color:var(--text-secondary); text-transform:uppercase;
+      letter-spacing:0.05em; text-align:right;
+      background:var(--bg-page); border-bottom:1px solid var(--border-default);
+      white-space:nowrap;
+    }
+    .perm-table td {
+      padding:10px 14px; border-bottom:1px solid var(--border-default);
+      vertical-align:middle;
+    }
+    .perm-table tbody tr:hover { background:var(--bg-hover); }
+    .perm-table tbody tr:last-child td { border-bottom:none; }
+
+    /* Toggle switch */
+    .toggle-wrap { display:flex; align-items:center; justify-content:center; }
+    .toggle {
+      position:relative; width:36px; height:20px;
+      display:inline-block; flex-shrink:0;
+    }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider {
+      position:absolute; inset:0; background:var(--border-strong);
+      border-radius:20px; cursor:pointer;
+      transition:background var(--transition-fast);
+    }
+    .toggle-slider::before {
+      content:''; position:absolute;
+      width:14px; height:14px; border-radius:50%;
+      background:#fff; left:3px; top:3px;
+      transition:transform var(--transition-fast);
+    }
+    .toggle input:checked + .toggle-slider { background:var(--green-400); }
+    .toggle input:checked + .toggle-slider::before { transform:translateX(16px); }
+    .toggle input:disabled + .toggle-slider { opacity:0.4; cursor:not-allowed; }
+
+    /* Page group label */
+    .page-group-row td {
+      background:var(--blue-50); font-size:0.72rem; font-weight:600;
+      color:var(--blue-700); letter-spacing:0.04em; padding:6px 14px;
+      border-bottom:1px solid var(--border-default);
+    }
+
+    /* Role selector */
+    .role-selector {
+      display:flex; align-items:center; gap:12px;
+      padding:16px 20px; background:var(--bg-card);
+      border-bottom:1px solid var(--border-default);
+    }
+
+    /* Status badge */
+    .status-active   { background:var(--color-in-bg);      color:var(--color-in); }
+    .status-inactive { background:var(--color-neutral-bg);  color:var(--color-neutral); }
+
+    /* Role card */
+    .role-card {
+      background:var(--bg-card); border:1px solid var(--border-default);
+      border-radius:var(--radius-lg); padding:18px 20px;
+      display:flex; align-items:center; gap:14px;
+      transition:border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .role-card:hover { border-color:var(--blue-400); box-shadow:var(--shadow-card); }
+    .role-icon {
+      width:40px; height:40px; border-radius:var(--radius-sm);
+      background:var(--blue-50); display:flex; align-items:center;
+      justify-content:center; flex-shrink:0; color:var(--blue-600);
+    }
+    .role-icon svg { width:18px; height:18px; }
+    .role-info { flex:1; min-width:0; }
+    .role-name { font-weight:600; font-size:0.9rem; color:var(--text-primary); }
+    .role-desc { font-size:0.78rem; color:var(--text-secondary); margin-top:2px; }
+    .role-count { font-size:0.75rem; color:var(--text-muted); }
+
+    /* Saving indicator */
+    .saving-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:0.75rem; color:var(--text-muted);
+      padding:4px 10px; border-radius:20px;
+      background:var(--bg-page); border:1px solid var(--border-default);
+      transition:all var(--transition-base);
+    }
+    .saving-pill.saving { color:var(--color-warning); border-color:var(--color-warning-bg); }
+    .saving-pill.saved  { color:var(--color-in);      border-color:var(--color-in-border); }
+    .saving-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">الصلاحيات والمستخدمون</div>
+        <div class="topbar-subtitle">إدارة المستخدمين والأدوار والصلاحيات</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="saving-pill" id="savingPill">
+          <div class="saving-dot"></div>
+          <span id="savingText">كل التغييرات محفوظة</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="page-content" id="pageContent" style="opacity:0;">
+
+      <!-- Tabs -->
+      <div class="tabs" id="mainTabs">
+        <div class="tab active" onclick="switchTab('users')"   id="tab-users">المستخدمون</div>
+        <div class="tab"        onclick="switchTab('roles')"   id="tab-roles">الأدوار</div>
+        <div class="tab"        onclick="switchTab('matrix')"  id="tab-matrix">مصفوفة الصلاحيات</div>
+      </div>
+
+      <!-- ── TAB: Users ──────────────────────────────────────── -->
+      <div id="tabUsers">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-title" style="font-size:1.1rem;">قائمة المستخدمين</h2>
+          </div>
+          <div class="page-header-actions">
+            <div class="table-search" style="max-width:220px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="بحث بالاسم أو الإيميل…" oninput="filterUsers(this.value)">
+            </div>
+            <button class="btn btn-primary" onclick="openUserModal()" data-requires="create">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              إضافة مستخدم
+            </button>
+          </div>
+        </div>
+
+        <!-- Show deleted toggle -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;" id="showDeletedToggle">
+          <label class="form-check">
+            <input type="checkbox" id="showDeleted" onchange="toggleDeleted(this.checked)">
+            <span class="form-check-label text-sm text-muted">عرض المستخدمين المحذوفين</span>
+          </label>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table" id="usersTable">
+            <thead>
+              <tr>
+                <th>المستخدم</th>
+                <th>الدور</th>
+                <th>الحالة</th>
+                <th>آخر دخول</th>
+                <th>تاريخ الإضافة</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="6" style="text-align:center;padding:40px;">
+                <div class="spinner" style="margin:0 auto 12px;"></div>
+                جارٍ التحميل…
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── TAB: Roles ──────────────────────────────────────── -->
+      <div id="tabRoles" style="display:none;">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-title" style="font-size:1.1rem;">الأدوار الوظيفية</h2>
+            <p class="page-subtitle">الأدوار المدمجة لا يمكن حذفها — يمكن إضافة أدوار مخصصة</p>
+          </div>
+          <button class="btn btn-primary" onclick="openRoleModal()" data-requires="create">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            إضافة دور مخصص
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="rolesGrid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+            <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: Permissions Matrix ─────────────────────────── -->
+      <div id="tabMatrix" style="display:none;">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-title" style="font-size:1.1rem;">مصفوفة الصلاحيات</h2>
+            <p class="page-subtitle">اختر دوراً لعرض وتعديل صلاحياته على كل صفحة</p>
+          </div>
+          <div class="saving-pill" id="matrixSavingPill" style="display:none;">
+            <div class="saving-dot"></div>
+            <span id="matrixSavingText">جارٍ الحفظ…</span>
+          </div>
+        </div>
+
+        <!-- Role selector -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="role-selector">
+            <label class="form-label" style="margin:0;white-space:nowrap;">الدور:</label>
+            <select class="form-select" id="matrixRoleSelect" onchange="loadMatrix(this.value)" style="max-width:280px;">
+              <option value="">اختر دوراً…</option>
+            </select>
+            <div style="margin-right:auto;font-size:0.8rem;color:var(--text-muted);" id="matrixRoleDesc"></div>
+          </div>
+          <!-- Permission columns legend -->
+          <div style="padding:10px 20px;background:var(--bg-page);border-top:1px solid var(--border-default);display:flex;gap:20px;flex-wrap:wrap;">
+            <span class="text-xs text-muted"><strong>عرض</strong> — رؤية الصفحة</span>
+            <span class="text-xs text-muted"><strong>إضافة</strong> — إضافة سجلات</span>
+            <span class="text-xs text-muted"><strong>تعديل</strong> — تعديل سجلات</span>
+            <span class="text-xs text-muted"><strong>حذف</strong> — حذف (ناعم)</span>
+            <span class="text-xs text-muted"><strong>محذوف</strong> — عرض المحذوف</span>
+            <span class="text-xs text-muted"><strong>حساس</strong> — بيانات حساسة</span>
+            <span class="text-xs text-muted"><strong>تصدير</strong> — تصدير البيانات</span>
+          </div>
+        </div>
+
+        <div class="table-wrapper" id="matrixWrapper" style="display:none;">
+          <table class="perm-table" id="matrixTable">
+            <thead>
+              <tr>
+                <th style="min-width:160px;">الصفحة</th>
+                <th style="text-align:center;">عرض</th>
+                <th style="text-align:center;">إضافة</th>
+                <th style="text-align:center;">تعديل</th>
+                <th style="text-align:center;">حذف</th>
+                <th style="text-align:center;">محذوف</th>
+                <th style="text-align:center;">حساس</th>
+                <th style="text-align:center;">تصدير</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state" id="matrixEmpty">
+          <div class="empty-state-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="empty-state-title">اختر دوراً</div>
+          <div class="empty-state-text">اختر دوراً من القائمة أعلاه لعرض وتعديل صلاحياته</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── Modal: Add / Edit User ─────────────────────────────── -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title" id="userModalTitle">إضافة مستخدم جديد</h3>
+      <button class="modal-close" onclick="closeModal('userModal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="uRecordID">
+      <div class="form-grid" style="gap:14px;">
+        <div class="form-group span-full">
+          <label class="form-label">الاسم الكامل <span class="required">*</span></label>
+          <input type="text" class="form-input" id="uFullName" data-required="true" placeholder="الاسم بالكامل">
+        </div>
+        <div class="form-group span-full">
+          <label class="form-label">البريد الإلكتروني (Google) <span class="required">*</span></label>
+          <input type="email" class="form-input" id="uEmail" data-required="true" placeholder="user@gmail.com" dir="ltr">
+          <span class="form-hint">يجب أن يكون حساب Google فعّالاً</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الدور <span class="required">*</span></label>
+          <select class="form-select" id="uRole" data-required="true">
+            <option value="">اختر الدور…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحالة</label>
+          <select class="form-select" id="uStatus">
+            <option value="Active">نشط</option>
+            <option value="Inactive">غير نشط</option>
+          </select>
+        </div>
+        <div class="form-group span-full">
+          <label class="form-label">ملاحظات</label>
+          <textarea class="form-textarea" id="uNotes" rows="2" placeholder="أي ملاحظات إضافية…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('userModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveUser()" id="saveUserBtn">حفظ المستخدم</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Add / Edit Role ─────────────────────────────── -->
+<div class="modal-overlay" id="roleModal">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title" id="roleModalTitle">إضافة دور مخصص</h3>
+      <button class="modal-close" onclick="closeModal('roleModal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rRecordID">
+      <div class="form-grid" style="gap:14px;">
+        <div class="form-group span-full">
+          <label class="form-label">اسم الدور (بالإنجليزي) <span class="required">*</span></label>
+          <input type="text" class="form-input" id="rRoleID" data-required="true" placeholder="e.g. FieldWorker" dir="ltr">
+          <span class="form-hint">يُستخدم كمعرّف داخلي — بدون مسافات</span>
+        </div>
+        <div class="form-group span-full">
+          <label class="form-label">الوصف <span class="required">*</span></label>
+          <input type="text" class="form-input" id="rDesc" data-required="true" placeholder="وصف مختصر للدور">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('roleModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveRole()" id="saveRoleBtn">حفظ الدور</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirm Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box modal-sm">
+    <div class="modal-body" style="text-align:center;padding:32px 24px 20px;">
+      <div class="modal-confirm-icon danger" id="confirmIcon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+        </svg>
+      </div>
+      <div class="modal-confirm-title" id="confirmTitle">هل أنت متأكد؟</div>
+      <div class="modal-confirm-text" id="confirmMsg"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:12px;">
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">إلغاء</button>
+      <button class="btn btn-danger"    id="confirmOk">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="../assets/utils.js"></script>
+<script src="../assets/auth.js"></script>
+<script>
+'use strict';
+
+/* ── State ──────────────────────────────────────────────── */
+let _sid    = null;
+let _email  = null;
+let _perms  = null;
+let _users  = [];
+let _roles  = [];
+let _matrix = [];
+let _showDeleted   = false;
+let _editingUser   = null;
+let _editingRole   = null;
+let _currentRole   = null;
+let _pendingConfirm = null;
+
+/* ── Page groups for matrix display ─────────────────────── */
+const PAGE_GROUPS = {
+  'الصفحات الرئيسية': ['Dashboard','OwnerDashboard','Reports'],
+  'العمليات المالية':  ['Transactions','Receipts','Installments','Recurring'],
+  'السجلات':          ['Donors','Beneficiaries','Inventory','Projects'],
+  'الإعدادات':        ['Settings','Permissions'],
+  'بيانات المرجعية':  ['Categories','DonorTypes','IslamicClasses','NeedTypes',
+                       'PaymentMethods','AidFrequencies','ProjectStatuses',
+                       'ProjectCategories','Governorates','NotificationPrefs']
+};
+
+const PERM_COLS = [
+  { key:'CanView',         label:'عرض' },
+  { key:'CanCreate',       label:'إضافة' },
+  { key:'CanEdit',         label:'تعديل' },
+  { key:'CanDelete',       label:'حذف' },
+  { key:'CanViewDeleted',  label:'محذوف' },
+  { key:'CanViewSensitive',label:'حساس' },
+  { key:'CanExport',       label:'تصدير' }
+];
+
+const BUILTIN_ROLES = ['SuperAdmin','Director','AccountManager','CaseManager','DataEntry','InventoryManager','Viewer'];
+
+const ROLE_LABELS = {
+  SuperAdmin:      { ar:'مسؤول النظام الكامل',   desc:'صلاحيات كاملة على جميع الصفحات والبيانات' },
+  Director:        { ar:'المدير التنفيذي',         desc:'صلاحيات تشغيلية كاملة مع حذف العمليات المالية' },
+  AccountManager:  { ar:'مسؤول الحسابات',          desc:'صلاحيات كاملة على الوحدات المالية' },
+  CaseManager:     { ar:'مسؤول الحالات',           desc:'صلاحيات كاملة على المستفيدين والمشاريع' },
+  DataEntry:       { ar:'موظف إدخال بيانات',       desc:'إضافة وتعديل فقط — بدون حذف' },
+  InventoryManager:{ ar:'مسؤول المخزون',           desc:'صلاحيات كاملة على المخزون العيني' },
+  Viewer:          { ar:'مشاهد فقط',               desc:'قراءة فقط على لوحة التحكم والتقارير' }
+};
+
+/* ── Init ───────────────────────────────────────────────── */
+initPageAuth({
+  pageName: 'Permissions',
+  onLoadLocal: (email, sid) => {
+    _email = email; _sid = sid;
+  },
+  onReady: async (sid, email, token, perms) => {
+    _sid = sid; _email = email; _perms = perms;
+    await Promise.all([loadUsers(), loadRoles()]);
+    populateRoleDropdowns();
+  }
+});
+
+/* ── Tab Switching ──────────────────────────────────────── */
+function switchTab(tab) {
+  ['users','roles','matrix'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'roles') renderRoles();
+  if (tab === 'matrix') populateMatrixRoleSelect();
+}
+
+/* ══════════════════════════════════════════════════════════
+   USERS TAB
+══════════════════════════════════════════════════════════ */
+async function loadUsers() {
+  try {
+    _users = await readSheet(_sid, 'Users',
+      { includeDeleted: true, email: _email, forceRefresh: true });
+    renderUsers();
+  } catch (e) {
+    document.getElementById('usersBody').innerHTML =
+      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-out);">فشل التحميل — ${escapeHTML(e.message)}</td></tr>`;
+  }
+}
+
+function renderUsers(list) {
+  const data = list || (_showDeleted ? _users : _users.filter(u => u.IsDeleted !== 'TRUE'));
+  const body = document.getElementById('usersBody');
+
+  if (!data.length) {
+    body.innerHTML = `<tr><td colspan="6">
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="empty-state-title">لا يوجد مستخدمون</div>
+        <div class="empty-state-text">اضغط على "إضافة مستخدم" للبدء</div>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  body.innerHTML = data.map(u => {
+    const isDeleted  = u.IsDeleted === 'TRUE';
+    const initials   = (u.FullName || u.Email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    const roleLabel  = ROLE_LABELS[u.Role]?.ar || u.Role || '—';
+    const statusBadge = u.Status === 'Active'
+      ? `<span class="badge status-active badge-dot">نشط</span>`
+      : `<span class="badge status-inactive badge-dot">غير نشط</span>`;
+
+    const actions = isDeleted
+      ? (_perms?.canViewDeleted
+          ? `<button class="btn btn-sm btn-secondary" onclick="restoreUser('${u.RecordID}')">استعادة</button>`
+          : '')
+      : `
+        <button class="btn btn-sm btn-secondary btn-icon" onclick="openUserModal('${u.RecordID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        ${u.Email !== _email && _perms?.canDelete ? `
+        <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteUser('${u.RecordID}')" title="حذف">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>` : ''}
+      `;
+
+    return `<tr class="${isDeleted ? 'row-deleted' : ''}">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="user-avatar" style="background:var(--blue-600);width:34px;height:34px;font-size:0.72rem;">${initials}</div>
+          <div>
+            <div style="font-weight:500;">${escapeHTML(u.FullName || '—')}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span class="badge badge-blue">${escapeHTML(roleLabel)}</span>
+        ${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}
+      </td>
+      <td>${isDeleted ? '—' : statusBadge}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterUsers(q) {
+  if (!q.trim()) { renderUsers(); return; }
+  const lq = q.toLowerCase();
+  const filtered = _users
+    .filter(u => _showDeleted || u.IsDeleted !== 'TRUE')
+    .filter(u =>
+      (u.FullName  || '').toLowerCase().includes(lq) ||
+      (u.Email     || '').toLowerCase().includes(lq) ||
+      (u.Role      || '').toLowerCase().includes(lq)
+    );
+  renderUsers(filtered);
+}
+
+function toggleDeleted(val) {
+  _showDeleted = val;
+  renderUsers();
+}
+
+/* ── User Modal ─────────────────────────────────────────── */
+function openUserModal(recordID = null) {
+  _editingUser = null;
+  document.getElementById('uRecordID').value = '';
+  document.getElementById('uFullName').value = '';
+  document.getElementById('uEmail').value    = '';
+  document.getElementById('uRole').value     = '';
+  document.getElementById('uStatus').value   = 'Active';
+  document.getElementById('uNotes').value    = '';
+  document.getElementById('uEmail').disabled = false;
+  document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
+
+  if (recordID) {
+    const u = _users.find(x => x.RecordID === recordID);
+    if (!u) return;
+    _editingUser = u;
+    document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
+    document.getElementById('uRecordID').value = u.RecordID;
+    document.getElementById('uFullName').value = u.FullName  || '';
+    document.getElementById('uEmail').value    = u.Email     || '';
+    document.getElementById('uRole').value     = u.Role      || '';
+    document.getElementById('uStatus').value   = u.Status    || 'Active';
+    document.getElementById('uNotes').value    = u.Notes     || '';
+    document.getElementById('uEmail').disabled = true;
+  }
+
+  openModal('userModal');
+}
+
+async function saveUser() {
+  const name   = document.getElementById('uFullName').value.trim();
+  const email  = document.getElementById('uEmail').value.trim().toLowerCase();
+  const role   = document.getElementById('uRole').value;
+  const status = document.getElementById('uStatus').value;
+  const notes  = document.getElementById('uNotes').value.trim();
+
+  if (!name || !email || !role) {
+    ['uFullName','uEmail','uRole'].forEach(id => {
+      document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
+    });
+    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveUserBtn');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+
+  try {
+    if (_editingUser) {
+      await updateRow(_sid, 'Users', _editingUser.RecordID,
+        { FullName: name, Role: role, Status: status, Notes: notes }, _email);
+      showToast('تم تحديث المستخدم بنجاح', 'success');
+    } else {
+      const existing = _users.map(u => u.Email?.toLowerCase());
+      if (existing.includes(email)) {
+        showToast('هذا البريد الإلكتروني مسجّل مسبقاً', 'error');
+        btn.disabled = false; btn.textContent = 'حفظ المستخدم';
+        return;
+      }
+      const domainIDs = _users.map(u => u.Email).filter(Boolean);
+      await appendRow(_sid, 'Users', {
+        Email: email, FullName: name, Role: role,
+        Status: status, LastLogin: '', Notes: notes
+      }, _email);
+      showToast(`تم إضافة ${name} بنجاح`, 'success');
+    }
+    closeModal('userModal');
+    await loadUsers();
+    populateRoleDropdowns();
+  } catch (e) {
+    showToast('فشل الحفظ: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ المستخدم';
+  }
+}
+
+function confirmDeleteUser(recordID) {
+  const u = _users.find(x => x.RecordID === recordID);
+  if (!u) return;
+  document.getElementById('confirmTitle').textContent = 'حذف المستخدم';
+  document.getElementById('confirmMsg').textContent   = `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`;
+  _pendingConfirm = () => deleteUser(recordID);
+  document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
+  openModal('confirmModal');
+}
+
+async function deleteUser(recordID) {
+  try {
+    await softDelete(_sid, 'Users', recordID, _email);
+    await loadUsers();
+  } catch (e) {
+    showToast('فشل الحذف: ' + e.message, 'error');
+  }
+}
+
+async function restoreUser(recordID) {
+  try {
+    await restoreRecord(_sid, 'Users', recordID, _email);
+    await loadUsers();
+  } catch (e) {
+    showToast('فشل الاستعادة: ' + e.message, 'error');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ROLES TAB
+══════════════════════════════════════════════════════════ */
+async function loadRoles() {
+  try {
+    _roles = await readSheet(_sid, 'Roles',
+      { includeDeleted: false, email: _email, forceRefresh: true });
+  } catch (e) {
+    _roles = [];
+  }
+}
+
+function renderRoles() {
+  const grid = document.getElementById('rolesGrid');
+
+  /* Merge builtin + custom */
+  const builtinRows = BUILTIN_ROLES.map(rid => {
+    const existing = _roles.find(r => r.RoleID === rid);
+    return existing || { RoleID: rid, RoleName: ROLE_LABELS[rid]?.ar || rid, Description: ROLE_LABELS[rid]?.desc || '', IsDeleted: 'FALSE' };
+  });
+
+  const customRows = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE');
+  const allRoles   = [...builtinRows, ...customRows];
+
+  const userCountByRole = {};
+  _users.filter(u => u.IsDeleted !== 'TRUE').forEach(u => {
+    userCountByRole[u.Role] = (userCountByRole[u.Role] || 0) + 1;
+  });
+
+  grid.innerHTML = allRoles.map(r => {
+    const isBuiltin = BUILTIN_ROLES.includes(r.RoleID);
+    const count     = userCountByRole[r.RoleID] || 0;
+    return `
+      <div class="role-card">
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">${escapeHTML(r.RoleName || r.RoleID)}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);font-family:monospace;" dir="ltr">${escapeHTML(r.RoleID)}</div>
+          <div class="role-desc">${escapeHTML(r.Description || '')}</div>
+          <div class="role-count" style="margin-top:4px;">${count} مستخدم</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          ${isBuiltin
+            ? `<span class="badge badge-blue" style="font-size:0.65rem;">مدمج</span>`
+            : `<button class="btn btn-sm btn-secondary btn-icon" onclick="openRoleModal('${r.RoleID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              ${count === 0 && _perms?.canDelete
+                ? `<button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteRole('${r.RoleID}')" title="حذف">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>` : ''}`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── Role Modal ─────────────────────────────────────────── */
+function openRoleModal(roleID = null) {
+  _editingRole = null;
+  document.getElementById('rRecordID').value = '';
+  document.getElementById('rRoleID').value   = '';
+  document.getElementById('rDesc').value     = '';
+  document.getElementById('rRoleID').disabled = false;
+  document.getElementById('roleModalTitle').textContent = 'إضافة دور مخصص';
+
+  if (roleID) {
+    const r = _roles.find(x => x.RoleID === roleID);
+    if (!r) return;
+    _editingRole = r;
+    document.getElementById('roleModalTitle').textContent = 'تعديل الدور';
+    document.getElementById('rRecordID').value = r.RecordID || '';
+    document.getElementById('rRoleID').value   = r.RoleID   || '';
+    document.getElementById('rDesc').value     = r.Description || '';
+    document.getElementById('rRoleID').disabled = true;
+  }
+
+  openModal('roleModal');
+}
+
+async function saveRole() {
+  const roleID = document.getElementById('rRoleID').value.trim().replace(/\s+/g, '');
+  const desc   = document.getElementById('rDesc').value.trim();
+
+  if (!roleID || !desc) {
+    ['rRoleID','rDesc'].forEach(id => {
+      document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
+    });
+    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveRoleBtn');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+
+  try {
+    if (_editingRole) {
+      await updateRow(_sid, 'Roles', _editingRole.RecordID,
+        { Description: desc }, _email);
+      showToast('تم تحديث الدور بنجاح', 'success');
+    } else {
+      if (_roles.find(r => r.RoleID === roleID)) {
+        showToast('هذا الدور موجود مسبقاً', 'error');
+        btn.disabled = false; btn.textContent = 'حفظ الدور';
+        return;
+      }
+      await appendRow(_sid, 'Roles', { RoleID: roleID, RoleName: roleID, Description: desc }, _email);
+
+      /* Seed permissions for new role — all FALSE */
+      const permRows = ALL_PAGES.map(page => ({
+        RoleID: roleID, PageName: page,
+        CanView: 'FALSE', CanCreate: 'FALSE', CanEdit: 'FALSE',
+        CanDelete: 'FALSE', CanViewDeleted: 'FALSE',
+        CanViewSensitive: 'FALSE', CanExport: 'FALSE'
+      }));
+      for (const row of permRows) {
+        await appendRow(_sid, 'Permissions', row, _email);
+      }
+
+      showToast(`تم إضافة الدور "${roleID}" بنجاح`, 'success');
+    }
+
+    closeModal('roleModal');
+    await loadRoles();
+    renderRoles();
+    populateRoleDropdowns();
+    populateMatrixRoleSelect();
+  } catch (e) {
+    showToast('فشل الحفظ: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ الدور';
+  }
+}
+
+function confirmDeleteRole(roleID) {
+  document.getElementById('confirmTitle').textContent = 'حذف الدور';
+  document.getElementById('confirmMsg').textContent   = `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`;
+  document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); deleteRole(roleID); };
+  openModal('confirmModal');
+}
+
+async function deleteRole(roleID) {
+  const r = _roles.find(x => x.RoleID === roleID);
+  if (!r) return;
+  try {
+    await softDelete(_sid, 'Roles', r.RecordID, _email);
+    await loadRoles();
+    renderRoles();
+    populateRoleDropdowns();
+    populateMatrixRoleSelect();
+  } catch (e) {
+    showToast('فشل الحذف: ' + e.message, 'error');
+  }
+}
+
+/* ── Populate role dropdowns across the page ────────────── */
+function populateRoleDropdowns() {
+  const sel = document.getElementById('uRole');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">اختر الدور…</option>';
+
+  const builtins = BUILTIN_ROLES.map(rid => ({
+    RoleID: rid,
+    label: ROLE_LABELS[rid]?.ar || rid
+  }));
+
+  const customs = _roles
+    .filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE')
+    .map(r => ({ RoleID: r.RoleID, label: r.Description || r.RoleID }));
+
+  [...builtins, ...customs].forEach(({ RoleID, label }) => {
+    const opt = document.createElement('option');
+    opt.value = RoleID; opt.textContent = label;
+    if (RoleID === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   PERMISSIONS MATRIX TAB
+══════════════════════════════════════════════════════════ */
+function populateMatrixRoleSelect() {
+  const sel = document.getElementById('matrixRoleSelect');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">اختر دوراً…</option>';
+
+  const builtins = BUILTIN_ROLES.map(rid => ({ RoleID: rid, label: ROLE_LABELS[rid]?.ar || rid }));
+  const customs  = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE')
+    .map(r => ({ RoleID: r.RoleID, label: r.Description || r.RoleID }));
+
+  [...builtins, ...customs].forEach(({ RoleID, label }) => {
+    const opt = document.createElement('option');
+    opt.value = RoleID; opt.textContent = label;
+    if (RoleID === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadMatrix(roleID) {
+  if (!roleID) {
+    document.getElementById('matrixWrapper').style.display = 'none';
+    document.getElementById('matrixEmpty').style.display   = 'flex';
+    document.getElementById('matrixRoleDesc').textContent  = '';
+    return;
+  }
+
+  _currentRole = roleID;
+  const desc = ROLE_LABELS[roleID]?.desc || _roles.find(r => r.RoleID === roleID)?.Description || '';
+  document.getElementById('matrixRoleDesc').textContent = desc;
+
+  document.getElementById('matrixWrapper').style.display = 'block';
+  document.getElementById('matrixEmpty').style.display   = 'none';
+  document.getElementById('matrixBody').innerHTML =
+    `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">
+      <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>جارٍ التحميل…
+    </td></tr>`;
+
+  try {
+    _matrix = await readSheet(_sid, 'Permissions',
+      { includeDeleted: false, email: _email, forceRefresh: true });
+    renderMatrix(roleID);
+  } catch (e) {
+    showToast('فشل تحميل الصلاحيات: ' + e.message, 'error');
+  }
+}
+
+function renderMatrix(roleID) {
+  const body = document.getElementById('matrixBody');
+  const rolePerms = {};
+  _matrix.filter(r => r.RoleID === roleID).forEach(r => { rolePerms[r.PageName] = r; });
+
+  let html = '';
+  for (const [groupLabel, pages] of Object.entries(PAGE_GROUPS)) {
+    html += `<tr class="page-group-row"><td colspan="8">${groupLabel}</td></tr>`;
+    pages.forEach(page => {
+      const p = rolePerms[page] || {};
+      const pageName = getPageLabel(page);
+      html += `<tr>
+        <td style="font-weight:500;">${pageName}<div style="font-size:0.72rem;color:var(--text-muted);" dir="ltr">${page}</div></td>
+        ${PERM_COLS.map(col => `
+          <td>
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox"
+                  ${p[col.key] === 'TRUE' ? 'checked' : ''}
+                  ${!_perms?.canEdit || roleID === 'SuperAdmin' ? 'disabled' : ''}
+                  onchange="savePerm('${roleID}','${page}','${col.key}',this.checked,'${p.RecordID || ''}')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </td>`).join('')}
+      </tr>`;
+    });
+  }
+
+  body.innerHTML = html;
+
+  if (roleID === 'SuperAdmin') {
+    document.getElementById('matrixRoleDesc').textContent = 'المسؤول الكامل — لا يمكن تعديل صلاحياته';
+  }
+}
+
+let _saveTimer = null;
+
+async function savePerm(roleID, pageName, permKey, value, recordID) {
+  setSavingState('saving');
+
+  const existing = _matrix.find(r => r.RoleID === roleID && r.PageName === pageName);
+
+  try {
+    if (existing && existing.RecordID) {
+      await updateRow(_sid, 'Permissions', existing.RecordID,
+        { [permKey]: value ? 'TRUE' : 'FALSE' }, _email);
+      existing[permKey] = value ? 'TRUE' : 'FALSE';
+    } else {
+      const newRow = {
+        RoleID: roleID, PageName: pageName,
+        CanView: 'FALSE', CanCreate: 'FALSE', CanEdit: 'FALSE',
+        CanDelete: 'FALSE', CanViewDeleted: 'FALSE',
+        CanViewSensitive: 'FALSE', CanExport: 'FALSE',
+        [permKey]: value ? 'TRUE' : 'FALSE'
+      };
+      const created = await appendRow(_sid, 'Permissions', newRow, _email);
+      _matrix.push({ ...newRow, RecordID: created.RecordID });
+    }
+    setSavingState('saved');
+  } catch (e) {
+    showToast('فشل حفظ الصلاحية: ' + e.message, 'error');
+    setSavingState('error');
+  }
+}
+
+function setSavingState(state) {
+  const pill = document.getElementById('matrixSavingPill');
+  const text = document.getElementById('matrixSavingText');
+  if (!pill) return;
+  pill.style.display = 'inline-flex';
+  pill.className = `saving-pill ${state === 'saving' ? 'saving' : state === 'saved' ? 'saved' : ''}`;
+  text.textContent = state === 'saving' ? 'جارٍ الحفظ…' : state === 'saved' ? 'تم الحفظ' : 'فشل الحفظ';
+  if (state === 'saved') {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => { pill.style.display = 'none'; }, 2500);
+  }
+}
+
+/* ── Page label helper ──────────────────────────────────── */
+function getPageLabel(page) {
+  const labels = {
+    Dashboard: 'لوحة التحكم', OwnerDashboard: 'لوحة المالك', Reports: 'التقارير',
+    Transactions: 'العمليات المالية', Receipts: 'الإيصالات',
+    Installments: 'الأقساط', Recurring: 'المصروفات الدورية',
+    Donors: 'المتبرعون', Beneficiaries: 'المستفيدون',
+    Inventory: 'المخزون', Projects: 'المشاريع',
+    Settings: 'الإعدادات', Permissions: 'الصلاحيات',
+    Categories: 'الفئات', DonorTypes: 'أنواع المتبرعين',
+    IslamicClasses: 'التصنيفات الإسلامية', NeedTypes: 'أنواع الاحتياجات',
+    PaymentMethods: 'طرق الدفع', AidFrequencies: 'تكرار المساعدات',
+    ProjectStatuses: 'حالات المشاريع', ProjectCategories: 'فئات المشاريع',
+    Governorates: 'المحافظات', NotificationPrefs: 'تفضيلات الإشعارات'
+  };
+  return labels[page] || page;
+}
+
+/* ── Modal helpers ──────────────────────────────────────── */
+function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+</script>
+</body>
+</html>
