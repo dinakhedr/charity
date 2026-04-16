@@ -6,7 +6,7 @@
 'use strict';
 
 /* ── Constants ────────────────────────────────────────────── */
-const CLIENT_ID   = 'YOUR_GOOGLE_CLIENT_ID_HERE';
+const CLIENT_ID   = '460184547236-7a4jn7lclo4317pnui9qjcu9d62buknn.apps.googleusercontent.com';
 const SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 const SHEETS_API  = 'https://sheets.googleapis.com/v4/spreadsheets';
 const DRIVE_API   = 'https://www.googleapis.com/drive/v3';
