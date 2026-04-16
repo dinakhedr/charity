@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام إدارة الجمعية الخيرية</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google API Client -->
+  <script src="https://apis.google.com/js/api.js"></script>
+
+  <style>
+    /* ── Page-level overrides ─────────────────────────────── */
+    body {
+      background: var(--bg-page);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Screen system — only one visible at a time ───────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    /* ── Sign-in screen ───────────────────────────────────── */
+    #screenSignIn {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+      background: var(--bg-page);
+    }
+
+    .signin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-modal);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .signin-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: var(--blue-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .signin-logo svg { width: 32px; height: 32px; color: #fff; }
+
+    .signin-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .signin-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .google-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--blue-400);
+      box-shadow: 0 2px 8px rgba(24,95,165,0.12);
+    }
+
+    .google-btn:active { transform: scale(0.98); }
+
+    .google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .signin-footer {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Access Pending screen ────────────────────────────── */
+    #screenPending {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+    }
+
+    .pending-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-modal);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .pending-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--color-warning-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .pending-icon svg { width: 28px; height: 28px; color: var(--color-warning); }
+
+    /* ── Loading screen ───────────────────────────────────── */
+    #screenLoading {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--bg-page);
+    }
+
+    .loading-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .loading-brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--blue-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-brand-icon svg { width: 22px; height: 22px; color: #fff; }
+
+    .loading-step {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-height: 24px;
+      transition: all var(--transition-base);
+    }
+
+    /* ── SysAdmin Panel ───────────────────────────────────── */
+    #screenSysAdmin {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .sysadmin-topbar {
+      height: 56px;
+      background: var(--blue-900);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sysadmin-topbar-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .sysadmin-badge {
+      background: var(--green-400);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+
+    .sysadmin-body {
+      flex: 1;
+      padding: 32px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Setup Wizard ─────────────────────────────────────── */
+    #screenWizard {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+      background: var(--bg-page);
+    }
+
+    .wizard-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-modal);
+      width: 100%;
+      max-width: 560px;
+      overflow: hidden;
+    }
+
+    .wizard-progress {
+      background: var(--blue-600);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .wizard-step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      flex-shrink: 0;
+      transition: all var(--transition-base);
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-step-dot.active {
+      background: #fff;
+      border-color: #fff;
+      color: var(--blue-600);
+    }
+
+    .wizard-step-dot.done {
+      background: var(--green-400);
+      border-color: var(--green-400);
+      color: #fff;
+    }
+
+    .wizard-step-line {
+      flex: 1;
+      height: 2px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 4px;
+    }
+
+    .wizard-step-line.done { background: var(--green-400); }
+
+    .wizard-body { padding: 32px 28px; }
+
+    .wizard-step-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .wizard-step-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .wizard-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-page);
+    }
+
+    /* Setup progress checklist */
+    .setup-checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .setup-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .setup-item-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-base);
+    }
+
+    .setup-item.done .setup-item-icon {
+      background: var(--color-in-bg);
+      border-color: var(--color-in);
+      color: var(--color-in);
+    }
+
+    .setup-item.active .setup-item-icon {
+      border-color: var(--blue-400);
+      color: var(--blue-600);
+    }
+
+    .setup-item.active .setup-item-icon .spinner-sm {
+      width: 12px;
+      height: 12px;
+      border-width: 2px;
+      border-color: var(--blue-100);
+      border-top-color: var(--blue-600);
+    }
+
+    .setup-item.done { color: var(--text-primary); }
+
+    /* Success screen */
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--color-in-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .success-icon svg { width: 32px; height: 32px; color: var(--color-in); }
+
+    /* Org table in SysAdmin */
+    .org-status-pending   { background: var(--color-warning-bg); color: var(--color-warning); }
+    .org-status-completed { background: var(--color-in-bg);      color: var(--color-in); }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCREEN: Loading / Branch Check
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen active" id="screenLoading">
+    <div class="loading-brand">
+      <div class="loading-brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <span style="font-size:1.1rem;font-weight:600;color:var(--text-primary);">الجمعية الخيرية</span>
+    </div>
+    <div class="spinner"></div>
+    <div class="loading-step" id="loadingStep">جارٍ التحقق من الجلسة…</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCREEN: Sign In
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screenSignIn">
+    <div class="signin-card">
+      <div class="signin-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <h1 class="signin-title">نظام إدارة الجمعية الخيرية</h1>
+      <p class="signin-subtitle">سجّل دخولك للمتابعة إلى نظام الإدارة</p>
+
+      <button class="google-btn" id="googleSignInBtn" onclick="startGoogleSignIn()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        تسجيل الدخول بحساب Google
+      </button>
+
+      <p class="signin-footer">
+        هذا النظام مخصص للمستخدمين المصرّح لهم فقط.<br>
+        للحصول على صلاحية الوصول، تواصل مع مسؤول النظام.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCREEN: Access Pending
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screenPending">
+    <div class="pending-card">
+      <div class="pending-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h2 style="font-size:1.15rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;">
+        في انتظار تفعيل الحساب
+      </h2>
+      <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">
+        تم التحقق من حساب Google الخاص بك بنجاح، لكن لم يتم تفعيل وصولك إلى النظام بعد.<br>
+        يرجى التواصل مع المسؤول لمنحك الصلاحية.
+      </p>
+      <div style="background:var(--bg-page);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:24px;font-size:0.8rem;color:var(--text-muted);word-break:break-all;" id="pendingEmail"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-primary w-full" onclick="retryBranchCheck()" id="retryBtn">
+          إعادة المحاولة
+        </button>
+        <button class="btn btn-ghost w-full" onclick="showScreen('screenSignIn')">
+          تسجيل الدخول بحساب آخر
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCREEN: SysAdmin Panel
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screenSysAdmin" style="flex-direction:column;">
+    <div class="sysadmin-topbar">
+      <div class="signin-logo" style="width:32px;height:32px;border-radius:8px;margin:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#fff;">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <span class="sysadmin-topbar-title">لوحة مسؤول النظام</span>
+      <span class="sysadmin-badge">SYSADMIN</span>
+      <div style="margin-right:auto;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:0.78rem;color:rgba(255,255,255,0.6);" id="sysAdminEmail"></span>
+        <button class="btn btn-ghost btn-sm" onclick="signOutSysAdmin()"
+          style="color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2);">
+          خروج
+        </button>
+      </div>
+    </div>
+
+    <div class="sysadmin-body">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1 class="page-title">المنظمات المُفعَّلة</h1>
+          <p class="page-subtitle">إدارة الجمعيات المسجلة في النظام</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary" onclick="openOnboardModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            تسجيل جمعية جديدة
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:24px;" id="sysAdminStats">
+        <div class="kpi-card blue">
+          <div class="kpi-label">إجمالي الجمعيات</div>
+          <div class="kpi-value" id="statTotal">—</div>
+        </div>
+        <div class="kpi-card in">
+          <div class="kpi-label">مفعَّلة</div>
+          <div class="kpi-value" id="statActive">—</div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-label">في انتظار الإعداد</div>
+          <div class="kpi-value" id="statPending">—</div>
+        </div>
+      </div>
+
+      <!-- Organizations table -->
+      <div class="table-wrapper">
+        <div class="table-toolbar">
+          <div class="table-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="بحث في الجمعيات…" oninput="filterOrgs(this.value)" id="orgSearch">
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-secondary btn-sm" onclick="loadOrganizations()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+              تحديث
+            </button>
+          </div>
+        </div>
+        <table class="data-table" id="orgsTable">
+          <thead>
+            <tr>
+              <th>الجمعية</th>
+              <th>المسؤول</th>
+              <th>المحافظة</th>
+              <th>الحالة</th>
+              <th>تاريخ التسجيل</th>
+              <th>الجدول الزمني</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="orgsTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
+              <div class="spinner" style="margin:0 auto 12px;"></div>
+              جارٍ التحميل…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SCREEN: Setup Wizard
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screenWizard">
+    <div class="wizard-card">
+
+      <!-- Progress bar -->
+      <div class="wizard-progress" id="wizardProgress">
+        <div class="wizard-step-dot active" id="wdot1">1</div>
+        <div class="wizard-step-line" id="wline1"></div>
+        <div class="wizard-step-dot" id="wdot2">2</div>
+        <div class="wizard-step-line" id="wline2"></div>
+        <div class="wizard-step-dot" id="wdot3">3</div>
+        <div class="wizard-step-line" id="wline3"></div>
+        <div class="wizard-step-dot" id="wdot4">4</div>
+      </div>
+
+      <!-- Step 1: Welcome -->
+      <div id="wizStep1">
+        <div class="wizard-body">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div class="signin-logo" style="margin:0 auto 16px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <h2 class="wizard-step-title" id="wizWelcomeTitle">مرحباً بك</h2>
+            <p class="wizard-step-desc" id="wizWelcomeDesc">
+              لقد تم تعيينك مسؤولاً عن النظام.<br>
+              سنقوم الآن بإعداد نظامك في خطوات بسيطة.
+            </p>
+          </div>
+          <div style="background:var(--bg-page);border-radius:var(--radius-md);padding:16px 18px;font-size:0.85rem;color:var(--text-secondary);line-height:1.8;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--blue-600);"></div>
+              إنشاء مجلد خاص بجمعيتك على Google Drive
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--blue-600);"></div>
+              إنشاء جداول البيانات وتهيئة النظام كاملاً
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--blue-600);"></div>
+              تسجيل حسابك كمسؤول رئيسي
+            </div>
+          </div>
+        </div>
+        <div class="wizard-footer">
+          <span class="text-sm text-muted" id="wizUserEmail"></span>
+          <button class="btn btn-primary" onclick="wizardNext(2)">
+            ابدأ الإعداد
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Confirm Org Details -->
+      <div id="wizStep2" style="display:none;">
+        <div class="wizard-body">
+          <h2 class="wizard-step-title">تفاصيل الجمعية</h2>
+          <p class="wizard-step-desc">راجع وأكمل بيانات جمعيتك قبل المتابعة</p>
+          <div class="form-grid" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">اسم الجمعية بالعربي <span class="required">*</span></label>
+              <input type="text" class="form-input" id="wizOrgNameAR" name="OrgNameAR" data-required="true" placeholder="الجمعية الخيرية الإسلامية">
+            </div>
+            <div class="form-group">
+              <label class="form-label">اسم الجمعية بالإنجليزي <span class="required">*</span></label>
+              <input type="text" class="form-input" id="wizOrgNameEN" name="OrgNameEN" data-required="true" placeholder="Islamic Charity Organization" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">المحافظة <span class="required">*</span></label>
+              <select class="form-select" id="wizGov" name="Governorate" data-required="true">
+                <option value="">اختر المحافظة…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">البريد الإلكتروني للتواصل</label>
+              <input type="email" class="form-input" id="wizContactEmail" name="ContactEmail" placeholder="info@charity.org" dir="ltr">
+            </div>
+            <div class="form-group span-full">
+              <label class="form-label">الاسم الظاهر للمسؤول <span class="required">*</span></label>
+              <input type="text" class="form-input" id="wizAdminName" name="AdminName" data-required="true" placeholder="الاسم الكامل">
+            </div>
+          </div>
+        </div>
+        <div class="wizard-footer">
+          <button class="btn btn-ghost" onclick="wizardNext(1)">رجوع</button>
+          <button class="btn btn-primary" onclick="wizardStep2Next()">
+            تأكيد والمتابعة
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Create Drive Structure -->
+      <div id="wizStep3" style="display:none;">
+        <div class="wizard-body">
+          <h2 class="wizard-step-title">إنشاء النظام</h2>
+          <p class="wizard-step-desc" id="wizStep3Desc">اضغط على الزر أدناه لإنشاء نظامك على Google Drive</p>
+          <ul class="setup-checklist" id="setupChecklist">
+            <li class="setup-item" id="si-folder">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>إنشاء مجلد الجمعية على Google Drive</span>
+            </li>
+            <li class="setup-item" id="si-sheet">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>إنشاء ملف البيانات الرئيسي</span>
+            </li>
+            <li class="setup-item" id="si-sheets">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>إعداد جداول البيانات (22 جدول)</span>
+            </li>
+            <li class="setup-item" id="si-lookups">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>تهيئة بيانات الفئات والتصنيفات</span>
+            </li>
+            <li class="setup-item" id="si-users">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>تسجيل حساب المسؤول الرئيسي</span>
+            </li>
+            <li class="setup-item" id="si-perms">
+              <div class="setup-item-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span>إعداد صلاحيات المستخدمين</span>
+            </li>
+          </ul>
+        </div>
+        <div class="wizard-footer">
+          <span></span>
+          <button class="btn btn-primary" id="wizCreateBtn" onclick="runSetup()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            إنشاء النظام الآن
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Complete -->
+      <div id="wizStep4" style="display:none;">
+        <div class="wizard-body" style="text-align:center;">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h2 class="wizard-step-title">النظام جاهز!</h2>
+          <p class="wizard-step-desc">
+            تم إعداد نظامك بنجاح. يمكنك الآن البدء في استخدام جميع الميزات.
+          </p>
+          <div style="background:var(--bg-page);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:20px;text-align:right;">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">رابط ملف البيانات (احفظه)</div>
+            <a id="wizSheetLink" href="#" target="_blank" dir="ltr"
+              style="font-size:0.78rem;color:var(--blue-600);word-break:break-all;text-decoration:underline;">
+            </a>
+          </div>
+        </div>
+        <div class="wizard-footer" style="flex-direction:column;gap:10px;align-items:stretch;">
+          <button class="btn btn-primary w-full" onclick="goToDashboard()">
+            الانتقال إلى لوحة التحكم
+          </button>
+          <button class="btn btn-secondary w-full" onclick="goToPermissions()">
+            إدارة المستخدمين والصلاحيات
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL: Onboard New Organization (SysAdmin)
+  ══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="onboardModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">تسجيل جمعية جديدة</h3>
+        <button class="modal-close" onclick="closeModal('onboardModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid" style="gap:14px;" id="onboardForm">
+          <div class="form-group">
+            <label class="form-label">اسم الجمعية بالعربي <span class="required">*</span></label>
+            <input type="text" class="form-input" id="onbOrgNameAR" data-required="true" placeholder="الجمعية الخيرية…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">اسم الجمعية بالإنجليزي <span class="required">*</span></label>
+            <input type="text" class="form-input" id="onbOrgNameEN" data-required="true" placeholder="Charity Org…" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">المحافظة <span class="required">*</span></label>
+            <select class="form-select" id="onbGov" data-required="true">
+              <option value="">اختر…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">بريد التواصل</label>
+            <input type="email" class="form-input" id="onbContactEmail" placeholder="info@org.com" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">إيميل المسؤول الرئيسي <span class="required">*</span></label>
+            <input type="email" class="form-input" id="onbAdminEmail" data-required="true" placeholder="admin@org.com" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">اسم المسؤول الرئيسي <span class="required">*</span></label>
+            <input type="text" class="form-input" id="onbAdminName" data-required="true" placeholder="الاسم الكامل">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">ملاحظات</label>
+            <textarea class="form-textarea" id="onbNotes" placeholder="أي ملاحظات إضافية…" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('onboardModal')">إلغاء</button>
+        <button class="btn btn-primary" onclick="submitOnboard()" id="onboardSubmitBtn">
+          تسجيل الجمعية
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="../assets/utils.js"></script>
+  <script src="../assets/auth.js"></script>
+
+  <script>
+    'use strict';
+
+    /* ── State ──────────────────────────────────────────────── */
+    let _currentEmail     = null;
+    let _currentToken     = null;
+    let _orgData          = null;
+    let _allOrgs          = [];
+    let _wizardOrgDetails = {};
+
+    /* ── Boot ───────────────────────────────────────────────── */
+    window.addEventListener('load', async () => {
+      setStep('جارٍ تهيئة Google API…');
+      try {
+        await initGapiClient();
+      } catch (e) {
+        setStep('فشل تحميل Google API — تحقق من الاتصال');
+        return;
+      }
+
+      const token = localStorage.getItem('google_token');
+      if (token) {
+        const email = getUserEmailFromToken(token);
+        if (email) {
+          _currentEmail = email;
+          setStep('جارٍ التحقق من الجلسة…');
+          const cached = getSavedAccessToken();
+          if (cached) {
+            const valid = await _validateToken(cached);
+            if (valid) {
+              _currentToken = cached;
+              gapi.client.setToken({ access_token: cached });
+              await branchCheck(email);
+              return;
+            }
+            clearAccessToken();
+          }
+          await requestToken(email);
+          return;
+        }
+      }
+
+      showScreen('screenSignIn');
+    });
+
+    /* ── Screen helper ──────────────────────────────────────── */
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function setStep(msg) {
+      const el = document.getElementById('loadingStep');
+      if (el) el.textContent = msg;
+    }
+
+    /* ── Google Sign In ─────────────────────────────────────── */
+    function startGoogleSignIn() {
+      const btn = document.getElementById('googleSignInBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> جارٍ تسجيل الدخول…`;
+
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback:  onGoogleCredential,
+        auto_select: false
+      });
+
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope:     SCOPES,
+            prompt:    'select_account',
+            callback:  async (resp) => {
+              if (resp.error || !resp.access_token) {
+                showToast('فشل تسجيل الدخول — حاول مرة أخرى', 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;flex-shrink:0;"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> تسجيل الدخول بحساب Google`;
+                return;
+              }
+              saveAccessToken(resp.access_token);
+              gapi.client.setToken({ access_token: resp.access_token });
+              _currentToken = resp.access_token;
+
+              try {
+                const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+                  { headers: { Authorization: `Bearer ${resp.access_token}` } });
+                const info = await me.json();
+                const fakeJwt = btoa(JSON.stringify({ alg:'RS256' })) + '.' +
+                  btoa(JSON.stringify({ email: info.email, name: info.name })) + '.sig';
+                localStorage.setItem('google_token', fakeJwt);
+                _currentEmail = info.email;
+              } catch {
+                showToast('تعذّر الحصول على بيانات الحساب', 'error');
+                return;
+              }
+
+              showScreen('screenLoading');
+              await branchCheck(_currentEmail);
+            }
+          }).requestAccessToken();
+        }
+      });
+    }
+
+    async function onGoogleCredential(response) {
+      localStorage.setItem('google_token', response.credential);
+      _currentEmail = getUserEmailFromToken(response.credential);
+      showScreen('screenLoading');
+      setStep('جارٍ التحقق من الصلاحيات…');
+      await requestToken(_currentEmail);
+    }
+
+    async function requestToken(email) {
+      return new Promise((resolve) => {
+        google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope:     SCOPES,
+          prompt:    '',
+          hint:      email,
+          callback:  async (resp) => {
+            if (resp.error || !resp.access_token) {
+              showScreen('screenSignIn');
+              resolve();
+              return;
+            }
+            saveAccessToken(resp.access_token);
+            gapi.client.setToken({ access_token: resp.access_token });
+            _currentToken = resp.access_token;
+            await branchCheck(email);
+            resolve();
+          }
+        }).requestAccessToken();
+      });
+    }
+
+    /* ── Branch Check ───────────────────────────────────────── */
+    async function branchCheck(email) {
+      showScreen('screenLoading');
+      setStep('جارٍ التحقق من الصلاحيات…');
+
+      /* Branch A: SysAdmin */
+      if (email === SYSADMIN_EMAIL) {
+        document.getElementById('sysAdminEmail').textContent = email;
+        showScreen('screenSysAdmin');
+        await loadOrganizations();
+        return;
+      }
+
+      /* Branch B/C/D: Check SysAdmin config sheet */
+      try {
+        setStep('جارٍ التحقق في سجلات النظام…');
+        const orgs = await _readSysAdminSheet();
+        const match = orgs.find(r =>
+          r.SuperAdminEmail?.toLowerCase() === email.toLowerCase()
+        );
+
+        if (match && match.SetupStatus === 'Pending') {
+          /* Branch B: Pending SuperAdmin → Setup Wizard */
+          _orgData = match;
+          showWizard(match, email);
+          return;
+        }
+
+        if (match && match.SetupStatus === 'Completed') {
+          /* Check they are in their own Users sheet */
+          const spreadsheetId = match.SpreadsheetId;
+          localStorage.setItem(SPREADSHEET_ID_KEY(email), spreadsheetId);
+          setStep('جارٍ التحقق من حساب المستخدم…');
+
+          const users = await readSheet(spreadsheetId, 'Users',
+            { includeDeleted: false, email, forceRefresh: true });
+          const user = users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
+
+          if (user && user.Status === 'Active') {
+            /* Branch C: Returning SuperAdmin → Dashboard */
+            setStep('مرحباً بعودتك…');
+            showToast(`مرحباً، ${user.FullName || email}`, 'success');
+            setTimeout(() => { window.location.href = 'Dashboard.html'; }, 800);
+            return;
+          }
+        }
+
+        /* Check if they are a regular user in any org's spreadsheet */
+        const spreadsheetId = localStorage.getItem(SPREADSHEET_ID_KEY(email));
+        if (spreadsheetId) {
+          try {
+            setStep('جارٍ التحقق من حساب المستخدم…');
+            const users = await readSheet(spreadsheetId, 'Users',
+              { includeDeleted: false, email, forceRefresh: true });
+            const user = users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
+            if (user && user.Status === 'Active') {
+              setStep('مرحباً بعودتك…');
+              showToast(`مرحباً، ${user.FullName || email}`, 'success');
+              setTimeout(() => { window.location.href = 'Dashboard.html'; }, 800);
+              return;
+            }
+          } catch { /* fall through to pending */ }
+        }
+
+        /* Branch D: Unregistered */
+        document.getElementById('pendingEmail').textContent = email;
+        showScreen('screenPending');
+
+      } catch (e) {
+        console.error('Branch check failed:', e);
+        showToast('حدث خطأ أثناء التحقق من الصلاحيات', 'error');
+        showScreen('screenSignIn');
+      }
+    }
+
+    async function retryBranchCheck() {
+      const btn = document.getElementById('retryBtn');
+      btn.disabled = true;
+      btn.textContent = 'جارٍ التحقق…';
+      await branchCheck(_currentEmail);
+      btn.disabled = false;
+      btn.textContent = 'إعادة المحاولة';
+    }
+
+    /* ── SysAdmin: Read Config Sheet ────────────────────────── */
+    async function _readSysAdminSheet() {
+      const res = await fetch(
+        `${SHEETS_API}/${SYSADMIN_SHEET_ID}/values/Organizations`,
+        { headers: { Authorization: `Bearer ${_currentToken}` } }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      const rows = data.values || [];
+      if (rows.length < 2) return [];
+      const headers = rows[0].map(h => String(h).trim());
+      return rows.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+        return obj;
+      });
+    }
+
+    async function _writeSysAdminRow(rowData) {
+      const headers = [
+        'OrgID','OrgNameAR','OrgNameEN','Governorate','ContactEmail',
+        'SuperAdminEmail','SuperAdminName','SetupToken','SetupStatus',
+        'SpreadsheetId','CreatedAt','CompletedAt','Notes'
+      ];
+      const row = headers.map(h => rowData[h] || '');
+      await fetch(
+        `${SHEETS_API}/${SYSADMIN_SHEET_ID}/values/Organizations:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${_currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [row] })
+        }
+      );
+    }
+
+    async function _updateSysAdminRow(rowIndex, updates) {
+      const headers = [
+        'OrgID','OrgNameAR','OrgNameEN','Governorate','ContactEmail',
+        'SuperAdminEmail','SuperAdminName','SetupToken','SetupStatus',
+        'SpreadsheetId','CreatedAt','CompletedAt','Notes'
+      ];
+
+      const res = await fetch(
+        `${SHEETS_API}/${SYSADMIN_SHEET_ID}/values/Organizations`,
+        { headers: { Authorization: `Bearer ${_currentToken}` } }
+      );
+      const data = await res.json();
+      const rows = data.values || [];
+
+      const row = rows[rowIndex] || [];
+      headers.forEach((h, i) => {
+        if (updates[h] !== undefined) row[i] = updates[h];
+      });
+
+      await fetch(
+        `${SHEETS_API}/${SYSADMIN_SHEET_ID}/values/${encodeURIComponent(`Organizations!A${rowIndex + 1}`)}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${_currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [row] })
+        }
+      );
+    }
+
+    /* ── SysAdmin Panel: Load & Render Orgs ─────────────────── */
+    async function loadOrganizations() {
+      const tbody = document.getElementById('orgsTableBody');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
+        <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…</td></tr>`;
+
+      try {
+        _allOrgs = await _readSysAdminSheet();
+        renderOrgsTable(_allOrgs);
+        document.getElementById('statTotal').textContent   = _allOrgs.length;
+        document.getElementById('statActive').textContent  = _allOrgs.filter(o => o.SetupStatus === 'Completed').length;
+        document.getElementById('statPending').textContent = _allOrgs.filter(o => o.SetupStatus === 'Pending').length;
+
+        populateGovDropdown('onbGov');
+      } catch (e) {
+        console.error('Load orgs failed:', e);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-out);">
+          فشل تحميل البيانات — تحقق من الاتصال</td></tr>`;
+      }
+    }
+
+    function renderOrgsTable(orgs) {
+      const tbody = document.getElementById('orgsTableBody');
+      if (!orgs.length) {
+        tbody.innerHTML = `<tr><td colspan="7">
+          <div class="empty-state">
+            <div class="empty-state-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="empty-state-title">لا توجد جمعيات مسجلة</div>
+            <div class="empty-state-text">اضغط على "تسجيل جمعية جديدة" للبدء</div>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = orgs.map((org, idx) => {
+        const isPending   = org.SetupStatus === 'Pending';
+        const statusBadge = isPending
+          ? `<span class="badge org-status-pending badge-dot">في الانتظار</span>`
+          : `<span class="badge org-status-completed badge-dot">مفعَّل</span>`;
+
+        const sheetLink = org.SpreadsheetId
+          ? `<a href="https://docs.google.com/spreadsheets/d/${org.SpreadsheetId}" target="_blank"
+              style="font-size:0.75rem;color:var(--blue-600);">فتح الملف</a>`
+          : `<span style="color:var(--text-muted);font-size:0.75rem;">—</span>`;
+
+        return `<tr>
+          <td>
+            <div style="font-weight:500;">${escapeHTML(org.OrgNameAR || '—')}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${escapeHTML(org.OrgNameEN || '')}</div>
+          </td>
+          <td>
+            <div>${escapeHTML(org.SuperAdminName || '—')}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${escapeHTML(org.SuperAdminEmail || '')}</div>
+          </td>
+          <td>${escapeHTML(org.Governorate || '—')}</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:0.8rem;">${formatDisplayDate(org.CreatedAt)}</td>
+          <td>${sheetLink}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              ${isPending ? `<button class="btn btn-sm btn-secondary" onclick="resendInvite(${idx})">إعادة الإرسال</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterOrgs(q) {
+      if (!q.trim()) { renderOrgsTable(_allOrgs); return; }
+      const filtered = _allOrgs.filter(o =>
+        (o.OrgNameAR || '').includes(q) ||
+        (o.OrgNameEN || '').toLowerCase().includes(q.toLowerCase()) ||
+        (o.SuperAdminEmail || '').toLowerCase().includes(q.toLowerCase()) ||
+        (o.SuperAdminName || '').includes(q)
+      );
+      renderOrgsTable(filtered);
+    }
+
+    function resendInvite(idx) {
+      const org = _allOrgs[idx];
+      showToast(`أخبر ${org.SuperAdminEmail} بفتح التطبيق وتسجيل الدخول`, 'info', 5000);
+    }
+
+    /* ── SysAdmin: Onboard New Org ──────────────────────────── */
+    function openOnboardModal() {
+      document.getElementById('onbOrgNameAR').value   = '';
+      document.getElementById('onbOrgNameEN').value   = '';
+      document.getElementById('onbContactEmail').value = '';
+      document.getElementById('onbAdminEmail').value  = '';
+      document.getElementById('onbAdminName').value   = '';
+      document.getElementById('onbNotes').value       = '';
+      populateGovDropdown('onbGov');
+      openModal('onboardModal');
+    }
+
+    async function submitOnboard() {
+      const fields = ['onbOrgNameAR','onbOrgNameEN','onbGov','onbAdminEmail','onbAdminName'];
+      const missing = fields.filter(id => !document.getElementById(id).value.trim());
+      if (missing.length) {
+        missing.forEach(id => document.getElementById(id).classList.add('error'));
+        showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+      }
+      fields.forEach(id => document.getElementById(id).classList.remove('error'));
+
+      const btn = document.getElementById('onboardSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'جارٍ الحفظ…';
+
+      try {
+        const orgData = {
+          OrgID:           generateRecordID(),
+          OrgNameAR:       document.getElementById('onbOrgNameAR').value.trim(),
+          OrgNameEN:       document.getElementById('onbOrgNameEN').value.trim(),
+          Governorate:     document.getElementById('onbGov').value,
+          ContactEmail:    document.getElementById('onbContactEmail').value.trim(),
+          SuperAdminEmail: document.getElementById('onbAdminEmail').value.trim().toLowerCase(),
+          SuperAdminName:  document.getElementById('onbAdminName').value.trim(),
+          SetupToken:      generateRecordID(),
+          SetupStatus:     'Pending',
+          SpreadsheetId:   '',
+          CreatedAt:       getCurrentTimestamp(),
+          CompletedAt:     '',
+          Notes:           document.getElementById('onbNotes').value.trim()
+        };
+
+        await _writeSysAdminRow(orgData);
+        closeModal('onboardModal');
+        showToast(`تم تسجيل ${orgData.OrgNameAR} بنجاح — أخبر ${orgData.SuperAdminEmail} بفتح التطبيق`, 'success', 6000);
+        await loadOrganizations();
+      } catch (e) {
+        console.error('Onboard failed:', e);
+        showToast('فشل حفظ البيانات — حاول مرة أخرى', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تسجيل الجمعية';
+      }
+    }
+
+    function signOutSysAdmin() {
+      clearAccessToken();
+      localStorage.removeItem('google_token');
+      showScreen('screenSignIn');
+    }
+
+    /* ── Setup Wizard ───────────────────────────────────────── */
+    function showWizard(orgData, email) {
+      _wizardOrgDetails = { ...orgData };
+
+      document.getElementById('wizWelcomeTitle').textContent =
+        `مرحباً، ${orgData.SuperAdminName || email}`;
+      document.getElementById('wizWelcomeDesc').textContent =
+        `لقد تم تعيينك مسؤولاً رئيسياً عن ${orgData.OrgNameAR}.\nسنقوم الآن بإعداد نظامك في خطوات بسيطة.`;
+      document.getElementById('wizUserEmail').textContent = email;
+
+      document.getElementById('wizOrgNameAR').value   = orgData.OrgNameAR || '';
+      document.getElementById('wizOrgNameEN').value   = orgData.OrgNameEN || '';
+      document.getElementById('wizContactEmail').value = orgData.ContactEmail || '';
+      document.getElementById('wizAdminName').value   = orgData.SuperAdminName || '';
+
+      populateGovDropdown('wizGov', orgData.Governorate);
+      wizardNext(1);
+      showScreen('screenWizard');
+    }
+
+    function wizardNext(step) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`wizStep${i}`);
+        if (el) el.style.display = i === step ? 'block' : 'none';
+      }
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`wdot${i}`);
+        if (!dot) continue;
+        dot.classList.remove('active','done');
+        if (i < step) dot.classList.add('done');
+        else if (i === step) dot.classList.add('active');
+      }
+      for (let i = 1; i <= 3; i++) {
+        const line = document.getElementById(`wline${i}`);
+        if (line) line.classList.toggle('done', i < step);
+      }
+    }
+
+    function wizardStep2Next() {
+      const nameAR = document.getElementById('wizOrgNameAR').value.trim();
+      const nameEN = document.getElementById('wizOrgNameEN').value.trim();
+      const gov    = document.getElementById('wizGov').value;
+      const admin  = document.getElementById('wizAdminName').value.trim();
+
+      let valid = true;
+      [['wizOrgNameAR', nameAR], ['wizOrgNameEN', nameEN], ['wizGov', gov], ['wizAdminName', admin]].forEach(([id, val]) => {
+        document.getElementById(id).classList.toggle('error', !val);
+        if (!val) valid = false;
+      });
+
+      if (!valid) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+
+      _wizardOrgDetails.OrgNameAR    = nameAR;
+      _wizardOrgDetails.OrgNameEN    = nameEN;
+      _wizardOrgDetails.Governorate  = gov;
+      _wizardOrgDetails.ContactEmail = document.getElementById('wizContactEmail').value.trim();
+      _wizardOrgDetails.SuperAdminName = admin;
+
+      wizardNext(3);
+    }
+
+    async function runSetup() {
+      const btn = document.getElementById('wizCreateBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> جارٍ الإنشاء…`;
+      document.getElementById('wizStep3Desc').textContent = 'جارٍ إعداد نظامك، يرجى الانتظار…';
+
+      const steps = ['si-folder','si-sheet','si-sheets','si-lookups','si-users','si-perms'];
+
+      const markActive = (id) => {
+        const el = document.getElementById(id);
+        el.classList.add('active');
+        el.querySelector('.setup-item-icon').innerHTML =
+          `<div class="spinner spinner-sm" style="margin:0;"></div>`;
+      };
+
+      const markDone = (id) => {
+        const el = document.getElementById(id);
+        el.classList.remove('active');
+        el.classList.add('done');
+        el.querySelector('.setup-item-icon').innerHTML =
+          `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+      };
+
+      try {
+        const orgName = _wizardOrgDetails.OrgNameAR || 'Charity Org';
+        const email   = _currentEmail;
+
+        /* Step 1: Create Drive folder */
+        markActive('si-folder');
+        const folderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${_currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name:     `${orgName} — Charity Management`,
+            mimeType: 'application/vnd.google-apps.folder'
+          })
+        });
+        if (!folderRes.ok) throw new Error('Failed to create Drive folder');
+        const folder = await folderRes.json();
+        markDone('si-folder');
+
+        /* Step 2: Create spreadsheet inside folder */
+        markActive('si-sheet');
+        const ssRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${_currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            properties: { title: `${orgName} — COMS Data` }
+          })
+        });
+        if (!ssRes.ok) throw new Error('Failed to create spreadsheet');
+        const ss = await ssRes.json();
+        const spreadsheetId = ss.spreadsheetId;
+
+        await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${_currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ parents: [folder.id] })
+        });
+        markDone('si-sheet');
+
+        /* Step 3: Create all sheets */
+        markActive('si-sheets');
+        await setupSpreadsheet(spreadsheetId, _currentToken, email);
+        markDone('si-sheets');
+        markDone('si-lookups');
+        markDone('si-users');
+        markDone('si-perms');
+
+        /* Save to localStorage */
+        localStorage.setItem(SPREADSHEET_ID_KEY(email), spreadsheetId);
+
+        /* Update SysAdmin config sheet */
+        const orgs = await _readSysAdminSheet();
+        const rowIdx = orgs.findIndex(o =>
+          o.SuperAdminEmail?.toLowerCase() === email.toLowerCase()
+        );
+        if (rowIdx >= 0) {
+          await _updateSysAdminRow(rowIdx + 1, {
+            SetupStatus:  'Completed',
+            SpreadsheetId: spreadsheetId,
+            CompletedAt:  getCurrentTimestamp()
+          });
+        }
+
+        /* Show success */
+        const link = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+        document.getElementById('wizSheetLink').href        = link;
+        document.getElementById('wizSheetLink').textContent = link;
+        wizardNext(4);
+
+      } catch (e) {
+        console.error('Setup failed:', e);
+        showToast('فشل الإعداد — ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = `إعادة المحاولة`;
+      }
+    }
+
+    function goToDashboard()   { window.location.href = 'Dashboard.html'; }
+    function goToPermissions() { window.location.href = 'Permissions.html'; }
+
+    /* ── Helpers ────────────────────────────────────────────── */
+    async function _validateToken(token) {
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/drive/v3/files?pageSize=1&fields=files(id)`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        return res.ok;
+      } catch { return false; }
+    }
+
+    function populateGovDropdown(selectId, selectedVal = '') {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      const govs = LOOKUP_SEED_DATA.LKP_Governorates || [];
+      sel.innerHTML = '<option value="">اختر المحافظة…</option>';
+      govs.forEach(([,code,,nameAR]) => {
+        const opt = document.createElement('option');
+        opt.value = nameAR;
+        opt.textContent = nameAR;
+        if (nameAR === selectedVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+  </script>
+</body>
+</html>
