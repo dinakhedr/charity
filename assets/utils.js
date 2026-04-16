@@ -207,7 +207,9 @@ function clearAccessToken() {
  */
 function getUserEmailFromToken(jwtToken) {
   try {
-    const payload = JSON.parse(atob(jwtToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const parts = jwtToken.split('.');
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
     return payload.email || null;
   } catch {
     return null;
