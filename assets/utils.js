@@ -922,11 +922,18 @@ async function checkPagePermissions(pageName, spreadsheetId, userEmail) {
  * @returns {Promise<object>} permissions object (if access granted)
  */
 async function enforceViewPermission(pageName, spreadsheetId, userEmail) {
+  if (!pageName) return {
+    canView: true, canCreate: true, canEdit: true,
+    canDelete: true, canViewDeleted: true,
+    canViewSensitive: true, canExport: true
+  };
+
   const perms = await checkPagePermissions(pageName, spreadsheetId, userEmail);
   if (!perms.canView) {
-    showToast('You do not have permission to access this page', 'error');
+    showToast('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
+    const isDashboardBuilt = false;
     setTimeout(() => {
-      window.location.href = getRelativePath('pages/Dashboard.html');
+      window.location.href = getRelativePath('pages/Home.html');
     }, 1500);
   }
   return perms;
