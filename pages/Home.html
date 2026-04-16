@@ -808,13 +808,16 @@ function setStep(msg) {
 }
 
 function fillGov(selId, selected = '') {
-  const sel = document.getElementById(selId); if (!sel) return;
+  const sel = document.getElementById(selId);
+  if (!sel) return;
   sel.innerHTML = '<option value="">اختر المحافظة…</option>';
+  const trimmed = (selected || '').trim();
   (LOOKUP_SEED_DATA.LKP_Governorates || []).forEach(r => {
-    const name = r[2] || '';
+    const name = (r[2] || '').trim();
     const opt  = document.createElement('option');
-    opt.value = name; opt.textContent = name;
-    if (name === selected) opt.selected = true;
+    opt.value       = name;
+    opt.textContent = name;
+    if (name && trimmed && name === trimmed) opt.selected = true;
     sel.appendChild(opt);
   });
 }
