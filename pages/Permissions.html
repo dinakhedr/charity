@@ -487,23 +487,6 @@ function renderUsers(list) {
 
     return `<tr class="${isDeleted ? 'row-deleted' : ''}">
   <td><div style="display:flex;align-items:center;gap:6px;">${actions}</div></td>
-  <td>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="user-avatar" style="background:var(--blue-600);width:34px;height:34px;font-size:0.72rem;">${initials}</div>
-      <div>
-        <div style="font-weight:500;">${escapeHTML(u.FullName || '—')}</div>
-        <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
-      </div>
-    </div>
-  </td>
-  <td>
-    <span class="badge badge-blue">${escapeHTML(roleLabel)}</span>
-    ${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}
-  </td>
-  <td>${isDeleted ? '—' : statusBadge}</td>
-  <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
-  <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
-</tr>`;
       <td>
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="user-avatar" style="background:var(--blue-600);width:34px;height:34px;font-size:0.72rem;">${initials}</div>
