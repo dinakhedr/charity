@@ -90,8 +90,13 @@ async function initPageAuth({ pageName = '', onLoadLocal = null, onReady }) {
   /* ── Step 6: Validate token ──────────────────────────── */
   const valid = await _validateToken(token);
   if (!valid) {
-    _redirectHome(typeof t === 'function' ? t('errSession') : 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى');
+    _redirectHome(typeof t === 'function' ? t('errSession') : 'Session expired — please sign in again');
     return;
+  }
+
+  /* ── Step 6b: Load translations from SysAdmin sheet ─── */
+  if (typeof loadTranslations === 'function') {
+    await loadTranslations(token);
   }
 
   /* ── Step 7: Finalize ────────────────────────────────── */

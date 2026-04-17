@@ -129,150 +129,237 @@ const DEFAULT_ROLES = [
 
 /* ══════════════════════════════════════════════════════════
    LANGUAGE / TRANSLATION SYSTEM
+   Source of truth: "Translations" tab in the SysAdmin
+   config sheet (SYSADMIN_SHEET_ID from config.js).
+   Columns: key | ar | en
+   Cached in localStorage for 24 hours.
+   Force-refresh available from Settings page.
 ══════════════════════════════════════════════════════════ */
 
 let LANG = localStorage.getItem('app_lang') || 'ar';
 
-// Translation function
+/* ── Translation cache ────────────────────────────────────
+   Populated by loadTranslations(). Falls back to
+   FALLBACK_TRANSLATIONS if the sheet hasn't loaded yet.
+──────────────────────────────────────────────────────────── */
+const TRANSLATIONS_CACHE_KEY = 'coms_translations';
+const TRANSLATIONS_TS_KEY    = 'coms_translations_ts';
+const TRANSLATIONS_TTL       = 24 * 60 * 60 * 1000; // 24 hours
+
+let _translationsCache = null; // { key: { ar, en } }
+
+/* ── Critical fallback — used only if sheet hasn't loaded ─
+   Keep this minimal: just what auth.js needs before the
+   sheet fetch completes.
+──────────────────────────────────────────────────────────── */
+const FALLBACK_TRANSLATIONS = {
+  loading:         { ar: 'جارٍ التحميل...', en: 'Loading...' },
+  save:            { ar: 'حفظ',             en: 'Save' },
+  cancel:          { ar: 'إلغاء',           en: 'Cancel' },
+  delete:          { ar: 'حذف',             en: 'Delete' },
+  edit:            { ar: 'تعديل',           en: 'Edit' },
+  add:             { ar: 'إضافة',           en: 'Add' },
+  confirm:         { ar: 'تأكيد',           en: 'Confirm' },
+  close:           { ar: 'إغلاق',           en: 'Close' },
+  signOut:         { ar: 'تسجيل الخروج',   en: 'Sign Out' },
+  signedOut:       { ar: 'تم تسجيل الخروج بنجاح', en: 'Signed out successfully' },
+  errSignIn:       { ar: 'يرجى تسجيل الدخول أولاً', en: 'Please sign in first' },
+  errSetup:        { ar: 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي', en: 'System not set up — please complete initial setup' },
+  errSession:      { ar: 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى', en: 'Session expired — please sign in again' },
+  errNoPermission: { ar: 'ليس لديك صلاحية للوصول إلى هذه الصفحة', en: 'You do not have permission to access this page' },
+  errLoadFailed:   { ar: 'حدث خطأ أثناء تحميل الصفحة', en: 'An error occurred while loading the page' },
+  successUpdated:  { ar: 'تم التحديث بنجاح', en: 'Updated successfully' },
+  dashboard:       { ar: 'لوحة التحكم',    en: 'Dashboard' },
+  transactions:    { ar: 'المعاملات',       en: 'Transactions' },
+  donors:          { ar: 'المتبرعون',       en: 'Donors' },
+  beneficiaries:   { ar: 'المستفيدون',      en: 'Beneficiaries' },
+  inventory:       { ar: 'المخزون',         en: 'Inventory' },
+  projects:        { ar: 'المشاريع',        en: 'Projects' },
+  receipts:        { ar: 'الإيصالات',       en: 'Receipts' },
+  installments:    { ar: 'الأقساط',         en: 'Installments' },
+  recurring:       { ar: 'المعاملات الدورية', en: 'Recurring' },
+  reports:         { ar: 'التقارير',        en: 'Reports' },
+  settings:        { ar: 'الإعدادات',       en: 'Settings' },
+  permissions:     { ar: 'الصلاحيات',       en: 'Permissions' },
+  system:          { ar: 'النظام',          en: 'SYSTEM' },
+  mainMenu:        { ar: 'القائمة الرئيسية', en: 'MAIN MENU' },
+  charityManagement: { ar: 'إدارة الجمعية الخيرية', en: 'Charity Management' },
+  roleSuperAdmin:  { ar: 'مسؤول النظام الكامل', en: 'Super Administrator' },
+  roleDirector:    { ar: 'المدير التنفيذي',  en: 'Executive Director' },
+  roleAccountManager: { ar: 'مسؤول الحسابات', en: 'Account Manager' },
+  roleCaseManager: { ar: 'مسؤول الحالات',   en: 'Case Manager' },
+  roleDataEntry:   { ar: 'موظف إدخال بيانات', en: 'Data Entry Clerk' },
+  roleInventoryManager: { ar: 'مسؤول المخزون', en: 'Inventory Manager' },
+  roleViewer:      { ar: 'مشاهد فقط',       en: 'Viewer Only' },
+};
+
+/* ── t(key) ───────────────────────────────────────────────
+   Looks up the active cache, then falls back to
+   FALLBACK_TRANSLATIONS, then returns the key itself.
+──────────────────────────────────────────────────────────── */
 function t(key) {
-  const translations = {
-    // Arabic translations
-    'loading': 'جارٍ التحميل...',
-    'save': 'حفظ',
-    'cancel': 'إلغاء',
-    'delete': 'حذف',
-    'edit': 'تعديل',
-    'add': 'إضافة',
-    'search': 'بحث',
-    'signIn': 'تسجيل الدخول',
-    'signOut': 'تسجيل الخروج',
-    'errSignIn': 'يرجى تسجيل الدخول أولاً',
-    'errSetup': 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي',
-    'errSession': 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى',
-    'errNoPermission': 'ليس لديك صلاحية للوصول إلى هذه الصفحة',
-    'errLoadFailed': 'فشل تحميل البيانات',
-    'errSaveFailed': 'فشل الحفظ',
-    'errDeleteFailed': 'فشل الحذف',
-    'signedOut': 'تم تسجيل الخروج بنجاح',
-    'successSaved': 'تم الحفظ بنجاح',
-    'successDeleted': 'تم الحذف بنجاح',
-    'successRestored': 'تمت الاستعادة بنجاح',
-    'successUpdated': 'تم التحديث بنجاح',
-    'requiredFields': 'الرجاء تعبئة جميع الحقول المطلوبة',
-    'allSaved': 'تم حفظ جميع التغييرات',
-    'saving': 'جارٍ الحفظ...',
-    'saved': 'تم الحفظ',
-    'error': 'خطأ',
-    'success': 'نجاح',
-    'warning': 'تحذير',
-    'info': 'معلومات',
-    'active': 'نشط',
-    'inactive': 'غير نشط',
-    'deleted': 'محذوف',
-    'restore': 'استعادة',
-    'confirm': 'تأكيد',
-    'close': 'إغلاق',
-    'dashboard': 'لوحة التحكم',
-    'transactions': 'المعاملات',
-    'donors': 'المتبرعون',
-    'beneficiaries': 'المستفيدون',
-    'inventory': 'المخزون',
-    'projects': 'المشاريع',
-    'receipts': 'الإيصالات',
-    'installments': 'الأقساط',
-    'recurring': 'المعاملات الدورية',
-    'reports': 'التقارير',
-    'settings': 'الإعدادات',
-    'permissions': 'الصلاحيات',
-    'system': 'النظام',
-    'mainMenu': 'القائمة الرئيسية',
-    'charityManagement': 'إدارة الجمعية الخيرية',
-    'roleSuperAdmin': 'مسؤول النظام الكامل',
-    'roleSuperAdminDesc': 'صلاحيات كاملة على جميع الصفحات والبيانات',
-    'roleDirector': 'المدير التنفيذي',
-    'roleDirectorDesc': 'صلاحيات تشغيلية كاملة مع حذف العمليات المالية',
-    'roleAccountManager': 'مسؤول الحسابات',
-    'roleAccountManagerDesc': 'صلاحيات كاملة على الوحدات المالية',
-    'roleCaseManager': 'مسؤول الحالات',
-    'roleCaseManagerDesc': 'صلاحيات كاملة على المستفيدين والمشاريع',
-    'roleDataEntry': 'موظف إدخال بيانات',
-    'roleDataEntryDesc': 'إضافة وتعديل فقط — بدون حذف',
-    'roleInventoryManager': 'مسؤول المخزون',
-    'roleInventoryManagerDesc': 'صلاحيات كاملة على المخزون العيني',
-    'roleViewer': 'مشاهد فقط',
-    'roleViewerDesc': 'قراءة فقط على لوحة التحكم والتقارير'
-  };
-  
-  // For English, return the key itself or a simple mapping
-  if (LANG === 'en') {
-    const enTranslations = {
-      'dashboard': 'Dashboard',
-      'transactions': 'Transactions',
-      'donors': 'Donors',
-      'beneficiaries': 'Beneficiaries',
-      'inventory': 'Inventory',
-      'projects': 'Projects',
-      'settings': 'Settings',
-      'permissions': 'Permissions',
-      'system': 'SYSTEM',
-      'mainMenu': 'MAIN MENU',
-      'signOut': 'Sign Out',
-      'roleSuperAdmin': 'Super Administrator',
-      'roleDirector': 'Executive Director',
-      'roleAccountManager': 'Account Manager',
-      'roleCaseManager': 'Case Manager',
-      'roleDataEntry': 'Data Entry Clerk',
-      'roleInventoryManager': 'Inventory Manager',
-      'roleViewer': 'Viewer Only'
-    };
-    return enTranslations[key] || key;
-  }
-  
-  return translations[key] || key;
+  const cache = _translationsCache || FALLBACK_TRANSLATIONS;
+  const entry = cache[key];
+  if (!entry) return key;
+  return entry[LANG] || entry['ar'] || key;
 }
 
-// Set language and update UI
+/* ── loadTranslations(token, forceRefresh) ────────────────
+   Fetches the "Translations" sheet from the SysAdmin
+   config spreadsheet and stores the result in memory
+   and localStorage.
+
+   - token        : Google OAuth access token
+   - forceRefresh : if true, ignores the 24-hour TTL
+
+   Returns: true on success, false on failure.
+   On failure, the fallback translations remain active.
+──────────────────────────────────────────────────────────── */
+async function loadTranslations(token, forceRefresh = false) {
+  /* 1. Try localStorage cache first (unless forced) */
+  if (!forceRefresh) {
+    const cached = _readTranslationsCache();
+    if (cached) {
+      _translationsCache = cached;
+      return true;
+    }
+  }
+
+  /* 2. Fetch from the SysAdmin config sheet */
+  if (!token) {
+    console.warn('loadTranslations: no token — using fallback');
+    return false;
+  }
+
+  const sheetId = window.APP_CONFIG?.admin?.configSheetId || SYSADMIN_SHEET_ID;
+
+  try {
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Translations!A:C`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!res.ok) {
+      console.warn('loadTranslations: fetch failed', res.status);
+      _loadFallbackIntoCache();
+      return false;
+    }
+
+    const data = await res.json();
+    const rows = data.values || [];
+
+    if (rows.length < 2) {
+      console.warn('loadTranslations: sheet is empty');
+      _loadFallbackIntoCache();
+      return false;
+    }
+
+    /* 3. Build cache object { key: { ar, en } } */
+    const header = rows[0].map(h => h.trim().toLowerCase()); // ['key','ar','en']
+    const keyIdx = header.indexOf('key');
+    const arIdx  = header.indexOf('ar');
+    const enIdx  = header.indexOf('en');
+
+    if (keyIdx === -1 || arIdx === -1 || enIdx === -1) {
+      console.warn('loadTranslations: missing columns — expected key, ar, en');
+      _loadFallbackIntoCache();
+      return false;
+    }
+
+    const parsed = {};
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const key = (row[keyIdx] || '').trim();
+      if (!key) continue;
+      parsed[key] = {
+        ar: (row[arIdx] || '').trim(),
+        en: (row[enIdx] || '').trim()
+      };
+    }
+
+    /* 4. Merge with fallback so critical keys are always present */
+    _translationsCache = { ...FALLBACK_TRANSLATIONS, ...parsed };
+
+    /* 5. Persist to localStorage */
+    _writeTranslationsCache(_translationsCache);
+
+    console.info(`loadTranslations: loaded ${Object.keys(parsed).length} keys from sheet`);
+    return true;
+
+  } catch (e) {
+    console.warn('loadTranslations: error —', e.message);
+    _loadFallbackIntoCache();
+    return false;
+  }
+}
+
+/* ── Cache helpers ────────────────────────────────────────── */
+function _readTranslationsCache() {
+  try {
+    const ts   = parseInt(localStorage.getItem(TRANSLATIONS_TS_KEY) || '0', 10);
+    const aged = Date.now() - ts > TRANSLATIONS_TTL;
+    if (aged) return null;
+    const raw = localStorage.getItem(TRANSLATIONS_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function _writeTranslationsCache(data) {
+  try {
+    localStorage.setItem(TRANSLATIONS_CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(TRANSLATIONS_TS_KEY, String(Date.now()));
+  } catch (e) {
+    console.warn('loadTranslations: could not write cache —', e.message);
+  }
+}
+
+function _loadFallbackIntoCache() {
+  if (!_translationsCache) _translationsCache = { ...FALLBACK_TRANSLATIONS };
+}
+
+/* ── clearTranslationsCache() — called from Settings ─────── */
+function clearTranslationsCache() {
+  localStorage.removeItem(TRANSLATIONS_CACHE_KEY);
+  localStorage.removeItem(TRANSLATIONS_TS_KEY);
+  _translationsCache = null;
+}
+
+/* ── setLanguage(lang) ────────────────────────────────────── */
 function setLanguage(lang) {
   if (lang !== 'ar' && lang !== 'en') return;
   LANG = lang;
   localStorage.setItem('app_lang', lang);
-  
-  // Update HTML direction
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+  document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
-  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  
-  // Re-render sidebar to update language (if auth state available)
+  document.body.dir             = lang === 'ar' ? 'rtl' : 'ltr';
+
   if (typeof getAuthState === 'function') {
     const authState = getAuthState();
-    if (authState && authState.email && authState.spreadsheetId) {
+    if (authState?.email) {
       renderSidebar(authState.email, authState.userName, authState.role);
     }
   }
-  
-  // Update all elements with data-t attributes
-  if (typeof applyTranslations === 'function') {
-    applyTranslations();
-  }
-  
-  // Show success notification
+
+  applyTranslations();
+
   if (typeof showToast === 'function') {
     showToast(t('successUpdated'), 'success');
   }
 }
 
-// Apply translations to all elements with data-t attributes
+/* ── applyTranslations() ──────────────────────────────────── */
 function applyTranslations() {
   document.querySelectorAll('[data-t]').forEach(el => {
     const key = el.getAttribute('data-t');
-    if (key && t(key) !== key) {
-      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-        if (el.getAttribute('data-t-placeholder') !== null) {
-          el.placeholder = t(key);
-        }
-      } else {
-        el.textContent = t(key);
-      }
+    if (!key) return;
+    const val = t(key);
+    if (val === key) return; // key not found — leave as-is
+    const isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
+    if (isInput && el.hasAttribute('data-t-placeholder')) {
+      el.placeholder = val;
+    } else if (!isInput) {
+      el.textContent = val;
     }
   });
 }
@@ -724,6 +811,8 @@ window.renderSidebar = renderSidebar;
 window.toggleUserMenu = toggleUserMenu;
 window.setLanguage = setLanguage;
 window.applyTranslations = applyTranslations;
+window.loadTranslations = loadTranslations;
+window.clearTranslationsCache = clearTranslationsCache;
 window.showToast = showToast;
 window.escapeHTML = escapeHTML;
 window.t = t;
