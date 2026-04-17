@@ -464,3 +464,6 @@ function _authShowIOSTapScreen(onTap) {
     </div>`;
   document.getElementById('_iosTapBtn').addEventListener('click', () => { onTap(); });
 }
+
+// Make signOut available globally
+window.signOut = signOut;
