@@ -47,8 +47,9 @@ const CONFIG = {
     environment: 'production',  // 'development' or 'production'
     
     // Session and cache settings
-    sessionTimeout: 60 * 60 * 1000,  // 1 hour in milliseconds
-    syncInterval: 5 * 60 * 1000,     // 5 minutes
+    sessionTimeout: 60 * 60 * 1000,       // 1 hour in milliseconds
+    syncInterval: 5 * 60 * 1000,          // 5 minutes
+    translationsTTL: 24 * 60 * 60 * 1000, // 24 hours — how long translation cache is valid
     
     // Feature flags
     features: {
@@ -81,7 +82,8 @@ const CONFIG = {
     projectStatuses: 'ProjectStatuses',
     projectCategories: 'ProjectCategories',
     governorates: 'Governorates',
-    notificationPrefs: 'NotificationPrefs'
+    notificationPrefs: 'NotificationPrefs',
+    translations: 'Translations'
   },
 
   // Role Configuration

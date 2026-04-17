@@ -144,7 +144,8 @@ let LANG = localStorage.getItem('app_lang') || 'ar';
 ──────────────────────────────────────────────────────────── */
 const TRANSLATIONS_CACHE_KEY = 'coms_translations';
 const TRANSLATIONS_TS_KEY    = 'coms_translations_ts';
-const TRANSLATIONS_TTL       = 24 * 60 * 60 * 1000; // 24 hours
+const TRANSLATIONS_TTL       = window.APP_CONFIG?.app?.translationsTTL || 24 * 60 * 60 * 1000;
+const TRANSLATIONS_SHEET     = window.APP_CONFIG?.sheets?.translations  || 'Translations';
 
 let _translationsCache = null; // { key: { ar, en } }
 
@@ -235,7 +236,7 @@ async function loadTranslations(token, forceRefresh = false) {
 
   try {
     const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Translations!A:C`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TRANSLATIONS_SHEET}!A:C`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
