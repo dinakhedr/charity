@@ -1,2489 +1,1200 @@
 /* ============================================================
    CHARITY MANAGEMENT SYSTEM — utils.js
-   Shared utility library — loaded on every page
+   Shared utilities, Google Sheets API wrapper, translations
    ============================================================ */
 
 'use strict';
 
-/* ── Constants ────────────────────────────────────────────── */
-const CLIENT_ID   = '460184547236-7a4jn7lclo4317pnui9qjcu9d62buknn.apps.googleusercontent.com';
-const SYSADMIN_EMAIL    = 'dina.khedr@gmail.com';
-const SYSADMIN_SHEET_ID = '1m41rWfsHWWh6LkKqDir8nnen0y0Yx8RzhPPQs73Bxis';
-const SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
-const SHEETS_API  = 'https://sheets.googleapis.com/v4/spreadsheets';
-const DRIVE_API   = 'https://www.googleapis.com/drive/v3';
+/* ══════════════════════════════════════════════════════════
+   GLOBAL CONFIGURATION
+══════════════════════════════════════════════════════════ */
 
-const SPREADSHEET_ID_KEY  = (email) => `spreadsheet_id_${email}`;
-const ACCESS_TOKEN_KEY    = 'coms_access_token';
-const ACCESS_TOKEN_EXP    = 'coms_access_token_exp';
-const PERMISSIONS_CACHE   = 'coms_permissions';
-const LOOKUP_CACHE_PREFIX = 'coms_lkp_';
-const CACHE_TTL           = 5 * 60 * 1000;   // 5 minutes for lookups
-const PENDING_SYNC_KEY    = 'coms_pending_sync';
+// All system pages for permissions matrix
+const ALL_PAGES = [
+  'Dashboard', 'OwnerDashboard', 'Reports',
+  'Transactions', 'Receipts', 'Installments', 'Recurring',
+  'Donors', 'Beneficiaries', 'Inventory', 'Projects',
+  'Settings', 'Permissions',
+  'Categories', 'DonorTypes', 'IslamicClasses', 'NeedTypes',
+  'PaymentMethods', 'AidFrequencies', 'ProjectStatuses',
+  'ProjectCategories', 'Governorates', 'NotificationPrefs'
+];
 
-/* ── Character set for ID generation (no O/0 or I/1 confusion) */
-const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+// Sheet definitions - each sheet name and its headers
+const SHEET_DEFINITIONS = {
+  'Users': ['Email', 'FullName', 'Role', 'Status', 'LastLogin', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Roles': ['RoleID', 'RoleName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Permissions': ['RoleID', 'PageName', 'CanView', 'CanCreate', 'CanEdit', 'CanDelete', 'CanViewDeleted', 'CanViewSensitive', 'CanExport', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Donors': ['Name', 'Email', 'Phone', 'Address', 'DonorType', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Beneficiaries': ['FullName', 'IDNumber', 'Phone', 'Address', 'IslamicClass', 'NeedType', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Transactions': ['Date', 'DonorID', 'BeneficiaryID', 'Amount', 'PaymentMethod', 'ReceiptNumber', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Receipts': ['ReceiptNumber', 'TransactionID', 'Date', 'DonorName', 'Amount', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Inventory': ['ItemName', 'Category', 'Quantity', 'Unit', 'MinQuantity', 'Location', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Projects': ['ProjectName', 'Category', 'StartDate', 'EndDate', 'Budget', 'Status', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Installments': ['BeneficiaryID', 'Amount', 'Frequency', 'StartDate', 'EndDate', 'NextDueDate', 'Status', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Recurring': ['DonorID', 'Amount', 'Frequency', 'StartDate', 'EndDate', 'NextDate', 'Status', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Categories': ['CategoryName', 'Type', 'Notes', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'DonorTypes': ['TypeName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'IslamicClasses': ['ClassName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'NeedTypes': ['NeedName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'PaymentMethods': ['MethodName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'AidFrequencies': ['FrequencyName', 'Months', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'ProjectStatuses': ['StatusName', 'Color', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'ProjectCategories': ['CategoryName', 'Description', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'Governorates': ['GovernorateName', 'Region', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt'],
+  'NotificationPrefs': ['UserEmail', 'NotifyOnNewDonation', 'NotifyOnNewBeneficiary', 'NotifyOnLowStock', 'NotifyOnProjectDue', 'RecordID', 'CreatedAt', 'CreatedBy', 'ModifiedAt', 'ModifiedBy', 'IsDeleted', 'DeletedAt']
+};
 
-/* ============================================================
-   SECTION 1 — ID GENERATION
-   ============================================================ */
+// Lookup seed data for initial setup
+const LOOKUP_SEED_DATA = {
+  'Categories': [
+    ['Food', 'inventory'],
+    ['Clothing', 'inventory'],
+    ['Medical', 'inventory'],
+    ['Educational', 'inventory']
+  ],
+  'DonorTypes': [
+    ['Individual', 'Individual donor'],
+    ['Corporate', 'Corporate donor'],
+    ['Foundation', 'Foundation donor']
+  ],
+  'IslamicClasses': [
+    ['Poor', 'Al-Fuqara (The Poor)'],
+    ['Needy', 'Al-Masakin (The Needy)'],
+    ['Zakat Admin', 'Those employed to collect Zakat'],
+    ['New Muslims', 'Those whose hearts are to be reconciled'],
+    ['Debtors', 'Those in debt'],
+    ['In the Cause of Allah', 'Fi Sabilillah'],
+    ['Wayfarer', 'Ibn al-Sabil']
+  ],
+  'NeedTypes': [
+    ['Financial', 'Financial assistance needed'],
+    ['Medical', 'Medical treatment needed'],
+    ['Educational', 'Educational support needed'],
+    ['Housing', 'Housing assistance needed'],
+    ['Food', 'Food assistance needed']
+  ],
+  'PaymentMethods': [
+    ['Cash', 'Cash payment'],
+    ['Bank Transfer', 'Bank transfer payment'],
+    ['Credit Card', 'Credit card payment'],
+    ['Check', 'Check payment']
+  ],
+  'AidFrequencies': [
+    ['One-time', 0, 'One-time assistance'],
+    ['Monthly', 1, 'Monthly assistance'],
+    ['Quarterly', 3, 'Quarterly assistance'],
+    ['Semi-annual', 6, 'Semi-annual assistance'],
+    ['Annual', 12, 'Annual assistance']
+  ],
+  'ProjectStatuses': [
+    ['Planning', '#FFA500', 'Project in planning phase'],
+    ['Active', '#1D9E75', 'Project is active'],
+    ['Completed', '#185FA5', 'Project completed'],
+    ['On Hold', '#BA7517', 'Project on hold'],
+    ['Cancelled', '#A32D2D', 'Project cancelled']
+  ],
+  'ProjectCategories': [
+    ['Education', 'Educational projects'],
+    ['Healthcare', 'Healthcare projects'],
+    ['Infrastructure', 'Infrastructure projects'],
+    ['Emergency', 'Emergency relief projects']
+  ],
+  'Governorates': [
+    ['Cairo', 'Capital'],
+    ['Alexandria', 'Coastal'],
+    ['Giza', 'Greater Cairo'],
+    ['Port Said', 'Canal'],
+    ['Suez', 'Canal']
+  ],
+  'NotificationPrefs': []  // Empty - will be populated as users are added
+};
 
-/**
- * generateRecordID()
- * Returns a unique 8-character alphanumeric system ID.
- * Characters drawn from ID_CHARS (no O/0 or I/1 ambiguity).
- * @param {string[]} [existingIDs=[]] - Array of existing IDs to check against
- * @returns {string} 8-character unique ID e.g. "A3F9K2M7"
- */
-function generateRecordID(existingIDs = []) {
-  const existing = new Set(existingIDs);
-  let id;
-  let attempts = 0;
-  do {
-    id = '';
-    const bytes = new Uint8Array(8);
-    crypto.getRandomValues(bytes);
-    for (const byte of bytes) {
-      id += ID_CHARS[byte % ID_CHARS.length];
-    }
-    attempts++;
-    if (attempts > 100) throw new Error('Could not generate unique RecordID after 100 attempts');
-  } while (existing.has(id));
-  return id;
+// Default roles for initial setup
+const DEFAULT_ROLES = [
+  ['SuperAdmin', 'Super Administrator', 'Full system access with all permissions'],
+  ['Director', 'Executive Director', 'Full operational permissions with financial deletion'],
+  ['AccountManager', 'Account Manager', 'Full access to financial modules'],
+  ['CaseManager', 'Case Manager', 'Full access to beneficiaries and projects'],
+  ['DataEntry', 'Data Entry Clerk', 'Add and edit only — no deletion'],
+  ['InventoryManager', 'Inventory Manager', 'Full access to inventory management'],
+  ['Viewer', 'Viewer Only', 'Read-only access to dashboard and reports']
+];
+
+/* ══════════════════════════════════════════════════════════
+   LANGUAGE / TRANSLATION SYSTEM
+══════════════════════════════════════════════════════════ */
+
+let LANG = localStorage.getItem('app_lang') || 'ar';
+
+// English translations
+const LANG_EN = {
+  // Common
+  'loading': 'Loading...',
+  'save': 'Save',
+  'cancel': 'Cancel',
+  'delete': 'Delete',
+  'edit': 'Edit',
+  'add': 'Add',
+  'search': 'Search',
+  'filter': 'Filter',
+  'export': 'Export',
+  'import': 'Import',
+  'refresh': 'Refresh',
+  'close': 'Close',
+  'confirm': 'Confirm',
+  'saving': 'Saving...',
+  'saved': 'Saved',
+  'error': 'Error',
+  'success': 'Success',
+  'warning': 'Warning',
+  'info': 'Info',
+  'allSaved': 'All changes saved',
+  'requiredFields': 'Please fill all required fields',
+  
+  // Auth & Navigation
+  'signIn': 'Sign In',
+  'signOut': 'Sign Out',
+  'welcomeBack': 'Welcome Back',
+  'tapToContinue': 'Tap to continue',
+  'continue': 'Continue',
+  'errSignIn': 'Please sign in first',
+  'errSetup': 'System not set up — please complete initial setup',
+  'errSession': 'Session expired — please sign in again',
+  'errNoPermission': 'You don\'t have permission to access this page',
+  'errLoadFailed': 'Failed to load data',
+  'errSaveFailed': 'Failed to save',
+  'errDeleteFailed': 'Failed to delete',
+  'signedOut': 'Signed out successfully',
+  
+  // Permissions Page
+  'permissionsTitle': 'Permissions',
+  'permissionsSubtitle': 'Manage users, roles and permissions',
+  'usersList': 'User List',
+  'rolesTitle': 'Roles',
+  'rolesSubtitle': 'Manage system roles and their permissions',
+  'matrixTitle': 'Permissions Matrix',
+  'matrixSubtitle': 'Configure detailed permissions per role',
+  'tabUsers': 'Users',
+  'tabRoles': 'Roles',
+  'tabMatrix': 'Permissions Matrix',
+  'addUser': 'Add User',
+  'addCustomRole': 'Add Custom Role',
+  'showDeleted': 'Show deleted users',
+  'colUser': 'User',
+  'colRole': 'Role',
+  'colStatus': 'Status',
+  'colLastLogin': 'Last Login',
+  'colDateAdded': 'Date Added',
+  'colPage': 'Page',
+  'colView': 'View',
+  'colCreate': 'Create',
+  'colEdit': 'Edit',
+  'colDelete': 'Delete',
+  'colViewDeleted': 'Deleted',
+  'colSensitive': 'Sensitive',
+  'colExport': 'Export',
+  'selectRole': 'Select a role...',
+  'selectRoleFirst': 'Select a role first',
+  'selectRoleHint': 'Choose a role from the dropdown above to view and edit permissions',
+  'noUsers': 'No users found',
+  'noUsersHint': 'Click "Add User" to create your first user',
+  'deleted': 'Deleted',
+  'restore': 'Restore',
+  
+  // Matrix column headers (bilingual display)
+  'colViewEn': 'View',
+  'colViewAr': 'Page View',
+  'colCreateEn': 'Create',
+  'colCreateAr': 'Add Records',
+  'colEditEn': 'Edit',
+  'colEditAr': 'Edit Records',
+  'colDeleteEn': 'Delete',
+  'colDeleteAr': 'Soft Delete',
+  'colViewDeletedEn': 'Deleted',
+  'colViewDeletedAr': 'View Deleted',
+  'colSensitiveEn': 'Sensitive',
+  'colSensitiveAr': 'Sensitive Data',
+  'colExportEn': 'Export',
+  'colExportAr': 'Export Data',
+  
+  // User Modal
+  'addUserTitle': 'Add New User',
+  'editUserTitle': 'Edit User',
+  'fullName': 'Full Name',
+  'emailGoogle': 'Email (Google)',
+  'emailHint': 'Must be an active Google account',
+  'notes': 'Notes',
+  'saveUser': 'Save User',
+  'emailExists': 'User with this email already exists',
+  
+  // Role Modal
+  'addRoleTitle': 'Add Custom Role',
+  'editRoleTitle': 'Edit Role',
+  'roleNameEn': 'Role Name (English)',
+  'roleNameHint': 'Used as internal identifier — no spaces',
+  'description': 'Description',
+  'saveRole': 'Save Role',
+  'roleExists': 'Role with this ID already exists',
+  
+  // Confirm Modal
+  'confirmTitle': 'Are you sure?',
+  'deleteUserTitle': 'Delete User',
+  'deleteRoleTitle': 'Delete Role',
+  
+  // Status
+  'status': 'Status',
+  'active': 'Active',
+  'inactive': 'Inactive',
+  
+  // Role labels
+  'roleSuperAdmin': 'Super Administrator',
+  'roleSuperAdminDesc': 'Full access to all pages and data',
+  'roleDirector': 'Executive Director',
+  'roleDirectorDesc': 'Full operational permissions with financial deletion capability',
+  'roleAccountManager': 'Account Manager',
+  'roleAccountManagerDesc': 'Full access to financial modules',
+  'roleCaseManager': 'Case Manager',
+  'roleCaseManagerDesc': 'Full access to beneficiaries and projects',
+  'roleDataEntry': 'Data Entry Clerk',
+  'roleDataEntryDesc': 'Add and edit only — no deletion',
+  'roleInventoryManager': 'Inventory Manager',
+  'roleInventoryManagerDesc': 'Full access to inventory management',
+  'roleViewer': 'Viewer Only',
+  'roleViewerDesc': 'Read-only access to dashboard and reports',
+  
+  // Dashboard
+  'dashboardTitle': 'Dashboard',
+  'totalDonations': 'Total Donations',
+  'totalBeneficiaries': 'Total Beneficiaries',
+  'totalProjects': 'Total Projects',
+  'lowStockItems': 'Low Stock Items',
+  'recentTransactions': 'Recent Transactions',
+  'upcomingInstallments': 'Upcoming Installments',
+  'activeProjects': 'Active Projects',
+  
+  // Transactions
+  'transactionsTitle': 'Transactions',
+  'addTransaction': 'Add Transaction',
+  'date': 'Date',
+  'donor': 'Donor',
+  'beneficiary': 'Beneficiary',
+  'amount': 'Amount',
+  'paymentMethod': 'Payment Method',
+  'receiptNumber': 'Receipt Number',
+  
+  // Donors
+  'donorsTitle': 'Donors',
+  'addDonor': 'Add Donor',
+  'donorName': 'Donor Name',
+  'donorType': 'Donor Type',
+  'phone': 'Phone',
+  'address': 'Address',
+  
+  // Beneficiaries
+  'beneficiariesTitle': 'Beneficiaries',
+  'addBeneficiary': 'Add Beneficiary',
+  'idNumber': 'ID Number',
+  'islamicClass': 'Islamic Class',
+  'needType': 'Need Type',
+  
+  // Inventory
+  'inventoryTitle': 'Inventory',
+  'addItem': 'Add Item',
+  'itemName': 'Item Name',
+  'category': 'Category',
+  'quantity': 'Quantity',
+  'unit': 'Unit',
+  'minQuantity': 'Min Quantity',
+  'location': 'Location',
+  
+  // Projects
+  'projectsTitle': 'Projects',
+  'addProject': 'Add Project',
+  'projectName': 'Project Name',
+  'projectCategory': 'Project Category',
+  'startDate': 'Start Date',
+  'endDate': 'End Date',
+  'budget': 'Budget',
+  'projectStatus': 'Project Status',
+  
+  // Installments
+  'installmentsTitle': 'Installments',
+  'addInstallment': 'Add Installment',
+  'frequency': 'Frequency',
+  'nextDueDate': 'Next Due Date',
+  
+  // Recurring
+  'recurringTitle': 'Recurring Transactions',
+  'addRecurring': 'Add Recurring',
+  'nextDate': 'Next Date',
+  
+  // Settings
+  'settingsTitle': 'Settings',
+  'generalSettings': 'General Settings',
+  'language': 'Language',
+  'arabic': 'Arabic',
+  'english': 'English',
+  'theme': 'Theme',
+  'light': 'Light',
+  'dark': 'Dark',
+  'notifications': 'Notifications',
+  'backup': 'Backup',
+  'restore': 'Restore',
+  
+  // Reports
+  'reportsTitle': 'Reports',
+  'financialReports': 'Financial Reports',
+  'donorReports': 'Donor Reports',
+  'beneficiaryReports': 'Beneficiary Reports',
+  'inventoryReports': 'Inventory Reports',
+  'projectReports': 'Project Reports',
+  
+  // Success Messages
+  'successSaved': 'Saved successfully',
+  'successDeleted': 'Deleted successfully',
+  'successRestored': 'Restored successfully',
+  'successUpdated': 'Updated successfully',
+  
+  // Time
+  'today': 'Today',
+  'yesterday': 'Yesterday',
+  'thisWeek': 'This Week',
+  'thisMonth': 'This Month',
+  'thisYear': 'This Year',
+  'allTime': 'All Time'
+};
+
+// Arabic translations
+const LANG_AR = {
+  // Common
+  'loading': 'جارٍ التحميل...',
+  'save': 'حفظ',
+  'cancel': 'إلغاء',
+  'delete': 'حذف',
+  'edit': 'تعديل',
+  'add': 'إضافة',
+  'search': 'بحث',
+  'filter': 'تصفية',
+  'export': 'تصدير',
+  'import': 'استيراد',
+  'refresh': 'تحديث',
+  'close': 'إغلاق',
+  'confirm': 'تأكيد',
+  'saving': 'جارٍ الحفظ...',
+  'saved': 'تم الحفظ',
+  'error': 'خطأ',
+  'success': 'نجاح',
+  'warning': 'تحذير',
+  'info': 'معلومات',
+  'allSaved': 'تم حفظ جميع التغييرات',
+  'requiredFields': 'الرجاء تعبئة جميع الحقول المطلوبة',
+  
+  // Auth & Navigation
+  'signIn': 'تسجيل الدخول',
+  'signOut': 'تسجيل الخروج',
+  'welcomeBack': 'مرحباً بعودتك',
+  'tapToContinue': 'اضغط للمتابعة',
+  'continue': 'متابعة',
+  'errSignIn': 'يرجى تسجيل الدخول أولاً',
+  'errSetup': 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي',
+  'errSession': 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى',
+  'errNoPermission': 'ليس لديك صلاحية للوصول إلى هذه الصفحة',
+  'errLoadFailed': 'فشل تحميل البيانات',
+  'errSaveFailed': 'فشل الحفظ',
+  'errDeleteFailed': 'فشل الحذف',
+  'signedOut': 'تم تسجيل الخروج بنجاح',
+  
+  // Permissions Page
+  'permissionsTitle': 'الصلاحيات',
+  'permissionsSubtitle': 'إدارة المستخدمين والأدوار والصلاحيات',
+  'usersList': 'قائمة المستخدمين',
+  'rolesTitle': 'الأدوار',
+  'rolesSubtitle': 'إدارة أدوار النظام والصلاحيات المرتبطة بها',
+  'matrixTitle': 'مصفوفة الصلاحيات',
+  'matrixSubtitle': 'تكوين الصلاحيات التفصيلية لكل دور',
+  'tabUsers': 'المستخدمون',
+  'tabRoles': 'الأدوار',
+  'tabMatrix': 'مصفوفة الصلاحيات',
+  'addUser': 'إضافة مستخدم',
+  'addCustomRole': 'إضافة دور مخصص',
+  'showDeleted': 'عرض المستخدمين المحذوفين',
+  'colUser': 'المستخدم',
+  'colRole': 'الدور',
+  'colStatus': 'الحالة',
+  'colLastLogin': 'آخر دخول',
+  'colDateAdded': 'تاريخ الإضافة',
+  'colPage': 'الصفحة',
+  'colView': 'عرض',
+  'colCreate': 'إضافة',
+  'colEdit': 'تعديل',
+  'colDelete': 'حذف',
+  'colViewDeleted': 'محذوف',
+  'colSensitive': 'حساس',
+  'colExport': 'تصدير',
+  'selectRole': 'اختر دوراً...',
+  'selectRoleFirst': 'اختر دوراً أولاً',
+  'selectRoleHint': 'اختر دوراً من القائمة أعلاه لعرض وتعديل الصلاحيات',
+  'noUsers': 'لا يوجد مستخدمون',
+  'noUsersHint': 'انقر على "إضافة مستخدم" لإنشاء أول مستخدم',
+  'deleted': 'محذوف',
+  'restore': 'استعادة',
+  
+  // Matrix column headers (bilingual display)
+  'colViewEn': 'View',
+  'colViewAr': 'رؤية الصفحة',
+  'colCreateEn': 'Create',
+  'colCreateAr': 'إضافة سجلات',
+  'colEditEn': 'Edit',
+  'colEditAr': 'تعديل سجلات',
+  'colDeleteEn': 'Delete',
+  'colDeleteAr': 'حذف ناعم',
+  'colViewDeletedEn': 'Deleted',
+  'colViewDeletedAr': 'عرض المحذوف',
+  'colSensitiveEn': 'Sensitive',
+  'colSensitiveAr': 'بيانات حساسة',
+  'colExportEn': 'Export',
+  'colExportAr': 'تصدير البيانات',
+  
+  // User Modal
+  'addUserTitle': 'إضافة مستخدم جديد',
+  'editUserTitle': 'تعديل المستخدم',
+  'fullName': 'الاسم الكامل',
+  'emailGoogle': 'البريد الإلكتروني (Google)',
+  'emailHint': 'يجب أن يكون حساب Google فعّالاً',
+  'notes': 'ملاحظات',
+  'saveUser': 'حفظ المستخدم',
+  'emailExists': 'هذا البريد الإلكتروني مسجل مسبقاً',
+  
+  // Role Modal
+  'addRoleTitle': 'إضافة دور مخصص',
+  'editRoleTitle': 'تعديل الدور',
+  'roleNameEn': 'اسم الدور (بالإنجليزي)',
+  'roleNameHint': 'يُستخدم كمعرّف داخلي — بدون مسافات',
+  'description': 'الوصف',
+  'saveRole': 'حفظ الدور',
+  'roleExists': 'هذا المعرف موجود مسبقاً',
+  
+  // Confirm Modal
+  'confirmTitle': 'هل أنت متأكد؟',
+  'deleteUserTitle': 'حذف المستخدم',
+  'deleteRoleTitle': 'حذف الدور',
+  
+  // Status
+  'status': 'الحالة',
+  'active': 'نشط',
+  'inactive': 'غير نشط',
+  
+  // Role labels
+  'roleSuperAdmin': 'مسؤول النظام الكامل',
+  'roleSuperAdminDesc': 'صلاحيات كاملة على جميع الصفحات والبيانات',
+  'roleDirector': 'المدير التنفيذي',
+  'roleDirectorDesc': 'صلاحيات تشغيلية كاملة مع حذف العمليات المالية',
+  'roleAccountManager': 'مسؤول الحسابات',
+  'roleAccountManagerDesc': 'صلاحيات كاملة على الوحدات المالية',
+  'roleCaseManager': 'مسؤول الحالات',
+  'roleCaseManagerDesc': 'صلاحيات كاملة على المستفيدين والمشاريع',
+  'roleDataEntry': 'موظف إدخال بيانات',
+  'roleDataEntryDesc': 'إضافة وتعديل فقط — بدون حذف',
+  'roleInventoryManager': 'مسؤول المخزون',
+  'roleInventoryManagerDesc': 'صلاحيات كاملة على المخزون العيني',
+  'roleViewer': 'مشاهد فقط',
+  'roleViewerDesc': 'قراءة فقط على لوحة التحكم والتقارير',
+  
+  // Dashboard
+  'dashboardTitle': 'لوحة التحكم',
+  'totalDonations': 'إجمالي التبرعات',
+  'totalBeneficiaries': 'إجمالي المستفيدين',
+  'totalProjects': 'إجمالي المشاريع',
+  'lowStockItems': 'الأصناف منخفضة المخزون',
+  'recentTransactions': 'آخر المعاملات',
+  'upcomingInstallments': 'الأقساط القادمة',
+  'activeProjects': 'المشاريع النشطة',
+  
+  // Transactions
+  'transactionsTitle': 'المعاملات',
+  'addTransaction': 'إضافة معاملة',
+  'date': 'التاريخ',
+  'donor': 'المتبرع',
+  'beneficiary': 'المستفيد',
+  'amount': 'المبلغ',
+  'paymentMethod': 'طريقة الدفع',
+  'receiptNumber': 'رقم الإيصال',
+  
+  // Donors
+  'donorsTitle': 'المتبرعون',
+  'addDonor': 'إضافة متبرع',
+  'donorName': 'اسم المتبرع',
+  'donorType': 'نوع المتبرع',
+  'phone': 'الهاتف',
+  'address': 'العنوان',
+  
+  // Beneficiaries
+  'beneficiariesTitle': 'المستفيدون',
+  'addBeneficiary': 'إضافة مستفيد',
+  'idNumber': 'رقم الهوية',
+  'islamicClass': 'التصنيف الإسلامي',
+  'needType': 'نوع الاحتياج',
+  
+  // Inventory
+  'inventoryTitle': 'المخزون',
+  'addItem': 'إضافة صنف',
+  'itemName': 'اسم الصنف',
+  'category': 'الفئة',
+  'quantity': 'الكمية',
+  'unit': 'الوحدة',
+  'minQuantity': 'الحد الأدنى',
+  'location': 'الموقع',
+  
+  // Projects
+  'projectsTitle': 'المشاريع',
+  'addProject': 'إضافة مشروع',
+  'projectName': 'اسم المشروع',
+  'projectCategory': 'فئة المشروع',
+  'startDate': 'تاريخ البداية',
+  'endDate': 'تاريخ النهاية',
+  'budget': 'الميزانية',
+  'projectStatus': 'حالة المشروع',
+  
+  // Installments
+  'installmentsTitle': 'الأقساط',
+  'addInstallment': 'إضافة قسط',
+  'frequency': 'التكرار',
+  'nextDueDate': 'تاريخ الاستحقاق القادم',
+  
+  // Recurring
+  'recurringTitle': 'المعاملات الدورية',
+  'addRecurring': 'إضافة معاملة دورية',
+  'nextDate': 'التاريخ القادم',
+  
+  // Settings
+  'settingsTitle': 'الإعدادات',
+  'generalSettings': 'الإعدادات العامة',
+  'language': 'اللغة',
+  'arabic': 'العربية',
+  'english': 'الإنجليزية',
+  'theme': 'المظهر',
+  'light': 'فاتح',
+  'dark': 'داكن',
+  'notifications': 'الإشعارات',
+  'backup': 'نسخ احتياطي',
+  'restore': 'استعادة',
+  
+  // Reports
+  'reportsTitle': 'التقارير',
+  'financialReports': 'التقارير المالية',
+  'donorReports': 'تقارير المتبرعين',
+  'beneficiaryReports': 'تقارير المستفيدين',
+  'inventoryReports': 'تقارير المخزون',
+  'projectReports': 'تقارير المشاريع',
+  
+  // Success Messages
+  'successSaved': 'تم الحفظ بنجاح',
+  'successDeleted': 'تم الحذف بنجاح',
+  'successRestored': 'تمت الاستعادة بنجاح',
+  'successUpdated': 'تم التحديث بنجاح',
+  
+  // Time
+  'today': 'اليوم',
+  'yesterday': 'أمس',
+  'thisWeek': 'هذا الأسبوع',
+  'thisMonth': 'هذا الشهر',
+  'thisYear': 'هذه السنة',
+  'allTime': 'كل الوقت'
+};
+
+// Translation function
+function t(key) {
+  const translations = LANG === 'ar' ? LANG_AR : LANG_EN;
+  return translations[key] || key;
 }
 
-/**
- * generateDomainID(prefix, existingIDs)
- * Returns the next sequential human-readable domain ID.
- * @param {string} prefix - e.g. "TX-2026-", "DNR-", "BNF-"
- * @param {string[]} existingIDs - Array of existing domain IDs for this entity
- * @returns {string} e.g. "TX-2026-006", "DNR-004"
- */
-function generateDomainID(prefix, existingIDs = []) {
-  let maxNum = 0;
-  for (const id of existingIDs) {
-    if (id && id.startsWith(prefix)) {
-      const num = parseInt(id.replace(prefix, ''), 10);
-      if (!isNaN(num) && num > maxNum) maxNum = num;
-    }
+// Set language and update UI
+function setLanguage(lang) {
+  if (lang !== 'ar' && lang !== 'en') return;
+  LANG = lang;
+  localStorage.setItem('app_lang', lang);
+  
+  // Update HTML direction
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  
+  // Update all elements with data-t attributes
+  if (typeof applyTranslations === 'function') {
+    applyTranslations();
   }
-  return `${prefix}${String(maxNum + 1).padStart(3, '0')}`;
-}
-
-/**
- * generateTxID(existingIDs)
- * Shorthand for transaction IDs — always uses current year.
- * @param {string[]} existingIDs
- * @returns {string} e.g. "TX-2026-007"
- */
-function generateTxID(existingIDs = []) {
-  const year = new Date().getFullYear();
-  return generateDomainID(`TX-${year}-`, existingIDs);
-}
-
-/* ============================================================
-   SECTION 2 — TIMESTAMPS & DATE UTILITIES
-   ============================================================ */
-
-/**
- * getCurrentTimestamp()
- * Returns current datetime as ISO-style string: "YYYY-MM-DD HH:MM:SS"
- * @returns {string}
- */
-function getCurrentTimestamp() {
-  const now = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ` +
-         `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-}
-
-/**
- * getCurrentDate()
- * Returns current date as "YYYY-MM-DD"
- * @returns {string}
- */
-function getCurrentDate() {
-  return getCurrentTimestamp().split(' ')[0];
-}
-
-/**
- * formatDisplayDate(isoString)
- * Formats ISO date string for UI display as "DD/MM/YYYY"
- * @param {string} isoString
- * @returns {string}
- */
-function formatDisplayDate(isoString) {
-  if (!isoString) return '—';
-  const d = new Date(isoString);
-  if (isNaN(d.getTime())) return '—';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
-
-/**
- * formatDisplayDateTime(isoString)
- * Formats ISO datetime string as "DD/MM/YYYY HH:MM"
- * @param {string} isoString
- * @returns {string}
- */
-function formatDisplayDateTime(isoString) {
-  if (!isoString) return '—';
-  const d = new Date(isoString);
-  if (isNaN(d.getTime())) return '—';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ` +
-         `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/**
- * formatCurrency(amount)
- * Formats a number as Egyptian Pounds
- * @param {number|string} amount
- * @returns {string} e.g. "5,000 ج.م"
- */
-function formatCurrency(amount) {
-  if (amount === null || amount === undefined || amount === '') return '—';
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '—';
-  return num.toLocaleString('ar-EG', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ج.م';
-}
-
-/**
- * timeAgo(isoString)
- * Returns a human-readable relative time string e.g. "3 minutes ago"
- * @param {string} isoString
- * @returns {string}
- */
-function timeAgo(isoString) {
-  if (!isoString) return '';
-  const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
-  if (seconds < 60)    return 'Just now';
-  if (seconds < 3600)  return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
-
-/* ============================================================
-   SECTION 3 — TOKEN & SESSION MANAGEMENT
-   ============================================================ */
-
-/**
- * saveAccessToken(token)
- * Saves OAuth access token to sessionStorage with 55-minute expiry
- * @param {string} token
- */
-function saveAccessToken(token) {
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
-  sessionStorage.setItem(ACCESS_TOKEN_EXP, Date.now() + 55 * 60 * 1000);
-}
-
-/**
- * getSavedAccessToken()
- * Returns cached access token if still valid, null otherwise
- * @returns {string|null}
- */
-function getSavedAccessToken() {
-  const token = sessionStorage.getItem(ACCESS_TOKEN_KEY);
-  const exp   = parseInt(sessionStorage.getItem(ACCESS_TOKEN_EXP) || '0', 10);
-  if (token && Date.now() < exp) return token;
-  clearAccessToken();
-  return null;
-}
-
-/**
- * clearAccessToken()
- * Removes cached access token from sessionStorage
- */
-function clearAccessToken() {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-  sessionStorage.removeItem(ACCESS_TOKEN_EXP);
-}
-
-/**
- * getUserEmailFromToken(jwtToken)
- * Decodes a Google JWT ID token and returns the email
- * @param {string} jwtToken
- * @returns {string|null}
- */
-function getUserEmailFromToken(jwtToken) {
-  try {
-    const parts = jwtToken.split('.');
-    if (parts.length < 2) return null;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return payload.email || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * getUserNameFromToken(jwtToken)
- * Decodes a Google JWT ID token and returns the display name
- * @param {string} jwtToken
- * @returns {string|null}
- */
-function getUserNameFromToken(jwtToken) {
-  try {
-    const payload = JSON.parse(atob(jwtToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return payload.name || payload.email || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * isIOSSafari()
- * Detects iOS Safari for tap-to-auth overlay requirement
- * @returns {boolean}
- */
-function isIOSSafari() {
-  const ua = navigator.userAgent;
-  return /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
-}
-
-/**
- * initGapiClient()
- * Initializes the Google API client with Sheets and Drive discovery
- * @returns {Promise<void>}
- */
-async function initGapiClient() {
-  await new Promise((resolve) => gapi.load('client', resolve));
-  await gapi.client.init({
-    discoveryDocs: [
-      'https://sheets.googleapis.com/$discovery/rest?version=v4',
-      'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-    ]
-  });
-}
-
-/* ============================================================
-   SECTION 4 — LOCAL CACHE (localStorage)
-   ============================================================ */
-
-/**
- * cacheWrite(key, data)
- * Writes data to localStorage with a timestamp
- * @param {string} key
- * @param {*} data
- */
-function cacheWrite(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
-  } catch (e) {
-    console.warn('Cache write failed:', key, e);
-  }
-}
-
-/**
- * cacheRead(key, maxAge)
- * Reads data from localStorage if within maxAge milliseconds
- * @param {string} key
- * @param {number} [maxAge=Infinity]
- * @returns {*|null}
- */
-function cacheRead(key, maxAge = Infinity) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const { ts, data } = JSON.parse(raw);
-    if (Date.now() - ts > maxAge) return null;
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * cacheClear(key)
- * Removes a specific key from localStorage
- * @param {string} key
- */
-function cacheClear(key) {
-  localStorage.removeItem(key);
-}
-
-/**
- * getCacheKey(sheetName, email)
- * Returns a namespaced localStorage key for a sheet's data
- * @param {string} sheetName
- * @param {string} email
- * @returns {string}
- */
-function getCacheKey(sheetName, email) {
-  return `coms_sheet_${email}_${sheetName}`;
-}
-
-/* ============================================================
-   SECTION 5 — GOOGLE SHEETS API (db layer)
-   ============================================================ */
-
-/**
- * sheetsRequest(spreadsheetId, method, endpoint, body)
- * Low-level authenticated Sheets API request
- * @param {string} spreadsheetId
- * @param {string} method - GET | PUT | POST | DELETE
- * @param {string} endpoint - path after /v4/spreadsheets/{id}
- * @param {object} [body]
- * @returns {Promise<object>}
- */
-async function sheetsRequest(spreadsheetId, method, endpoint, body = null) {
-  const token = getSavedAccessToken();
-  if (!token) throw new Error('No access token available');
-
-  const url = `${SHEETS_API}/${spreadsheetId}${endpoint}`;
-  const options = {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-  if (body) options.body = JSON.stringify(body);
-
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Sheets API error: ${res.status}`);
-  }
-  return res.json();
-}
-
-/**
- * getSheetHeaders(spreadsheetId, sheetName)
- * Returns the first row of a sheet as an array of header strings
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @returns {Promise<string[]>}
- */
-async function getSheetHeaders(spreadsheetId, sheetName) {
-  const range  = encodeURIComponent(`${sheetName}!1:1`);
-  const result = await sheetsRequest(spreadsheetId, 'GET', `/values/${range}`);
-  return (result.values?.[0] || []).map(h => String(h).trim());
-}
-
-/**
- * readSheet(spreadsheetId, sheetName, options)
- * Reads all rows from a sheet and returns an array of objects keyed by header.
- * Soft-deleted rows (IsDeleted=TRUE) are filtered out by default.
- *
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {object} [options]
- * @param {boolean} [options.includeDeleted=false] - Include soft-deleted rows
- * @param {string}  [options.email] - User email for cache namespacing
- * @param {boolean} [options.forceRefresh=false] - Bypass cache
- * @returns {Promise<object[]>}
- */
-async function readSheet(spreadsheetId, sheetName, options = {}) {
-  const { includeDeleted = false, email = '', forceRefresh = false } = options;
-
-  const cacheKey = getCacheKey(sheetName, email);
-
-  if (!forceRefresh) {
-    const cached = cacheRead(cacheKey, CACHE_TTL);
-    if (cached) {
-      return includeDeleted ? cached : cached.filter(r => r.IsDeleted !== 'TRUE');
-    }
-  }
-
-  const range  = encodeURIComponent(`${sheetName}`);
-  const result = await sheetsRequest(spreadsheetId, 'GET', `/values/${range}`);
-  const rows   = result.values || [];
-
-  if (rows.length < 2) {
-    cacheWrite(cacheKey, []);
-    return [];
-  }
-
-  const headers = rows[0].map(h => String(h).trim());
-  const records = rows.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });
-    return obj;
-  });
-
-  cacheWrite(cacheKey, records);
-  return includeDeleted ? records : records.filter(r => r.IsDeleted !== 'TRUE');
-}
-
-/**
- * appendRow(spreadsheetId, sheetName, rowData, userEmail)
- * Appends a new record to a sheet.
- * Automatically injects universal fields:
- *   RecordID, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy,
- *   IsDeleted, DeletedAt, DeletedBy
- *
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {object} rowData - Field key/value pairs (excluding universal fields)
- * @param {string} userEmail - Authenticated user's email
- * @returns {Promise<object>} The complete record that was appended
- */
-async function appendRow(spreadsheetId, sheetName, rowData, userEmail) {
-  const headers = await getSheetHeaders(spreadsheetId, sheetName);
-
-  const existing = await readSheet(spreadsheetId, sheetName,
-    { includeDeleted: true, email: userEmail, forceRefresh: true });
-  const existingIDs = existing.map(r => r.RecordID).filter(Boolean);
-
-  const now      = getCurrentTimestamp();
-  const recordID = generateRecordID(existingIDs);
-
-  const fullRecord = {
-    ...rowData,
-    RecordID:   recordID,
-    CreatedAt:  now,
-    CreatedBy:  userEmail,
-    ModifiedAt: '',
-    ModifiedBy: '',
-    IsDeleted:  'FALSE',
-    DeletedAt:  '',
-    DeletedBy:  ''
-  };
-
-  const rowValues = headers.map(h => fullRecord[h] !== undefined ? fullRecord[h] : '');
-
-  await sheetsRequest(spreadsheetId, 'POST',
-    `/values/${encodeURIComponent(sheetName)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    { values: [rowValues] }
-  );
-
-  await writeAuditLog(spreadsheetId, {
-    action:     'CREATE',
-    sheetName,
-    recordID,
-    fieldName:  '',
-    oldValue:   '',
-    newValue:   JSON.stringify(rowData),
-    userEmail
-  });
-
-  cacheClear(getCacheKey(sheetName, userEmail));
-
-  queueSyncWrite(sheetName, recordID, 'CREATE', fullRecord);
-
-  return fullRecord;
-}
-
-/**
- * updateRow(spreadsheetId, sheetName, recordID, updatedFields, userEmail)
- * Updates specific fields on a row identified by RecordID.
- * Auto-updates ModifiedAt and ModifiedBy.
- * Writes EDIT entries to AuditLog for each changed field.
- *
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {string} recordID
- * @param {object} updatedFields - Only the fields that changed
- * @param {string} userEmail
- * @returns {Promise<boolean>} True if updated successfully
- */
-async function updateRow(spreadsheetId, sheetName, recordID, updatedFields, userEmail) {
-  const headers = await getSheetHeaders(spreadsheetId, sheetName);
-  const allRows = await sheetsRequest(spreadsheetId, 'GET',
-    `/values/${encodeURIComponent(sheetName)}`);
-
-  const rows    = allRows.values || [];
-  const rowIdx  = rows.findIndex((row, i) => i > 0 && row[headers.indexOf('RecordID')] === recordID);
-
-  if (rowIdx === -1) throw new Error(`Record ${recordID} not found in ${sheetName}`);
-
-  const existingRow = {};
-  headers.forEach((h, i) => { existingRow[h] = rows[rowIdx][i] || ''; });
-
-  const now = getCurrentTimestamp();
-  const updates = { ...updatedFields, ModifiedAt: now, ModifiedBy: userEmail };
-
-  const updatedRow = headers.map(h => updates[h] !== undefined ? updates[h] : (existingRow[h] || ''));
-
-  const sheetRowNum = rowIdx + 1;
-  const range = encodeURIComponent(`${sheetName}!A${sheetRowNum}`);
-
-  await sheetsRequest(spreadsheetId, 'PUT',
-    `/values/${range}?valueInputOption=USER_ENTERED`,
-    { values: [updatedRow] }
-  );
-
-  for (const [field, newVal] of Object.entries(updatedFields)) {
-    const oldVal = existingRow[field] || '';
-    if (String(oldVal) !== String(newVal)) {
-      await writeAuditLog(spreadsheetId, {
-        action: 'EDIT',
-        sheetName,
-        recordID,
-        fieldName: field,
-        oldValue:  String(oldVal),
-        newValue:  String(newVal),
-        userEmail
-      });
-    }
-  }
-
-  cacheClear(getCacheKey(sheetName, userEmail));
-  return true;
-}
-
-/**
- * findRowIndex(spreadsheetId, sheetName, recordID)
- * Finds the 1-based sheet row number for a given RecordID
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {string} recordID
- * @returns {Promise<number>} 1-based row number, or -1 if not found
- */
-async function findRowIndex(spreadsheetId, sheetName, recordID) {
-  const result  = await sheetsRequest(spreadsheetId, 'GET',
-    `/values/${encodeURIComponent(sheetName)}`);
-  const rows    = result.values || [];
-  const headers = rows[0] || [];
-  const idCol   = headers.indexOf('RecordID');
-  if (idCol === -1) return -1;
-  const idx = rows.findIndex((row, i) => i > 0 && row[idCol] === recordID);
-  return idx === -1 ? -1 : idx + 1;
-}
-
-/* ============================================================
-   SECTION 6 — SOFT-DELETE & RESTORE
-   ============================================================ */
-
-/**
- * softDelete(spreadsheetId, sheetName, recordID, userEmail)
- * Soft-deletes a record by setting IsDeleted=TRUE, DeletedAt, DeletedBy.
- * NEVER physically removes the row.
- * Writes a DELETE entry to AuditLog.
- *
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {string} recordID
- * @param {string} userEmail
- * @returns {Promise<boolean>}
- */
-async function softDelete(spreadsheetId, sheetName, recordID, userEmail) {
-  const now = getCurrentTimestamp();
-  await updateRow(spreadsheetId, sheetName, recordID, {
-    IsDeleted: 'TRUE',
-    DeletedAt: now,
-    DeletedBy: userEmail
-  }, userEmail);
-
-  await writeAuditLog(spreadsheetId, {
-    action:    'DELETE',
-    sheetName,
-    recordID,
-    fieldName: 'IsDeleted',
-    oldValue:  'FALSE',
-    newValue:  'TRUE',
-    userEmail
-  });
-
-  cacheClear(getCacheKey(sheetName, userEmail));
-  showToast('Record removed successfully', 'success');
-  return true;
-}
-
-/**
- * restoreRecord(spreadsheetId, sheetName, recordID, userEmail)
- * Reverses a soft-delete. Clears IsDeleted, DeletedAt, DeletedBy.
- * Writes a RESTORE entry to AuditLog.
- *
- * @param {string} spreadsheetId
- * @param {string} sheetName
- * @param {string} recordID
- * @param {string} userEmail
- * @returns {Promise<boolean>}
- */
-async function restoreRecord(spreadsheetId, sheetName, recordID, userEmail) {
-  await updateRow(spreadsheetId, sheetName, recordID, {
-    IsDeleted: 'FALSE',
-    DeletedAt: '',
-    DeletedBy: ''
-  }, userEmail);
-
-  await writeAuditLog(spreadsheetId, {
-    action:    'RESTORE',
-    sheetName,
-    recordID,
-    fieldName: 'IsDeleted',
-    oldValue:  'TRUE',
-    newValue:  'FALSE',
-    userEmail
-  });
-
-  cacheClear(getCacheKey(sheetName, userEmail));
-  showToast('Record restored successfully', 'success');
-  return true;
-}
-
-/* ============================================================
-   SECTION 7 — AUDIT LOG
-   ============================================================ */
-
-/**
- * writeAuditLog(spreadsheetId, entry)
- * Appends an entry to the AuditLog sheet.
- * Silent — never throws (audit failure should not block main operation).
- *
- * @param {string} spreadsheetId
- * @param {object} entry
- * @param {string} entry.action     - CREATE | EDIT | DELETE | RESTORE
- * @param {string} entry.sheetName
- * @param {string} entry.recordID
- * @param {string} entry.fieldName
- * @param {string} entry.oldValue
- * @param {string} entry.newValue
- * @param {string} entry.userEmail
- */
-async function writeAuditLog(spreadsheetId, entry) {
-  try {
-    const logID = generateRecordID();
-    const row = [
-      logID,
-      getCurrentTimestamp(),
-      entry.userEmail,
-      entry.action,
-      entry.sheetName,
-      entry.recordID,
-      entry.fieldName,
-      entry.oldValue,
-      entry.newValue
-    ];
-    await sheetsRequest(spreadsheetId, 'POST',
-      `/values/${encodeURIComponent('AuditLog')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      { values: [row] }
-    );
-  } catch (e) {
-    console.warn('AuditLog write failed (non-critical):', e);
+  
+  // Show toast notification
+  if (typeof showToast === 'function') {
+    showToast(t('successUpdated'), 'success');
   }
 }
 
-/* ============================================================
-   SECTION 8 — OFFLINE SYNC QUEUE
-   ============================================================ */
-
-/**
- * queueSyncWrite(sheetName, recordID, action, data)
- * Adds a write operation to the pending sync queue in localStorage.
- * Used as a fallback indicator — the app writes to Sheets immediately,
- * but this queue tracks operations that may need retry.
- *
- * @param {string} sheetName
- * @param {string} recordID
- * @param {string} action - CREATE | EDIT | DELETE
- * @param {object} data
- */
-function queueSyncWrite(sheetName, recordID, action, data) {
-  try {
-    const queue = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
-    queue.push({ sheetName, recordID, action, data, ts: Date.now() });
-    localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(queue));
-  } catch (e) {
-    console.warn('Sync queue write failed:', e);
-  }
-}
-
-/**
- * clearSyncQueue()
- * Clears the pending sync queue after successful sync
- */
-function clearSyncQueue() {
-  localStorage.removeItem(PENDING_SYNC_KEY);
-}
-
-/**
- * getPendingSyncCount()
- * Returns the number of operations pending sync
- * @returns {number}
- */
-function getPendingSyncCount() {
-  try {
-    const queue = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
-    return queue.length;
-  } catch {
-    return 0;
-  }
-}
-
-/**
- * updateSyncIndicator(state)
- * Updates the sync status dot in the UI.
- * @param {'syncing'|'synced'|'error'} state
- * @param {string} [message]
- */
-function updateSyncIndicator(state, message = '') {
-  const el = document.getElementById('syncIndicator');
-  if (!el) return;
-  el.className = `sync-indicator ${state}`;
-  const text = el.querySelector('.sync-text');
-  if (text) {
-    text.textContent = {
-      syncing: 'Syncing…',
-      synced:  message || 'All changes saved',
-      error:   message || 'Sync failed — will retry'
-    }[state] || '';
-  }
-}
-
-/* ============================================================
-   SECTION 9 — LOOKUP UTILITIES
-   ============================================================ */
-
-/**
- * loadLookup(spreadsheetId, lookupSheetName, userEmail)
- * Fetches all active records from a lookup sheet.
- * Results cached in localStorage for CACHE_TTL ms.
- *
- * @param {string} spreadsheetId
- * @param {string} lookupSheetName - e.g. "LKP_Categories"
- * @param {string} userEmail
- * @returns {Promise<object[]>} Array of { code, nameAR, nameEN, description, sortOrder }
- */
-async function loadLookup(spreadsheetId, lookupSheetName, userEmail) {
-  const cacheKey = `${LOOKUP_CACHE_PREFIX}${lookupSheetName}`;
-  const cached   = cacheRead(cacheKey, CACHE_TTL);
-  if (cached) return cached;
-
-  const records = await readSheet(spreadsheetId, lookupSheetName,
-    { includeDeleted: false, email: userEmail });
-
-  const active = records
-    .filter(r => r.IsActive !== 'FALSE')
-    .sort((a, b) => (parseInt(a.SortOrder) || 0) - (parseInt(b.SortOrder) || 0))
-    .map(r => ({
-      code:        r.Code        || '',
-      nameAR:      r.NameAR      || '',
-      nameEN:      r.NameEN      || '',
-      description: r.Description || '',
-      sortOrder:   parseInt(r.SortOrder) || 0,
-      recordID:    r.RecordID    || ''
-    }));
-
-  cacheWrite(cacheKey, active);
-  return active;
-}
-
-/**
- * populateDropdown(selectEl, lookupSheetName, options)
- * Populates an HTML <select> element with lookup options.
- *
- * @param {HTMLSelectElement|string} selectEl - Element or selector string
- * @param {string} spreadsheetId
- * @param {string} lookupSheetName
- * @param {string} userEmail
- * @param {object} [options]
- * @param {string}  [options.valueField='code']     - Field to use as option value
- * @param {string}  [options.lang='AR']             - 'AR' or 'EN' for display
- * @param {string}  [options.placeholder='اختر...'] - Placeholder option text
- * @param {string}  [options.selectedValue='']      - Pre-select this value
- */
-async function populateDropdown(selectEl, spreadsheetId, lookupSheetName, userEmail, options = {}) {
-  const {
-    valueField    = 'code',
-    lang          = 'AR',
-    placeholder   = 'اختر...',
-    selectedValue = ''
-  } = options;
-
-  const el = typeof selectEl === 'string' ? document.querySelector(selectEl) : selectEl;
-  if (!el) return;
-
-  el.innerHTML = `<option value="">${placeholder}</option>`;
-
-  try {
-    const items = await loadLookup(spreadsheetId, lookupSheetName, userEmail);
-    for (const item of items) {
-      const opt   = document.createElement('option');
-      opt.value   = item[valueField];
-      opt.textContent = lang === 'AR' ? item.nameAR : item.nameEN;
-      if (item[valueField] === selectedValue) opt.selected = true;
-      el.appendChild(opt);
-    }
-  } catch (e) {
-    console.error(`Failed to populate dropdown from ${lookupSheetName}:`, e);
-    showToast(`Failed to load ${lookupSheetName} options`, 'error');
-  }
-}
-
-/**
- * getLookupLabel(lookupSheetName, code, lang, spreadsheetId, userEmail)
- * Returns the display label for a lookup code.
- * Uses cached lookup data — does not make an API call if cache is warm.
- *
- * @param {string} lookupSheetName
- * @param {string} code
- * @param {string} [lang='AR']
- * @param {string} spreadsheetId
- * @param {string} userEmail
- * @returns {Promise<string>}
- */
-async function getLookupLabel(lookupSheetName, code, lang = 'AR', spreadsheetId, userEmail) {
-  try {
-    const items = await loadLookup(spreadsheetId, lookupSheetName, userEmail);
-    const item  = items.find(i => i.code === code);
-    if (!item) return code;
-    return lang === 'AR' ? item.nameAR : item.nameEN;
-  } catch {
-    return code;
-  }
-}
-
-/* ============================================================
-   SECTION 10 — PERMISSIONS
-   ============================================================ */
-
-/**
- * loadPermissionsMatrix(spreadsheetId, userEmail)
- * Fetches and caches the permissions matrix from the Permissions sheet.
- * @param {string} spreadsheetId
- * @param {string} userEmail
- * @returns {Promise<object[]>}
- */
-async function loadPermissionsMatrix(spreadsheetId, userEmail) {
-  const cached = sessionStorage.getItem(PERMISSIONS_CACHE);
-  if (cached) return JSON.parse(cached);
-
-  const records = await readSheet(spreadsheetId, 'Permissions',
-    { includeDeleted: false, email: userEmail, forceRefresh: true });
-
-  sessionStorage.setItem(PERMISSIONS_CACHE, JSON.stringify(records));
-  return records;
-}
-
-/**
- * getUserRole(spreadsheetId, userEmail)
- * Returns the role assigned to the current authenticated user.
- * @param {string} spreadsheetId
- * @param {string} userEmail
- * @returns {Promise<string>} Role name e.g. "DataEntry", "SuperAdmin"
- */
-async function getUserRole(spreadsheetId, userEmail) {
-  const roleKey = `coms_role_${userEmail}`;
-  const cached  = sessionStorage.getItem(roleKey);
-  if (cached) return cached;
-
-  const users = await readSheet(spreadsheetId, 'Users',
-    { includeDeleted: false, email: userEmail, forceRefresh: true });
-
-  const user = users.find(u => u.Email === userEmail);
-  const role = user?.Role || 'Viewer';
-  sessionStorage.setItem(roleKey, role);
-  return role;
-}
-
-/**
- * checkPagePermissions(pageName, spreadsheetId, userEmail)
- * Returns a permissions object for the current user on a given page.
- *
- * @param {string} pageName - e.g. "Transactions", "Beneficiaries"
- * @param {string} spreadsheetId
- * @param {string} userEmail
- * @returns {Promise<object>} {
- *   canView, canCreate, canEdit, canDelete,
- *   canViewDeleted, canViewSensitive, canExport
- * }
- */
-async function checkPagePermissions(pageName, spreadsheetId, userEmail) {
-  const denied = {
-    canView: false, canCreate: false, canEdit: false,
-    canDelete: false, canViewDeleted: false,
-    canViewSensitive: false, canExport: false
-  };
-
-  try {
-    const role   = await getUserRole(spreadsheetId, userEmail);
-    const matrix = await loadPermissionsMatrix(spreadsheetId, userEmail);
-    const entry  = matrix.find(r => r.RoleID === role && r.PageName === pageName);
-    if (!entry) return denied;
-
-    const bool = (val) => String(val).toUpperCase() === 'TRUE';
-
-    return {
-      canView:         bool(entry.CanView),
-      canCreate:       bool(entry.CanCreate),
-      canEdit:         bool(entry.CanEdit),
-      canDelete:       bool(entry.CanDelete),
-      canViewDeleted:  bool(entry.CanViewDeleted),
-      canViewSensitive:bool(entry.CanViewSensitive),
-      canExport:       bool(entry.CanExport)
-    };
-  } catch (e) {
-    console.error('checkPagePermissions failed:', e);
-    return denied;
-  }
-}
-
-/**
- * enforceViewPermission(pageName, spreadsheetId, userEmail)
- * If the current user cannot view this page, shows toast and redirects.
- * Call at the top of every page's onReady() function.
- *
- * @param {string} pageName
- * @param {string} spreadsheetId
- * @param {string} userEmail
- * @returns {Promise<object>} permissions object (if access granted)
- */
-async function enforceViewPermission(pageName, spreadsheetId, userEmail) {
-  if (!pageName) return {
-    canView: true, canCreate: true, canEdit: true,
-    canDelete: true, canViewDeleted: true,
-    canViewSensitive: true, canExport: true
-  };
-
-  const perms = await checkPagePermissions(pageName, spreadsheetId, userEmail);
-  if (!perms.canView) {
-    showToast('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
-    setTimeout(() => {
-      window.location.href = getRelativePath('pages/Home.html');
-    }, 1500);
-  }
-  return perms;
-}
-
-/**
- * applyPermissionsToUI(perms)
- * Hides or disables UI elements based on the permissions object.
- * Elements with data-requires="create|edit|delete|export" are handled automatically.
- * @param {object} perms
- */
-function applyPermissionsToUI(perms) {
-  document.querySelectorAll('[data-requires]').forEach(el => {
-    const req = el.getAttribute('data-requires');
-    const allowed = {
-      create:       perms.canCreate,
-      edit:         perms.canEdit,
-      delete:       perms.canDelete,
-      export:       perms.canExport,
-      viewDeleted:  perms.canViewDeleted,
-      sensitive:    perms.canViewSensitive
-    }[req];
-
-    if (!allowed) {
-      if (el.tagName === 'BUTTON' || el.tagName === 'A') {
-        el.classList.add('permission-disabled');
+// Apply translations to all elements with data-t attributes
+function applyTranslations() {
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    if (key && t(key) !== key) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        if (el.getAttribute('data-t-placeholder') !== null) {
+          el.placeholder = t(key);
+        }
       } else {
-        el.style.display = 'none';
+        el.textContent = t(key);
       }
     }
   });
-
-  const showDeletedToggle = document.getElementById('showDeletedToggle');
-  if (showDeletedToggle) {
-    showDeletedToggle.style.display = perms.canViewDeleted ? '' : 'none';
-  }
 }
 
-/**
- * renderActionButtons(record, perms, callbacks)
- * Renders Edit and Delete/Restore action buttons for a table row.
- * Respects permissions — disabled state if no permission, hidden if delete not allowed.
- *
- * @param {object} record - The data record
- * @param {object} perms  - Permissions object from checkPagePermissions
- * @param {object} callbacks
- * @param {Function} callbacks.onEdit    - Called with (record)
- * @param {Function} callbacks.onDelete  - Called with (record)
- * @param {Function} callbacks.onRestore - Called with (record) — for deleted records
- * @returns {HTMLElement} A div containing the action buttons
- */
-function renderActionButtons(record, perms, callbacks = {}) {
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+/* ══════════════════════════════════════════════════════════
+   GOOGLE SHEETS API WRAPPER
+══════════════════════════════════════════════════════════ */
 
-  const isDeleted = record.IsDeleted === 'TRUE';
-
-  if (isDeleted && perms.canViewDeleted) {
-    const restoreBtn = document.createElement('button');
-    restoreBtn.className = 'btn btn-sm btn-secondary';
-    restoreBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg> Restore`;
-    restoreBtn.addEventListener('click', () => callbacks.onRestore?.(record));
-    wrap.appendChild(restoreBtn);
-    return wrap;
-  }
-
-  if (perms.canEdit) {
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-sm btn-secondary btn-icon';
-    editBtn.title = 'Edit';
-    editBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    editBtn.addEventListener('click', () => callbacks.onEdit?.(record));
-    wrap.appendChild(editBtn);
-  } else {
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-sm btn-secondary btn-icon permission-disabled';
-    editBtn.title = 'Edit (no permission)';
-    editBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    wrap.appendChild(editBtn);
-  }
-
-  if (perms.canDelete) {
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn btn-sm btn-danger btn-icon';
-    delBtn.title = 'Delete';
-    delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-    delBtn.addEventListener('click', () => callbacks.onDelete?.(record));
-    wrap.appendChild(delBtn);
-  }
-
-  return wrap;
+// Get current timestamp
+function getCurrentTimestamp() {
+  const now = new Date();
+  return now.toISOString();
 }
 
-/* ============================================================
-   SECTION 11 — TOAST NOTIFICATIONS
-   ============================================================ */
+// Format date for display
+function formatDisplayDate(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleDateString(LANG === 'ar' ? 'ar-EG' : 'en-US');
+}
 
-/**
- * showToast(message, type, duration)
- * Displays a floating toast notification.
- * Auto-dismisses after duration ms.
- *
- * @param {string} message
- * @param {'success'|'error'|'warning'|'info'} [type='success']
- * @param {number} [duration=3500]
- */
-function showToast(message, type = 'success', duration = 3500) {
-  let container = document.getElementById('toastContainer');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
+// Format datetime for display
+function formatDisplayDateTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleString(LANG === 'ar' ? 'ar-EG' : 'en-US');
+}
+
+// Generate unique RecordID
+function generateRecordID() {
+  return 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Read sheet data
+async function readSheet(spreadsheetId, sheetName, options = {}) {
+  const {
+    includeDeleted = false,
+    email = null,
+    forceRefresh = false
+  } = options;
+  
+  const token = getSavedAccessToken();
+  if (!token) throw new Error('No access token');
+  
+  const range = `${sheetName}!A:Z`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?majorDimension=ROWS`;
+  
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  
+  if (!response.ok) throw new Error('Failed to read sheet');
+  
+  const data = await response.json();
+  const rows = data.values || [];
+  if (rows.length < 2) return [];
+  
+  const headers = rows[0];
+  const records = [];
+  
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const record = {};
+    headers.forEach((header, idx) => {
+      record[header] = row[idx] || '';
+    });
+    
+    // Filter deleted
+    if (!includeDeleted && record.IsDeleted === 'TRUE') continue;
+    
+    // Filter by email if provided
+    if (email && record.Email && record.Email.toLowerCase() !== email.toLowerCase()) continue;
+    
+    records.push(record);
   }
+  
+  return records;
+}
 
-  const icons = {
-    success: '✓',
-    error:   '✕',
-    warning: '!',
-    info:    'i'
+// Append row to sheet
+async function appendRow(spreadsheetId, sheetName, data, userEmail) {
+  const token = getSavedAccessToken();
+  if (!token) throw new Error('No access token');
+  
+  const now = getCurrentTimestamp();
+  const recordID = generateRecordID();
+  
+  // Get headers
+  const headers = SHEET_DEFINITIONS[sheetName];
+  if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
+  
+  // Prepare row data
+  const row = headers.map(header => {
+    if (header === 'RecordID') return recordID;
+    if (header === 'CreatedAt') return now;
+    if (header === 'CreatedBy') return userEmail;
+    if (header === 'ModifiedAt') return now;
+    if (header === 'ModifiedBy') return userEmail;
+    if (header === 'IsDeleted') return 'FALSE';
+    if (header === 'DeletedAt') return '';
+    return data[header] || '';
+  });
+  
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${String.fromCharCode(65 + headers.length - 1)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      values: [row]
+    })
+  });
+  
+  if (!response.ok) throw new Error('Failed to append row');
+  
+  return { RecordID: recordID, ...data };
+}
+
+// Update row in sheet
+async function updateRow(spreadsheetId, sheetName, recordID, updates, userEmail) {
+  const token = getSavedAccessToken();
+  if (!token) throw new Error('No access token');
+  
+  // First find the row
+  const records = await readSheet(spreadsheetId, sheetName, { includeDeleted: true });
+  const record = records.find(r => r.RecordID === recordID);
+  if (!record) throw new Error('Record not found');
+  
+  // Find row index (add 2 because of 1-indexed and header row)
+  const headers = SHEET_DEFINITIONS[sheetName];
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${String.fromCharCode(65 + headers.length - 1)}`;
+  
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  
+  if (!response.ok) throw new Error('Failed to read sheet for update');
+  
+  const data = await response.json();
+  const rows = data.values || [];
+  
+  let rowIndex = -1;
+  for (let i = 1; i < rows.length; i++) {
+    const recordIDIndex = headers.indexOf('RecordID');
+    if (rows[i][recordIDIndex] === recordID) {
+      rowIndex = i + 1; // 1-indexed for API
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) throw new Error('Row not found');
+  
+  // Prepare updated row
+  const now = getCurrentTimestamp();
+  const updatedRow = [...rows[rowIndex - 1]];
+  
+  headers.forEach((header, idx) => {
+    if (header === 'ModifiedAt') updatedRow[idx] = now;
+    else if (header === 'ModifiedBy') updatedRow[idx] = userEmail;
+    else if (updates[header] !== undefined) updatedRow[idx] = updates[header];
+  });
+  
+  const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A${rowIndex}:${String.fromCharCode(65 + headers.length - 1)}${rowIndex}?valueInputOption=USER_ENTERED`;
+  
+  const updateResponse = await fetch(updateUrl, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      values: [updatedRow]
+    })
+  });
+  
+  if (!updateResponse.ok) throw new Error('Failed to update row');
+  
+  return true;
+}
+
+// Soft delete a record
+async function softDelete(spreadsheetId, sheetName, recordID, userEmail) {
+  return updateRow(spreadsheetId, sheetName, recordID, {
+    IsDeleted: 'TRUE',
+    DeletedAt: getCurrentTimestamp()
+  }, userEmail);
+}
+
+// Restore a soft-deleted record
+async function restoreRecord(spreadsheetId, sheetName, recordID, userEmail) {
+  return updateRow(spreadsheetId, sheetName, recordID, {
+    IsDeleted: 'FALSE',
+    DeletedAt: ''
+  }, userEmail);
+}
+
+// Check page permissions for a user
+async function checkPagePermissions(pageName, spreadsheetId, email) {
+  // SuperAdmin has all permissions
+  const users = await readSheet(spreadsheetId, 'Users', { includeDeleted: false });
+  const user = users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
+  
+  if (!user) return { canView: false, canCreate: false, canEdit: false, canDelete: false, canViewDeleted: false, canViewSensitive: false, canExport: false };
+  
+  if (user.Role === 'SuperAdmin') {
+    return { canView: true, canCreate: true, canEdit: true, canDelete: true, canViewDeleted: true, canViewSensitive: true, canExport: true };
+  }
+  
+  // Get permissions for this role and page
+  const permissions = await readSheet(spreadsheetId, 'Permissions', { includeDeleted: false });
+  const perm = permissions.find(p => p.RoleID === user.Role && p.PageName === pageName);
+  
+  if (!perm) {
+    return { canView: false, canCreate: false, canEdit: false, canDelete: false, canViewDeleted: false, canViewSensitive: false, canExport: false };
+  }
+  
+  return {
+    canView: perm.CanView === 'TRUE',
+    canCreate: perm.CanCreate === 'TRUE',
+    canEdit: perm.CanEdit === 'TRUE',
+    canDelete: perm.CanDelete === 'TRUE',
+    canViewDeleted: perm.CanViewDeleted === 'TRUE',
+    canViewSensitive: perm.CanViewSensitive === 'TRUE',
+    canExport: perm.CanExport === 'TRUE'
   };
+}
 
+// Apply permissions to UI (disable buttons/elements)
+function applyPermissionsToUI(perms) {
+  if (!perms) return;
+  
+  // Disable create buttons
+  if (!perms.canCreate) {
+    document.querySelectorAll('[data-requires="create"]').forEach(el => {
+      el.classList.add('permission-disabled');
+      el.disabled = true;
+    });
+  }
+  
+  // Disable edit buttons
+  if (!perms.canEdit) {
+    document.querySelectorAll('[data-requires="edit"]').forEach(el => {
+      el.classList.add('permission-disabled');
+      el.disabled = true;
+    });
+  }
+  
+  // Disable delete buttons
+  if (!perms.canDelete) {
+    document.querySelectorAll('[data-requires="delete"]').forEach(el => {
+      el.classList.add('permission-disabled');
+      el.disabled = true;
+    });
+  }
+  
+  // Hide deleted records toggle
+  if (!perms.canViewDeleted) {
+    const deletedToggle = document.getElementById('showDeletedToggle');
+    if (deletedToggle) deletedToggle.style.display = 'none';
+  }
+  
+  // Disable export buttons
+  if (!perms.canExport) {
+    document.querySelectorAll('[data-requires="export"]').forEach(el => {
+      el.classList.add('permission-disabled');
+      el.disabled = true;
+    });
+  }
+}
+
+// Render sidebar
+function renderSidebar(email, userName, role) {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  
+  const roleLabel = t(`role${role}`) || role;
+  const initials = (userName || email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  
+  sidebar.innerHTML = `
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="sidebar-brand-text">Charity Org</div>
+        <div class="sidebar-brand-sub">${t('charityManagement') || 'Charity Management'}</div>
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">${t('mainMenu') || 'MAIN MENU'}</div>
+      <nav class="sidebar-nav">
+        <a href="Dashboard.html" class="nav-item" data-page="Dashboard">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+          <span>${t('dashboard') || 'Dashboard'}</span>
+        </a>
+        <a href="Transactions.html" class="nav-item" data-page="Transactions">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <span>${t('transactions') || 'Transactions'}</span>
+        </a>
+        <a href="Donors.html" class="nav-item" data-page="Donors">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span>${t('donors') || 'Donors'}</span>
+        </a>
+        <a href="Beneficiaries.html" class="nav-item" data-page="Beneficiaries">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></span>
+          <span>${t('beneficiaries') || 'Beneficiaries'}</span>
+        </a>
+        <a href="Receipts.html" class="nav-item" data-page="Receipts">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+          <span>${t('receipts') || 'Receipts'}</span>
+        </a>
+        <a href="Inventory.html" class="nav-item" data-page="Inventory">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg></span>
+          <span>${t('inventory') || 'Inventory'}</span>
+        </a>
+        <a href="Projects.html" class="nav-item" data-page="Projects">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="3 9 12 13 21 9"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span>
+          <span>${t('projects') || 'Projects'}</span>
+        </a>
+        <a href="Installments.html" class="nav-item" data-page="Installments">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+          <span>${t('installments') || 'Installments'}</span>
+        </a>
+        <a href="Recurring.html" class="nav-item" data-page="Recurring">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 12h13"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg></span>
+          <span>${t('recurring') || 'Recurring'}</span>
+        </a>
+        <a href="Reports.html" class="nav-item" data-page="Reports">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-3"/><path d="M12 2v10"/><path d="M9 7l3-3 3 3"/></svg></span>
+          <span>${t('reports') || 'Reports'}</span>
+        </a>
+      </nav>
+    </div>
+    
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">${t('system') || 'SYSTEM'}</div>
+      <nav class="sidebar-nav">
+        <a href="Settings.html" class="nav-item" data-page="Settings">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span>${t('settings') || 'Settings'}</span>
+        </a>
+        <a href="Permissions.html" class="nav-item active" data-page="Permissions">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <span>${t('permissions') || 'Permissions'}</span>
+        </a>
+      </nav>
+    </div>
+    
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="toggleUserMenu()">
+        <div class="user-avatar">${initials}</div>
+        <div class="user-info">
+          <div class="user-name">${escapeHTML(userName || email)}</div>
+          <div class="user-role">${escapeHTML(roleLabel)}</div>
+        </div>
+      </div>
+      <div class="dropdown-menu" id="userMenu" style="display:none;">
+        <div class="dropdown-item" onclick="setLanguage('ar')">
+          <span>العربية</span>
+          ${LANG === 'ar' ? '<span>✓</span>' : ''}
+        </div>
+        <div class="dropdown-item" onclick="setLanguage('en')">
+          <span>English</span>
+          ${LANG === 'en' ? '<span>✓</span>' : ''}
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item danger" onclick="signOut()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>${t('signOut')}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Set active page
+  const currentPage = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const href = item.getAttribute('href');
+    if (href === currentPage) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+// Toggle user menu
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  if (menu) {
+    const isVisible = menu.style.display === 'block';
+    menu.style.display = isVisible ? 'none' : 'block';
+  }
+}
+
+// Close user menu when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('userMenu');
+  const userBtn = document.querySelector('.sidebar-user');
+  if (menu && userBtn && !userBtn.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+══════════════════════════════════════════════════════════ */
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  
+  let icon = '';
+  if (type === 'success') icon = '✓';
+  else if (type === 'error') icon = '✗';
+  else if (type === 'warning') icon = '⚠';
+  else icon = 'ℹ';
+  
   toast.innerHTML = `
-    <div class="toast-icon">${icons[type] || 'i'}</div>
-    <span>${message}</span>
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-message">${escapeHTML(message)}</div>
   `;
-
+  
   container.appendChild(toast);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => toast.classList.add('show'));
-  });
-
+  
+  // Animate in
+  setTimeout(() => toast.classList.add('show'), 10);
+  
+  // Remove after 3 seconds
   setTimeout(() => {
-    toast.classList.add('hide');
-    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-  }, duration);
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
-/* ============================================================
-   SECTION 12 — MODAL MANAGEMENT
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+══════════════════════════════════════════════════════════ */
 
-/**
- * openModal(modalID)
- * Opens a modal overlay by ID. Locks body scroll.
- * @param {string} modalID
- */
-function openModal(modalID) {
-  const modal = document.getElementById(modalID);
-  if (!modal) return;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal(modalID);
-  }, { once: true });
-}
-
-/**
- * closeModal(modalID)
- * Closes a modal overlay by ID. Restores body scroll.
- * @param {string} modalID
- */
-function closeModal(modalID) {
-  const modal = document.getElementById(modalID);
-  if (!modal) return;
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-/**
- * showConfirmModal(options)
- * Shows a confirmation dialog and returns a Promise<boolean>.
- * Resolves true if confirmed, false if cancelled.
- *
- * @param {object} options
- * @param {string} [options.title='Are you sure?']
- * @param {string} [options.message]
- * @param {string} [options.confirmText='Confirm']
- * @param {string} [options.cancelText='Cancel']
- * @param {'danger'|'warning'} [options.type='danger']
- * @returns {Promise<boolean>}
- */
-function showConfirmModal({ title = 'Are you sure?', message = '', confirmText = 'Confirm', cancelText = 'Cancel', type = 'danger' } = {}) {
-  return new Promise((resolve) => {
-    let modal = document.getElementById('globalConfirmModal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'globalConfirmModal';
-      modal.className = 'modal-overlay';
-      modal.innerHTML = `
-        <div class="modal-box modal-sm">
-          <div class="modal-body" style="text-align:center;padding:32px 24px 20px;">
-            <div class="modal-confirm-icon ${type}" id="confirmIcon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </div>
-            <div class="modal-confirm-title" id="confirmTitle"></div>
-            <div class="modal-confirm-text" id="confirmMessage"></div>
-          </div>
-          <div class="modal-footer" style="justify-content:center;gap:12px;">
-            <button class="btn btn-secondary" id="confirmCancel"></button>
-            <button class="btn btn-danger" id="confirmOk"></button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    }
-
-    document.getElementById('confirmTitle').textContent   = title;
-    document.getElementById('confirmMessage').textContent = message;
-    document.getElementById('confirmOk').textContent      = confirmText;
-    document.getElementById('confirmCancel').textContent  = cancelText;
-    document.getElementById('confirmIcon').className      = `modal-confirm-icon ${type}`;
-
-    openModal('globalConfirmModal');
-
-    const ok     = document.getElementById('confirmOk');
-    const cancel = document.getElementById('confirmCancel');
-
-    const cleanup = (result) => {
-      closeModal('globalConfirmModal');
-      ok.replaceWith(ok.cloneNode(true));
-      cancel.replaceWith(cancel.cloneNode(true));
-      resolve(result);
-    };
-
-    document.getElementById('confirmOk').addEventListener('click', () => cleanup(true), { once: true });
-    document.getElementById('confirmCancel').addEventListener('click', () => cleanup(false), { once: true });
-  });
-}
-
-/* ============================================================
-   SECTION 13 — FORM UTILITIES
-   ============================================================ */
-
-/**
- * clearForm(formIDOrEl)
- * Resets all inputs, selects, and textareas within a form.
- * @param {string|HTMLElement} formIDOrEl
- */
-function clearForm(formIDOrEl) {
-  const form = typeof formIDOrEl === 'string'
-    ? document.getElementById(formIDOrEl)
-    : formIDOrEl;
-  if (!form) return;
-  form.querySelectorAll('input, select, textarea').forEach(el => {
-    if (el.type === 'checkbox' || el.type === 'radio') {
-      el.checked = false;
-    } else {
-      el.value = '';
-    }
-    el.classList.remove('error');
-  });
-  form.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
-  form.querySelectorAll('.form-group').forEach(g => g.classList.remove('has-error'));
-}
-
-/**
- * serializeForm(formIDOrEl)
- * Returns an object of all named form field values.
- * @param {string|HTMLElement} formIDOrEl
- * @returns {object}
- */
-function serializeForm(formIDOrEl) {
-  const form = typeof formIDOrEl === 'string'
-    ? document.getElementById(formIDOrEl)
-    : formIDOrEl;
-  if (!form) return {};
-  const data = {};
-  form.querySelectorAll('[name]').forEach(el => {
-    if (el.type === 'checkbox') {
-      data[el.name] = el.checked ? 'TRUE' : 'FALSE';
-    } else if (el.type === 'radio') {
-      if (el.checked) data[el.name] = el.value;
-    } else {
-      data[el.name] = el.value.trim();
-    }
-  });
-  return data;
-}
-
-/**
- * validateRequired(formIDOrEl)
- * Validates all fields marked with data-required="true".
- * Highlights missing fields with error state.
- *
- * @param {string|HTMLElement} formIDOrEl
- * @returns {{ valid: boolean, missingFields: string[] }}
- */
-function validateRequired(formIDOrEl) {
-  const form = typeof formIDOrEl === 'string'
-    ? document.getElementById(formIDOrEl)
-    : formIDOrEl;
-  if (!form) return { valid: false, missingFields: [] };
-
-  const missing = [];
-
-  form.querySelectorAll('[data-required="true"]').forEach(el => {
-    const group = el.closest('.form-group');
-    const empty = el.value.trim() === '';
-    el.classList.toggle('error', empty);
-    if (group) group.classList.toggle('has-error', empty);
-    if (empty) missing.push(el.name || el.id || 'unknown');
-  });
-
-  return { valid: missing.length === 0, missingFields: missing };
-}
-
-/**
- * fillForm(formIDOrEl, data)
- * Populates form fields from a data object (for edit mode).
- * @param {string|HTMLElement} formIDOrEl
- * @param {object} data
- */
-function fillForm(formIDOrEl, data) {
-  const form = typeof formIDOrEl === 'string'
-    ? document.getElementById(formIDOrEl)
-    : formIDOrEl;
-  if (!form) return;
-  Object.entries(data).forEach(([key, val]) => {
-    const el = form.querySelector(`[name="${key}"]`);
-    if (!el) return;
-    if (el.type === 'checkbox') {
-      el.checked = val === 'TRUE' || val === true;
-    } else {
-      el.value = val || '';
-    }
-  });
-}
-
-/* ============================================================
-   SECTION 14 — TABLE HELPERS
-   ============================================================ */
-
-/**
- * sortTableData(data, field, direction)
- * Sorts an array of record objects by a given field.
- * @param {object[]} data
- * @param {string} field
- * @param {'asc'|'desc'} direction
- * @returns {object[]}
- */
-function sortTableData(data, field, direction = 'asc') {
-  return [...data].sort((a, b) => {
-    const av = a[field] || '';
-    const bv = b[field] || '';
-    const numA = parseFloat(av);
-    const numB = parseFloat(bv);
-    const isNum = !isNaN(numA) && !isNaN(numB);
-    const cmp = isNum ? numA - numB : String(av).localeCompare(String(bv), 'ar');
-    return direction === 'asc' ? cmp : -cmp;
-  });
-}
-
-/**
- * filterTableData(data, query, fields)
- * Filters records by searching query string across specified fields.
- * @param {object[]} data
- * @param {string} query
- * @param {string[]} fields - Field names to search in
- * @returns {object[]}
- */
-function filterTableData(data, query, fields) {
-  if (!query || !query.trim()) return data;
-  const q = query.trim().toLowerCase();
-  return data.filter(record =>
-    fields.some(field => {
-      const val = record[field];
-      return val && String(val).toLowerCase().includes(q);
-    })
-  );
-}
-
-/**
- * paginateData(data, page, pageSize)
- * Returns a slice of data for the given page.
- * @param {object[]} data
- * @param {number} page - 1-based page number
- * @param {number} pageSize
- * @returns {{ rows: object[], totalPages: number, totalRows: number }}
- */
-function paginateData(data, page, pageSize = 25) {
-  const totalRows  = data.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
-  const safePage   = Math.min(Math.max(1, page), totalPages);
-  const start      = (safePage - 1) * pageSize;
-  return {
-    rows: data.slice(start, start + pageSize),
-    totalPages,
-    totalRows,
-    currentPage: safePage
-  };
-}
-
-/* ============================================================
-   SECTION 15 — NAVIGATION & PATH UTILITIES
-   ============================================================ */
-
-/**
- * getRelativePath(targetPath)
- * Returns the correct relative path to a file from the current page location.
- * Handles pages/ and lookups/ depth automatically.
- * @param {string} targetPath - e.g. "pages/Dashboard.html", "assets/styles.css"
- * @returns {string}
- */
-function getRelativePath(targetPath) {
-  const path = window.location.pathname;
-  const depth = (path.match(/\//g) || []).length;
-  const inLookups = path.includes('/lookups/');
-  const prefix    = inLookups ? '../../' : (path.includes('/pages/') ? '../' : '');
-  return `${prefix}${targetPath}`;
-}
-
-/**
- * navigateTo(page)
- * Navigates to a page using the correct relative path.
- * @param {string} page - e.g. "Dashboard.html", "lookups/Categories.html"
- */
-function navigateTo(page) {
-  const inLookups = window.location.pathname.includes('/lookups/');
-  const inPages   = window.location.pathname.includes('/pages/');
-  const prefix    = inLookups ? '../../pages/' : (inPages ? '' : 'pages/');
-  window.location.href = `${prefix}${page}`;
-}
-
-/**
- * getActivePage()
- * Returns the current page filename without extension.
- * @returns {string} e.g. "Transactions", "Dashboard"
- */
-function getActivePage() {
-  return window.location.pathname.split('/').pop().replace('.html', '');
-}
-
-/**
- * setActiveNavItem()
- * Marks the correct sidebar nav item as active based on current page.
- */
-function setActiveNavItem() {
-  const current = getActivePage();
-  document.querySelectorAll('.nav-item').forEach(item => {
-    const href = item.getAttribute('href') || '';
-    const page = href.split('/').pop().replace('.html', '');
-    item.classList.toggle('active', page === current);
-  });
-}
-
-/* ============================================================
-   SECTION 16 — SPREADSHEET INITIALIZATION
-   ============================================================ */
-
-/**
- * SHEET_DEFINITIONS
- * Defines all sheets and their header rows for first-run setup.
- * Used by Home.html to create the spreadsheet structure.
- */
-const SHEET_DEFINITIONS = {
-  Transactions: [
-    'TxID','Date','Direction','CategoryAR','CategoryCode','IslamicClass',
-    'CashAmount','InKindValue','InKindDescription','DonorID','BeneficiaryID',
-    'PaymentMethod','ReceiptRef','ProjectID','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Donors: [
-    'DonorID','FullNameAR','FullNameEN','DonorType','Phone','Email',
-    'Address','Governorate','FirstDonationDate','TotalDonated',
-    'LastDonationDate','NotificationPref','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Beneficiaries: [
-    'BeneficiaryID','FullNameAR','Phone','FamilySize','Governorate',
-    'District','NeedType','RegistrationDate','FileStatus','TotalAidReceived',
-    'LastAidDate','AidFrequency','Verified','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Receipts: [
-    'ReceiptNo','Date','Direction','CategoryAR','CategoryCode','Amount',
-    'PaymentMethod','TxID','DonorName','BeneficiaryName','IssuedBy',
-    'ReceiptStatus','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Inventory: [
-    'ItemCode','ItemNameAR','Category','Unit','OpeningStock','TotalIN',
-    'TotalOUT','CurrentStock','EstUnitValue','TotalValue','StorageLocation',
-    'ExpiryDate','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Projects: [
-    'ProjectCode','ProjectNameAR','Category','StartDate','EndDate',
-    'Budget','ActualSpent','Remaining','BeneficiaryCount','ProjectManager',
-    'Status','FundingSource','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Installments: [
-    'InstallmentID','DonorID','PledgeTotal','InstallmentCount',
-    'InstallmentNo','DueDate','AmountDue','AmountPaid','PaymentDate',
-    'PaymentMethod','ReceiptRef','Status','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Recurring: [
-    'RecurringID','Description','CategoryCode','Amount','Frequency',
-    'StartDate','EndDate','NextDueDate','LastPaidDate','LinkedTxID',
-    'Status','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Users: [
-    'Email','FullName','Role','Status','LastLogin','Notes',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Roles: [
-    'RoleID','RoleName','Description',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  Permissions: [
-    'RoleID','PageName','CanView','CanCreate','CanEdit','CanDelete',
-    'CanViewDeleted','CanViewSensitive','CanExport',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  AuditLog: [
-    'LogID','Timestamp','UserEmail','Action','SheetName',
-    'RecordID','FieldName','OldValue','NewValue'
-  ],
-  LKP_Categories: [
-    'LookupID','Code','NameAR','NameEN','Type','SubType','IslamicClass',
-    'AccountCode','Description','SortOrder','IsActive',
-    'RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy',
-    'IsDeleted','DeletedAt','DeletedBy'
-  ],
-  LKP_DonorTypes:        ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_IslamicClasses:    ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_NeedTypes:         ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_PaymentMethods:    ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_AidFrequencies:    ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_ProjectStatuses:   ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_ProjectCategories: ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_Governorates:      ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy'],
-  LKP_NotificationPrefs: ['LookupID','Code','NameAR','NameEN','Description','SortOrder','IsActive','RecordID','CreatedAt','CreatedBy','ModifiedAt','ModifiedBy','IsDeleted','DeletedAt','DeletedBy']
-};
-
-/**
- * LOOKUP_SEED_DATA
- * Initial data for all lookup sheets — seeded on first run.
- */
-const LOOKUP_SEED_DATA = {
-  LKP_Categories: [
-    ['CAT001','IN-ZK-001','زكاة المال','Zakat Al-Mal','IN','زكاة | Zakat','زكاة | Zakat','IN-ZK-001','Zakat on savings & financial assets',1,'TRUE'],
-    ['CAT002','IN-ZK-002','زكاة الفطر','Zakat Al-Fitr','IN','زكاة | Zakat','زكاة | Zakat','IN-ZK-002','Zakat Al-Fitr paid during Ramadan',2,'TRUE'],
-    ['CAT003','IN-ZK-003','زكاة التجارة','Zakat Al-Tijarah','IN','زكاة | Zakat','زكاة | Zakat','IN-ZK-003','Zakat on trade goods & business assets',3,'TRUE'],
-    ['CAT004','IN-SD-001','صدقة عامة','General Sadaqah','IN','صدقات | Sadaqat','صدقة | Sadaqah','IN-SD-001','Voluntary donations with no specified purpose',4,'TRUE'],
-    ['CAT005','IN-SD-002','صدقة جارية','Sadaqah Jariyah','IN','صدقات | Sadaqat','صدقة جارية | Sadaqah Jariyah','IN-SD-002','Ongoing charity with lasting impact',5,'TRUE'],
-    ['CAT006','IN-TN-001','تبرع نقدي محدد الغرض','Designated Cash Donation','IN','تبرعات نقدية | Cash Donations','تبرع | Tabarru','IN-TN-001','Cash donation restricted to a specific cause',6,'TRUE'],
-    ['CAT007','IN-TN-002','تبرع نقدي غير محدد','Undesignated Cash Donation','IN','تبرعات نقدية | Cash Donations','تبرع | Tabarru','IN-TN-002','Cash donation with no restriction on use',7,'TRUE'],
-    ['CAT008','IN-TN-003','تبرع لدفع إيجار المقر','Donation for HQ Rent','IN','تبرعات نقدية | Cash Donations','تبرع | Tabarru','IN-TN-003','Donation designated to cover rent',8,'TRUE'],
-    ['CAT009','IN-TE-001','تبرع عيني — ملابس','In-Kind Donation — Clothing','IN','تبرعات عينية | In-Kind Donations','تبرع عيني | In-Kind','IN-TE-001','Clothing suitable for distribution',9,'TRUE'],
-    ['CAT010','IN-TE-002','تبرع عيني — طعام','In-Kind Donation — Food','IN','تبرعات عينية | In-Kind Donations','تبرع عيني | In-Kind','IN-TE-002','Food supplies or ready meals',10,'TRUE'],
-    ['CAT011','IN-TE-003','تبرع عيني — أدوية','In-Kind Donation — Medical','IN','تبرعات عينية | In-Kind Donations','تبرع عيني | In-Kind','IN-TE-003','Medicines and medical supplies',11,'TRUE'],
-    ['CAT012','IN-TE-004','تبرع عيني — أثاث','In-Kind Donation — Furniture','IN','تبرعات عينية | In-Kind Donations','تبرع عيني | In-Kind','IN-TE-004','Household furniture or appliances',12,'TRUE'],
-    ['CAT013','IN-TE-005','تبرع عيني — أخرى','In-Kind Donation — Other','IN','تبرعات عينية | In-Kind Donations','تبرع عيني | In-Kind','IN-TE-005','Other in-kind items',13,'TRUE'],
-    ['CAT014','OUT-MN-001','مساعدة نقدية — أسرة','Cash Aid — Needy Family','OUT','توزيع نقدي | Cash Distribution','صدقة / زكاة','OUT-MN-001','Monthly or emergency cash aid for a needy family',14,'TRUE'],
-    ['CAT015','OUT-MN-002','مساعدة نقدية — طارئة','Cash Aid — Emergency Case','OUT','توزيع نقدي | Cash Distribution','صدقة / زكاة','OUT-MN-002','Urgent cash payment for emergency',15,'TRUE'],
-    ['CAT016','OUT-TE-001','كسوة — ملابس','In-Kind Aid — Clothing','OUT','توزيع عيني | In-Kind Distribution','صدقة عينية','OUT-TE-001','Distribution of clothing to beneficiaries',16,'TRUE'],
-    ['CAT017','OUT-TE-002','توزيع طعام — وجبات','In-Kind Aid — Food / Meals','OUT','توزيع عيني | In-Kind Distribution','صدقة عينية','OUT-TE-002','Distribution of meals or food supplies',17,'TRUE'],
-    ['CAT018','OUT-TE-003','مستلزمات طبية — توزيع','In-Kind Aid — Medical Supplies','OUT','توزيع عيني | In-Kind Distribution','صدقة عينية','OUT-TE-003','Distribution of medicines or medical supplies',18,'TRUE'],
-    ['CAT019','OUT-OP-001','إيجار مقر الجمعية','HQ Rent','OUT','مصروفات تشغيلية | Operational Expenses','مصروف تشغيلي','OUT-OP-001','Monthly or annual rent for the organization',19,'TRUE'],
-    ['CAT020','OUT-OP-002','مرتبات / مكافآت العاملين','Staff Salaries / Allowances','OUT','مصروفات تشغيلية | Operational Expenses','مصروف تشغيلي','OUT-OP-002','Salaries or incentives paid to staff',20,'TRUE'],
-    ['CAT021','OUT-OP-003','مصاريف إدارية ومكتبية','Administrative & Office Expenses','OUT','مصروفات تشغيلية | Operational Expenses','مصروف تشغيلي','OUT-OP-003','Stationery, printing, communications',21,'TRUE'],
-    ['CAT022','OUT-OP-004','مصاريف نقل وتوصيل','Transport & Delivery Costs','OUT','مصروفات تشغيلية | Operational Expenses','مصروف تشغيلي','OUT-OP-004','Transportation of in-kind aid or team visits',22,'TRUE'],
-    ['CAT023','OUT-MK-001','مشروع خيري — تعليم','Ongoing Project — Education','OUT','مشاريع خيرية | Charity Projects','صدقة جارية','OUT-MK-001','Student support, scholarships',23,'TRUE'],
-    ['CAT024','OUT-MK-002','مشروع خيري — صحة','Ongoing Project — Health','OUT','مشاريع خيرية | Charity Projects','صدقة جارية','OUT-MK-002','Recurring healthcare, ongoing medication',24,'TRUE'],
-    ['CAT025','OUT-MK-003','مشروع خيري — إسكان','Ongoing Project — Housing','OUT','مشاريع خيرية | Charity Projects','صدقة جارية','OUT-MK-003','Assistance with rent or maintenance',25,'TRUE'],
-    ['CAT026','OUT-MK-004','مشروع خيري — أخرى','Ongoing Project — Other','OUT','مشاريع خيرية | Charity Projects','صدقة جارية','OUT-MK-004','Other ongoing sustainable projects',26,'TRUE']
-  ],
-  LKP_DonorTypes: [
-    ['DT001','INDIVIDUAL','فرد','Individual','Individual person donor',1,'TRUE'],
-    ['DT002','CORPORATE','شركة','Corporate','Company or business entity',2,'TRUE'],
-    ['DT003','ASSOCIATION','جمعية','Association / NGO','Non-governmental organization',3,'TRUE'],
-    ['DT004','GOVERNMENT','جهة حكومية','Government Entity','Government body or ministry',4,'TRUE'],
-    ['DT005','ANONYMOUS','مجهول','Anonymous','Anonymous donor',5,'TRUE']
-  ],
-  LKP_IslamicClasses: [
-    ['IC001','ZAKAT','زكاة','Zakat','Obligatory Islamic almsgiving',1,'TRUE'],
-    ['IC002','SADAQAH','صدقة','Sadaqah','Voluntary charity',2,'TRUE'],
-    ['IC003','SADAQAH_JARIYAH','صدقة جارية','Sadaqah Jariyah','Ongoing charity with lasting benefit',3,'TRUE'],
-    ['IC004','TABARRU','تبرع','Tabarru','Voluntary donation',4,'TRUE'],
-    ['IC005','IN_KIND','تبرع عيني','In-Kind Tabarru','Non-cash voluntary donation',5,'TRUE'],
-    ['IC006','OPERATIONAL','مصروف تشغيلي','Operational Expense','Non-charitable operational cost',6,'TRUE']
-  ],
-  LKP_NeedTypes: [
-    ['NT001','MONTHLY_CASH','مساعدة شهرية','Monthly Cash Aid','Regular monthly financial support',1,'TRUE'],
-    ['NT002','IN_KIND','مساعدة عينية','In-Kind Aid','Non-cash goods distribution',2,'TRUE'],
-    ['NT003','EDUCATION','مشروع تعليمي','Education Project','Educational support and scholarships',3,'TRUE'],
-    ['NT004','HEALTHCARE','رعاية صحية','Healthcare Support','Medical treatment and supplies',4,'TRUE'],
-    ['NT005','HOUSING','دعم إسكان','Housing Support','Rent assistance and housing',5,'TRUE'],
-    ['NT006','EMERGENCY','حالة طارئة','Emergency Case','Urgent one-time support',6,'TRUE'],
-    ['NT007','OTHER','أخرى','Other','Other need types',7,'TRUE']
-  ],
-  LKP_PaymentMethods: [
-    ['PM001','CASH','نقدي','Cash','Physical cash payment',1,'TRUE'],
-    ['PM002','BANK_TRANSFER','تحويل بنكي','Bank Transfer','Electronic bank transfer',2,'TRUE'],
-    ['PM003','CHEQUE','شيك','Cheque','Bank cheque',3,'TRUE'],
-    ['PM004','VODAFONE_CASH','فودافون كاش','Vodafone Cash','Mobile wallet payment',4,'TRUE'],
-    ['PM005','INSTAPAY','إنستاباي','InstaPay','InstaPay electronic payment',5,'TRUE'],
-    ['PM006','CARD','بطاقة ائتمانية','Credit / Debit Card','Card payment',6,'TRUE'],
-    ['PM007','OTHER','أخرى','Other','Other payment methods',7,'TRUE']
-  ],
-  LKP_AidFrequencies: [
-    ['AF001','MONTHLY','شهري','Monthly','Every month',1,'TRUE'],
-    ['AF002','QUARTERLY','فصلي','Quarterly','Every three months',2,'TRUE'],
-    ['AF003','SEASONAL','موسمي','Seasonal','Ramadan, Eid, etc.',3,'TRUE'],
-    ['AF004','ANNUAL','سنوي','Annual','Once per year',4,'TRUE'],
-    ['AF005','ONE_TIME','مرة واحدة','One-Time','Single occurrence only',5,'TRUE'],
-    ['AF006','AS_NEEDED','عند الحاجة','As Needed','On demand',6,'TRUE']
-  ],
-  LKP_ProjectStatuses: [
-    ['PS001','ACTIVE','نشط','Active','Project is running',1,'TRUE'],
-    ['PS002','UNDER_REVIEW','قيد المراجعة','Under Review','Being evaluated',2,'TRUE'],
-    ['PS003','ON_HOLD','موقوف مؤقتاً','On Hold','Temporarily paused',3,'TRUE'],
-    ['PS004','COMPLETED','مكتمل','Completed','Successfully finished',4,'TRUE'],
-    ['PS005','CANCELLED','ملغي','Cancelled','Cancelled before completion',5,'TRUE']
-  ],
-  LKP_ProjectCategories: [
-    ['PC001','EDUCATION','تعليم','Education','Educational programs and scholarships',1,'TRUE'],
-    ['PC002','HEALTH','صحة','Health','Healthcare and medical programs',2,'TRUE'],
-    ['PC003','HOUSING','إسكان','Housing','Housing and shelter support',3,'TRUE'],
-    ['PC004','EMERGENCY','إغاثة طارئة','Emergency Relief','Urgent relief operations',4,'TRUE'],
-    ['PC005','EMPOWERMENT','تمكين اقتصادي','Economic Empowerment','Livelihood and income support',5,'TRUE'],
-    ['PC006','OTHER','أخرى','Other','Other project categories',6,'TRUE']
-  ],
-  LKP_Governorates: [
-    ['GOV01','CAIRO','القاهرة','Cairo','',1,'TRUE'],
-    ['GOV02','GIZA','الجيزة','Giza','',2,'TRUE'],
-    ['GOV03','ALEX','الإسكندرية','Alexandria','',3,'TRUE'],
-    ['GOV04','DAKAHLIA','الدقهلية','Dakahlia','',4,'TRUE'],
-    ['GOV05','SHARQIA','الشرقية','Sharqia','',5,'TRUE'],
-    ['GOV06','MONUFIA','المنوفية','Monufia','',6,'TRUE'],
-    ['GOV07','GHARBIA','الغربية','Gharbia','',7,'TRUE'],
-    ['GOV08','KAFR_SHEIKH','كفر الشيخ','Kafr El-Sheikh','',8,'TRUE'],
-    ['GOV09','DAMIETTA','دمياط','Damietta','',9,'TRUE'],
-    ['GOV10','BEHEIRA','البحيرة','Beheira','',10,'TRUE'],
-    ['GOV11','ISMAILIA','الإسماعيلية','Ismailia','',11,'TRUE'],
-    ['GOV12','PORT_SAID','بورسعيد','Port Said','',12,'TRUE'],
-    ['GOV13','SUEZ','السويس','Suez','',13,'TRUE'],
-    ['GOV14','N_SINAI','شمال سيناء','North Sinai','',14,'TRUE'],
-    ['GOV15','S_SINAI','جنوب سيناء','South Sinai','',15,'TRUE'],
-    ['GOV16','FAYOUM','الفيوم','Fayoum','',16,'TRUE'],
-    ['GOV17','BENI_SUEF','بني سويف','Beni Suef','',17,'TRUE'],
-    ['GOV18','MINYA','المنيا','Minya','',18,'TRUE'],
-    ['GOV19','ASSIUT','أسيوط','Assiut','',19,'TRUE'],
-    ['GOV20','SOHAG','سوهاج','Sohag','',20,'TRUE'],
-    ['GOV21','QENA','قنا','Qena','',21,'TRUE'],
-    ['GOV22','LUXOR','الأقصر','Luxor','',22,'TRUE'],
-    ['GOV23','ASWAN','أسوان','Aswan','',23,'TRUE'],
-    ['GOV24','RED_SEA','البحر الأحمر','Red Sea','',24,'TRUE'],
-    ['GOV25','NEW_VALLEY','الوادي الجديد','New Valley','',25,'TRUE'],
-    ['GOV26','MATROUH','مطروح','Matrouh','',26,'TRUE'],
-    ['GOV27','QALYUBIA','القليوبية','Qalyubia','',27,'TRUE']
-  ],
-  LKP_NotificationPrefs: [
-    ['NP001','WHATSAPP','واتساب','WhatsApp','WhatsApp message',1,'TRUE'],
-    ['NP002','SMS','SMS','SMS','Text message',2,'TRUE'],
-    ['NP003','EMAIL','بريد إلكتروني','Email','Email notification',3,'TRUE'],
-    ['NP004','PHONE','اتصال هاتفي','Phone Call','Direct phone call',4,'TRUE'],
-    ['NP005','NONE','لا أرغب','No Notification','No contact preference',5,'TRUE']
-  ]
-};
-
-/**
- * DEFAULT_ROLES_AND_PERMISSIONS
- * Seed data for Roles and Permissions sheets.
- */
-const DEFAULT_ROLES = [
-  ['SuperAdmin','مسؤول النظام الكامل','صلاحيات كاملة على جميع الصفحات والبيانات'],
-  ['Director','المدير التنفيذي','صلاحيات تشغيلية كاملة مع حذف العمليات المالية'],
-  ['AccountManager','مسؤول الحسابات','صلاحيات كاملة على الوحدات المالية'],
-  ['CaseManager','مسؤول الحالات','صلاحيات كاملة على المستفيدين والمشاريع'],
-  ['DataEntry','موظف إدخال بيانات','إضافة وتعديل فقط — بدون حذف'],
-  ['InventoryManager','مسؤول المخزون','صلاحيات كاملة على المخزون العيني'],
-  ['Viewer','مشاهد فقط','قراءة فقط على لوحة التحكم والتقارير']
-];
-
-const ALL_PAGES = [
-  'Dashboard','OwnerDashboard','Transactions','Donors','Beneficiaries',
-  'Receipts','Inventory','Projects','Installments','Recurring',
-  'Reports','Settings','Permissions',
-  'Categories','DonorTypes','IslamicClasses','NeedTypes','PaymentMethods',
-  'AidFrequencies','ProjectStatuses','ProjectCategories','Governorates','NotificationPrefs'
-];
-
-/* ============================================================
-   SECTION 17 — MISC UTILITIES
-   ============================================================ */
-
-/**
- * debounce(fn, delay)
- * Returns a debounced version of fn.
- * @param {Function} fn
- * @param {number} delay - ms
- * @returns {Function}
- */
-function debounce(fn, delay) {
-  let timer;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
-/**
- * escapeHTML(str)
- * Escapes HTML special characters to prevent XSS.
- * @param {string} str
- * @returns {string}
- */
+// Escape HTML to prevent XSS
 function escapeHTML(str) {
-  return String(str)
+  if (!str) return '';
+  return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#39;');
 }
 
-/**
- * isEmpty(value)
- * Returns true if value is null, undefined, or empty string
- * @param {*} value
- * @returns {boolean}
- */
-function isEmpty(value) {
-  return value === null || value === undefined || String(value).trim() === '';
+// Debounce function for search inputs
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
-/**
- * sumField(records, field)
- * Sums a numeric field across an array of records.
- * @param {object[]} records
- * @param {string} field
- * @returns {number}
- */
-function sumField(records, field) {
-  return records.reduce((sum, r) => sum + (parseFloat(r[field]) || 0), 0);
+// Format currency
+function formatCurrency(amount, currency = 'EGP') {
+  return new Intl.NumberFormat(LANG === 'ar' ? 'ar-EG' : 'en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2
+  }).format(amount);
 }
 
-/**
- * groupBy(records, field)
- * Groups an array of records by a field value.
- * @param {object[]} records
- * @param {string} field
- * @returns {object} { value: records[] }
- */
-function groupBy(records, field) {
-  return records.reduce((acc, r) => {
-    const key = r[field] || '';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(r);
-    return acc;
-  }, {});
+// Format number
+function formatNumber(num) {
+  return new Intl.NumberFormat(LANG === 'ar' ? 'ar-EG' : 'en-US').format(num);
 }
 
-/* ============================================================
-   SECTION 18 — SIDEBAR RENDERER
-   ============================================================ */
-
-/**
- * renderSidebar(userEmail, userName, userRole)
- * Injects the shared sidebar HTML into #sidebar element.
- * Navigation items are filtered by permissions.
- * @param {string} userEmail
- * @param {string} userName
- * @param {string} userRole
- */
-function renderSidebar(userEmail, userName, userRole) {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  const initials = (userName || userEmail || 'U')
-    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-
-  const navItems = [
-    { page: 'Dashboard.html',     icon: gridIcon(),    key: 'dashboard'     },
-    { page: 'Transactions.html',  icon: txIcon(),      key: 'transactions'  },
-    { page: 'Donors.html',        icon: heartIcon(),   key: 'donors'        },
-    { page: 'Beneficiaries.html', icon: usersIcon(),   key: 'beneficiaries' },
-    { page: 'Receipts.html',      icon: receiptIcon(), key: 'receipts'      },
-    { page: 'Inventory.html',     icon: boxIcon(),     key: 'inventory'     },
-    { page: 'Projects.html',      icon: projIcon(),    key: 'projects'      },
-    { page: 'Installments.html',  icon: calIcon(),     key: 'installments'  },
-    { page: 'Recurring.html',     icon: repeatIcon(),  key: 'recurring'     },
-    { page: 'Reports.html',       icon: chartIcon(),   key: 'reports'       }
-  ];
-
-  const adminItems = [
-    { page: 'Settings.html',    icon: settingsIcon(), key: 'settings'    },
-    { page: 'Permissions.html', icon: lockIcon(),     key: 'permissions', adminOnly: true }
-  ];
-
-  const current = getActivePage();
-
-  const navHTML = (items) => items
-    .filter(i => !i.adminOnly || userRole === 'SuperAdmin')
-    .map(i => {
-      const page   = i.page.replace('.html', '');
-      const active = page === current ? 'active' : '';
-      return `<a href="${i.page}" class="nav-item ${active}">
-        <span class="nav-icon">${i.icon}</span>
-        <span>${t(i.key)}</span>
-      </a>`;
-    }).join('');
-
-  const isAR      = LANG === 'ar';
-  const langLabel = isAR ? 'EN' : 'ع';
-  const nextLang  = isAR ? 'en' : 'ar';
-
-  sidebar.innerHTML = `
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-      </div>
-      <div class="sidebar-brand-text">
-        ${t('appShort')}
-        <div class="sidebar-brand-sub">${t('charityManagement')}</div>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">${t('navMain')}</div>
-      <nav class="sidebar-nav">${navHTML(navItems)}</nav>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">${t('navSystem')}</div>
-      <nav class="sidebar-nav">${navHTML(adminItems)}</nav>
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar">${initials}</div>
-        <div class="user-info">
-          <div class="user-name">${escapeHTML(userName || userEmail)}</div>
-          <div class="user-role">${escapeHTML(userRole || 'Viewer')}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-top:4px;">
-        <div class="sync-indicator synced" id="syncIndicator">
-          <div class="sync-dot"></div>
-          <span class="sync-text text-xs">${t('allSaved')}</span>
-        </div>
-        <button onclick="setLang('${nextLang}')" style="
-          background:rgba(255,255,255,0.12);
-          border:1px solid rgba(255,255,255,0.2);
-          color:#fff;
-          border-radius:6px;
-          padding:3px 10px;
-          font-size:0.72rem;
-          font-weight:600;
-          cursor:pointer;
-          font-family:var(--font-sans);
-          transition:background 0.15s;
-        " onmouseover="this.style.background='rgba(255,255,255,0.2)'"
-           onmouseout="this.style.background='rgba(255,255,255,0.12)'"
-           title="${isAR ? 'Switch to English' : 'التبديل إلى العربية'}">
-          ${langLabel}
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-/* Inline SVG icons for sidebar */
-const svgIcon = (d) =>
-  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-
-const gridIcon    = () => svgIcon('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>');
-const txIcon      = () => svgIcon('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>');
-const heartIcon   = () => svgIcon('<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>');
-const usersIcon   = () => svgIcon('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
-const receiptIcon = () => svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
-const boxIcon     = () => svgIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>');
-const projIcon    = () => svgIcon('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>');
-const calIcon     = () => svgIcon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
-const repeatIcon  = () => svgIcon('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>');
-const chartIcon   = () => svgIcon('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>');
-const settingsIcon= () => svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
-const lockIcon    = () => svgIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>');
-
-/* ============================================================
-   SECTION 19 — BILINGUAL TRANSLATION SYSTEM
-   ============================================================ */
-
-/* ── Language state ───────────────────────────────────────── */
-const LANG_KEY = 'coms_lang';
-let LANG = localStorage.getItem(LANG_KEY) || 'ar';
-
-/* ── Switch language and reload ───────────────────────────── */
-function setLang(lang) {
-  localStorage.setItem(LANG_KEY, lang);
-  location.reload();
-}
-
-/* ── Get current language ─────────────────────────────────── */
-function getLang() { return LANG; }
-
-/* ── Translate a key ──────────────────────────────────────── */
-function t(key) {
-  return (T[LANG] && T[LANG][key]) || (T['ar'] && T['ar'][key]) || key;
-}
-
-/* ── Apply translations to all [data-t] elements ─────────── */
-function applyTranslations() {
-  document.documentElement.setAttribute('lang', LANG);
-  document.documentElement.setAttribute('dir', LANG === 'ar' ? 'rtl' : 'ltr');
-  document.querySelectorAll('[data-t]').forEach(el => {
-    const key = el.getAttribute('data-t');
-    const val = t(key);
-    if (val) el.textContent = val;
-  });
-  document.querySelectorAll('[data-t-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-t-placeholder');
-    const val = t(key);
-    if (val) el.placeholder = val;
-  });
-  document.querySelectorAll('[data-t-title]').forEach(el => {
-    const key = el.getAttribute('data-t-title');
-    const val = t(key);
-    if (val) el.title = val;
-  });
-}
-
-/* ── Full translations dictionary ─────────────────────────── */
-const T = {
-  ar: {
-    /* ── App ── */
-    appName:              'نظام إدارة الجمعية الخيرية',
-    appShort:             'الجمعية الخيرية',
-    charityManagement:    'Charity Management',
-
-    /* ── Navigation ── */
-    navMain:              'القائمة الرئيسية',
-    navSystem:            'النظام',
-    dashboard:            'لوحة التحكم',
-    transactions:         'العمليات',
-    donors:               'المتبرعون',
-    beneficiaries:        'المستفيدون',
-    receipts:             'الإيصالات',
-    inventory:            'المخزون',
-    projects:             'المشاريع',
-    installments:         'الأقساط',
-    recurring:            'الدوريات',
-    reports:              'التقارير',
-    settings:             'الإعدادات',
-    permissions:          'الصلاحيات',
-
-    /* ── Common Actions ── */
-    add:                  'إضافة',
-    edit:                 'تعديل',
-    delete:               'حذف',
-    restore:              'استعادة',
-    save:                 'حفظ',
-    cancel:               'إلغاء',
-    confirm:              'تأكيد',
-    search:               'بحث',
-    filter:               'تصفية',
-    export:               'تصدير',
-    refresh:              'تحديث',
-    close:                'إغلاق',
-    back:                 'رجوع',
-    next:                 'التالي',
-    loading:              'جارٍ التحميل…',
-    saving:               'جارٍ الحفظ…',
-    saved:                'تم الحفظ',
-    allSaved:             'كل التغييرات محفوظة',
-    syncing:              'جارٍ المزامنة…',
-    synced:               'تمت المزامنة',
-
-    /* ── Status ── */
-    active:               'نشط',
-    inactive:             'غير نشط',
-    pending:              'في الانتظار',
-    completed:            'مكتمل',
-    cancelled:            'ملغي',
-    onHold:               'موقوف مؤقتاً',
-    underReview:          'قيد المراجعة',
-    deleted:              'محذوف',
-    issued:               'مُصدَر',
-    voided:               'ملغي',
-
-    /* ── Direction ── */
-    dirIn:                'وارد',
-    dirOut:               'صادر',
-
-    /* ── Permissions Page ── */
-    permissionsTitle:     'الصلاحيات والمستخدمون',
-    permissionsSubtitle:  'إدارة المستخدمين والأدوار والصلاحيات',
-    tabUsers:             'المستخدمون',
-    tabRoles:             'الأدوار',
-    tabMatrix:            'مصفوفة الصلاحيات',
-    usersList:            'قائمة المستخدمين',
-    addUser:              'إضافة مستخدم',
-    showDeleted:          'عرض المستخدمين المحذوفين',
-    rolesTitle:           'الأدوار الوظيفية',
-    rolesSubtitle:        'الأدوار المدمجة لا يمكن حذفها — يمكن إضافة أدوار مخصصة',
-    addCustomRole:        'إضافة دور مخصص',
-    matrixTitle:          'مصفوفة الصلاحيات',
-    matrixSubtitle:       'اختر دوراً لعرض وتعديل صلاحياته على كل صفحة',
-    selectRole:           'اختر دوراً…',
-    colUser:              'المستخدم',
-    colRole:              'الدور',
-    colStatus:            'الحالة',
-    colLastLogin:         'آخر دخول',
-    colDateAdded:         'تاريخ الإضافة',
-    colPage:              'الصفحة',
-    colView:              'عرض',
-    colCreate:            'إضافة',
-    colEdit:              'تعديل',
-    colDelete:            'حذف',
-    colViewDeleted:       'محذوف',
-    colSensitive:         'حساس',
-    colExport:            'تصدير',
-
-    /* ── User Modal ── */
-    addUserTitle:         'إضافة مستخدم جديد',
-    editUserTitle:        'تعديل المستخدم',
-    fullName:             'الاسم الكامل',
-    emailGoogle:          'البريد الإلكتروني (Google)',
-    emailHint:            'يجب أن يكون حساب Google فعّالاً',
-    roleLabel:            'الدور',
-    statusLabel:          'الحالة',
-    notes:                'ملاحظات',
-    saveUser:             'حفظ المستخدم',
-    emailExists:          'هذا البريد الإلكتروني مسجّل مسبقاً',
-    requiredFields:       'يرجى ملء جميع الحقول المطلوبة',
-
-    /* ── Role Modal ── */
-    addRoleTitle:         'إضافة دور مخصص',
-    editRoleTitle:        'تعديل الدور',
-    roleIdLabel:          'اسم الدور (بالإنجليزي)',
-    roleIdHint:           'يُستخدم كمعرّف داخلي — بدون مسافات',
-    roleDesc:             'الوصف',
-    saveRole:             'حفظ الدور',
-    roleExists:           'هذا الدور موجود مسبقاً',
-
-    /* ── Confirm Modal ── */
-    deleteUserTitle:      'حذف المستخدم',
-    deleteRoleTitle:      'حذف الدور',
-    areYouSure:           'هل أنت متأكد؟',
-
-    /* ── Empty States ── */
-    noUsers:              'لا يوجد مستخدمون',
-    noUsersHint:          'اضغط على "إضافة مستخدم" للبدء',
-    noOrgs:               'لا توجد جمعيات مسجلة',
-    noOrgsHint:           'اضغط على "تسجيل جمعية جديدة" للبدء',
-    selectRoleFirst:      'اختر دوراً',
-    selectRoleHint:       'اختر دوراً من القائمة أعلاه لعرض وتعديل صلاحياته',
-
-    /* ── Transactions ── */
-    transactionsTitle:    'العمليات المالية والعينية',
-    transactionsSubtitle: 'سجل جميع الإيرادات والمصروفات',
-    addTransaction:       'إضافة عملية',
-    cashAmount:           'المبلغ النقدي',
-    inKindValue:          'القيمة التقديرية',
-    inKindDesc:           'وصف العيني',
-    paymentMethod:        'طريقة الدفع',
-    islamicClass:         'التصنيف الإسلامي',
-    receiptRef:           'مرجع الإيصال',
-    category:             'الفئة',
-    categoryCode:         'كود الفئة',
-
-    /* ── Donors ── */
-    donorsTitle:          'سجل المتبرعين',
-    donorsSubtitle:       'إدارة قاعدة بيانات المتبرعين',
-    addDonor:             'إضافة متبرع',
-    donorType:            'نوع المتبرع',
-    firstDonation:        'تاريخ أول تبرع',
-    totalDonated:         'إجمالي التبرعات',
-    lastDonation:         'آخر تبرع',
-    notificationPref:     'تفضيل الإشعار',
-    phone:                'رقم الهاتف',
-    address:              'العنوان',
-    governorate:          'المحافظة',
-
-    /* ── Beneficiaries ── */
-    beneficiariesTitle:   'سجل المستفيدين',
-    beneficiariesSubtitle:'إدارة ملفات المستفيدين',
-    addBeneficiary:       'إضافة مستفيد',
-    familySize:           'عدد أفراد الأسرة',
-    district:             'المنطقة',
-    needType:             'نوع الاحتياج',
-    regDate:              'تاريخ التسجيل',
-    fileStatus:           'حالة الملف',
-    totalAid:             'إجمالي المساعدات',
-    lastAid:              'آخر مساعدة',
-    aidFrequency:         'تكرار المساعدة',
-    verified:             'تم التحقق',
-
-    /* ── Receipts ── */
-    receiptsTitle:        'سجل الإيصالات',
-    receiptsSubtitle:     'إيصالات الوارد والصادر',
-    addReceipt:           'إضافة إيصال',
-    receiptNo:            'رقم الإيصال',
-    issuedBy:             'أصدره',
-    receiptStatus:        'حالة الإيصال',
-    donorPayer:           'المتبرع / الجهة',
-    beneficiaryName:      'اسم المستفيد',
-
-    /* ── Inventory ── */
-    inventoryTitle:       'المخزون العيني',
-    inventorySubtitle:    'إدارة المخزون من التبرعات العينية',
-    addItem:              'إضافة صنف',
-    itemCode:             'كود الصنف',
-    itemName:             'اسم الصنف',
-    unit:                 'الوحدة',
-    openingStock:         'الرصيد الافتتاحي',
-    totalIn:              'الوارد',
-    totalOut:             'الصادر',
-    currentStock:         'الرصيد الحالي',
-    estUnitValue:         'القيمة التقديرية للوحدة',
-    totalValue:           'إجمالي القيمة',
-    storageLocation:      'مكان التخزين',
-    expiryDate:           'تاريخ الانتهاء',
-
-    /* ── Projects ── */
-    projectsTitle:        'المشاريع الخيرية',
-    projectsSubtitle:     'تتبع المشاريع الخيرية والميزانيات',
-    addProject:           'إضافة مشروع',
-    projectCode:          'كود المشروع',
-    projectName:          'اسم المشروع',
-    startDate:            'تاريخ البداية',
-    endDate:              'تاريخ الانتهاء',
-    budget:               'الميزانية المخططة',
-    actualSpent:          'المصروف الفعلي',
-    remaining:            'الرصيد المتبقي',
-    beneficiaryCount:     'عدد المستفيدين',
-    projectManager:       'المسؤول',
-    fundingSource:        'مصدر التمويل',
-
-    /* ── Installments ── */
-    installmentsTitle:    'الأقساط والتعهدات',
-    installmentsSubtitle: 'متابعة أقساط التبرعات المتعهد بها',
-    addInstallment:       'إضافة قسط',
-    pledgeTotal:          'إجمالي التعهد',
-    installmentCount:     'عدد الأقساط',
-    installmentNo:        'رقم القسط',
-    dueDate:              'تاريخ الاستحقاق',
-    amountDue:            'المبلغ المستحق',
-    amountPaid:           'المبلغ المدفوع',
-    paymentDate:          'تاريخ الدفع',
-
-    /* ── Recurring ── */
-    recurringTitle:       'المصروفات الدورية',
-    recurringSubtitle:    'إدارة المصروفات المتكررة والمجدولة',
-    addRecurring:         'إضافة مصروف دوري',
-    frequency:            'التكرار',
-    nextDueDate:          'تاريخ الاستحقاق القادم',
-    lastPaidDate:         'آخر دفعة',
-
-    /* ── Reports ── */
-    reportsTitle:         'التقارير',
-    reportsSubtitle:      'التقارير المالية والإحصائية',
-    monthlyReport:        'التقرير الشهري',
-    annualTotal:          'الإجمالي السنوي',
-    totalIn:              'إجمالي الوارد',
-    totalOut:             'إجمالي الصادر',
-    netBalance:           'صافي الرصيد',
-    transactionCount:     'عدد العمليات',
-
-    /* ── Dashboard ── */
-    dashboardTitle:       'لوحة التحكم',
-    dashboardSubtitle:    'نظرة عامة على أنشطة الجمعية',
-    recentTransactions:   'آخر العمليات',
-    projectStatus:        'حالة المشاريع',
-    inventoryAlerts:      'تنبيهات المخزون',
-    pendingInstallments:  'الأقساط المعلقة',
-    upcomingPayments:     'المدفوعات القادمة',
-
-    /* ── Settings ── */
-    settingsTitle:        'الإعدادات',
-    personalPreferences:  'التفضيلات الشخصية',
-    orgSettings:          'إعدادات الجمعية',
-    systemConfig:         'إعدادات النظام',
-    language:             'اللغة',
-    arabic:               'العربية',
-    english:              'English',
-    displayName:          'الاسم الظاهر',
-    orgNameAR:            'اسم الجمعية بالعربي',
-    orgNameEN:            'اسم الجمعية بالإنجليزي',
-
-    /* ── Lookups ── */
-    categories:           'الفئات',
-    donorTypes:           'أنواع المتبرعين',
-    islamicClasses:       'التصنيفات الإسلامية',
-    needTypes:            'أنواع الاحتياجات',
-    paymentMethods:       'طرق الدفع',
-    aidFrequencies:       'تكرار المساعدات',
-    projectStatuses:      'حالات المشاريع',
-    projectCategories:    'فئات المشاريع',
-    governorates:         'المحافظات',
-    notificationPrefs:    'تفضيلات الإشعارات',
-
-    /* ── Errors / Toasts ── */
-    errSignIn:            'يرجى تسجيل الدخول أولاً',
-    errSession:           'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى',
-    errSetup:             'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي',
-    errNoPermission:      'ليس لديك صلاحية للوصول إلى هذه الصفحة',
-    errLoadFailed:        'فشل التحميل',
-    errSaveFailed:        'فشل الحفظ',
-    errDeleteFailed:      'فشل الحذف',
-    successSaved:         'تم الحفظ بنجاح',
-    successDeleted:       'تم الحذف بنجاح',
-    successRestored:      'تم الاستعادة بنجاح',
-    signedOut:            'تم تسجيل الخروج بنجاح',
-
-    /* ── Role Labels ── */
-    roleSuperAdmin:           'مسؤول النظام الكامل',
-    roleSuperAdminDesc:       'صلاحيات كاملة على جميع الصفحات والبيانات',
-    roleDirector:             'المدير التنفيذي',
-    roleDirectorDesc:         'صلاحيات تشغيلية كاملة مع حذف العمليات المالية',
-    roleAccountManager:       'مسؤول الحسابات',
-    roleAccountManagerDesc:   'صلاحيات كاملة على الوحدات المالية',
-    roleCaseManager:          'مسؤول الحالات',
-    roleCaseManagerDesc:      'صلاحيات كاملة على المستفيدين والمشاريع',
-    roleDataEntry:            'موظف إدخال بيانات',
-    roleDataEntryDesc:        'إضافة وتعديل فقط — بدون حذف',
-    roleInventoryManager:     'مسؤول المخزون',
-    roleInventoryManagerDesc: 'صلاحيات كاملة على المخزون العيني',
-    roleViewer:               'مشاهد فقط',
-    roleViewerDesc:           'قراءة فقط على لوحة التحكم والتقارير',
-
-    /* ── iOS tap screen ── */
-    welcomeBack:              'مرحباً بعودتك',
-    tapToContinue:            'اضغط للمتابعة',
-    continue:                 'متابعة',
-  },
-
-  en: {
-    /* ── App ── */
-    appName:              'Charity Organization Management System',
-    appShort:             'Charity Org',
-    charityManagement:    'Charity Management',
-
-    /* ── Navigation ── */
-    navMain:              'Main Menu',
-    navSystem:            'System',
-    dashboard:            'Dashboard',
-    transactions:         'Transactions',
-    donors:               'Donors',
-    beneficiaries:        'Beneficiaries',
-    receipts:             'Receipts',
-    inventory:            'Inventory',
-    projects:             'Projects',
-    installments:         'Installments',
-    recurring:            'Recurring',
-    reports:              'Reports',
-    settings:             'Settings',
-    permissions:          'Permissions',
-
-    /* ── Common Actions ── */
-    add:                  'Add',
-    edit:                 'Edit',
-    delete:               'Delete',
-    restore:              'Restore',
-    save:                 'Save',
-    cancel:               'Cancel',
-    confirm:              'Confirm',
-    search:               'Search',
-    filter:               'Filter',
-    export:               'Export',
-    refresh:              'Refresh',
-    close:                'Close',
-    back:                 'Back',
-    next:                 'Next',
-    loading:              'Loading…',
-    saving:               'Saving…',
-    saved:                'Saved',
-    allSaved:             'All changes saved',
-    syncing:              'Syncing…',
-    synced:               'Synced',
-
-    /* ── Status ── */
-    active:               'Active',
-    inactive:             'Inactive',
-    pending:              'Pending',
-    completed:            'Completed',
-    cancelled:            'Cancelled',
-    onHold:               'On Hold',
-    underReview:          'Under Review',
-    deleted:              'Deleted',
-    issued:               'Issued',
-    voided:               'Voided',
-
-    /* ── Direction ── */
-    dirIn:                'IN',
-    dirOut:               'OUT',
-
-    /* ── Permissions Page ── */
-    permissionsTitle:     'Permissions & Users',
-    permissionsSubtitle:  'Manage users, roles and permissions',
-    tabUsers:             'Users',
-    tabRoles:             'Roles',
-    tabMatrix:            'Permissions Matrix',
-    usersList:            'Users List',
-    addUser:              'Add User',
-    showDeleted:          'Show deleted users',
-    rolesTitle:           'Roles',
-    rolesSubtitle:        'Built-in roles cannot be deleted — custom roles can be added',
-    addCustomRole:        'Add Custom Role',
-    matrixTitle:          'Permissions Matrix',
-    matrixSubtitle:       'Select a role to view and edit its permissions per page',
-    selectRole:           'Select a role…',
-    colUser:              'User',
-    colRole:              'Role',
-    colStatus:            'Status',
-    colLastLogin:         'Last Login',
-    colDateAdded:         'Date Added',
-    colPage:              'Page',
-    colView:              'View',
-    colCreate:            'Create',
-    colEdit:              'Edit',
-    colDelete:            'Delete',
-    colViewDeleted:       'Deleted',
-    colSensitive:         'Sensitive',
-    colExport:            'Export',
-
-    /* ── User Modal ── */
-    addUserTitle:         'Add New User',
-    editUserTitle:        'Edit User',
-    fullName:             'Full Name',
-    emailGoogle:          'Email (Google Account)',
-    emailHint:            'Must be an active Google account',
-    roleLabel:            'Role',
-    statusLabel:          'Status',
-    notes:                'Notes',
-    saveUser:             'Save User',
-    emailExists:          'This email is already registered',
-    requiredFields:       'Please fill in all required fields',
-
-    /* ── Role Modal ── */
-    addRoleTitle:         'Add Custom Role',
-    editRoleTitle:        'Edit Role',
-    roleIdLabel:          'Role Name (English)',
-    roleIdHint:           'Used as internal identifier — no spaces',
-    roleDesc:             'Description',
-    saveRole:             'Save Role',
-    roleExists:           'This role already exists',
-
-    /* ── Confirm Modal ── */
-    deleteUserTitle:      'Delete User',
-    deleteRoleTitle:      'Delete Role',
-    areYouSure:           'Are you sure?',
-
-    /* ── Empty States ── */
-    noUsers:              'No users found',
-    noUsersHint:          'Click "Add User" to get started',
-    noOrgs:               'No organizations registered',
-    noOrgsHint:           'Click "Register New Organization" to get started',
-    selectRoleFirst:      'Select a Role',
-    selectRoleHint:       'Choose a role from the dropdown above to view and edit its permissions',
-
-    /* ── Transactions ── */
-    transactionsTitle:    'Financial & In-Kind Transactions',
-    transactionsSubtitle: 'Complete log of all income and expenses',
-    addTransaction:       'Add Transaction',
-    cashAmount:           'Cash Amount',
-    inKindValue:          'In-Kind Est. Value',
-    inKindDesc:           'In-Kind Description',
-    paymentMethod:        'Payment Method',
-    islamicClass:         'Islamic Classification',
-    receiptRef:           'Receipt Reference',
-    category:             'Category',
-    categoryCode:         'Category Code',
-
-    /* ── Donors ── */
-    donorsTitle:          'Donors Registry',
-    donorsSubtitle:       'Manage your donor database',
-    addDonor:             'Add Donor',
-    donorType:            'Donor Type',
-    firstDonation:        'First Donation Date',
-    totalDonated:         'Total Donated',
-    lastDonation:         'Last Donation',
-    notificationPref:     'Notification Preference',
-    phone:                'Phone',
-    address:              'Address',
-    governorate:          'Governorate',
-
-    /* ── Beneficiaries ── */
-    beneficiariesTitle:   'Beneficiaries Registry',
-    beneficiariesSubtitle:'Manage beneficiary case files',
-    addBeneficiary:       'Add Beneficiary',
-    familySize:           'Family Size',
-    district:             'District',
-    needType:             'Need Type',
-    regDate:              'Registration Date',
-    fileStatus:           'File Status',
-    totalAid:             'Total Aid Received',
-    lastAid:              'Last Aid Date',
-    aidFrequency:         'Aid Frequency',
-    verified:             'Verified',
-
-    /* ── Receipts ── */
-    receiptsTitle:        'Receipts Log',
-    receiptsSubtitle:     'IN & OUT receipts',
-    addReceipt:           'Add Receipt',
-    receiptNo:            'Receipt No.',
-    issuedBy:             'Issued By',
-    receiptStatus:        'Receipt Status',
-    donorPayer:           'Donor / Payer',
-    beneficiaryName:      'Beneficiary Name',
-
-    /* ── Inventory ── */
-    inventoryTitle:       'In-Kind Inventory',
-    inventorySubtitle:    'Manage in-kind donated goods',
-    addItem:              'Add Item',
-    itemCode:             'Item Code',
-    itemName:             'Item Name',
-    unit:                 'Unit',
-    openingStock:         'Opening Stock',
-    totalIn:              'Total IN',
-    totalOut:             'Total OUT',
-    currentStock:         'Current Stock',
-    estUnitValue:         'Est. Unit Value',
-    totalValue:           'Total Value',
-    storageLocation:      'Storage Location',
-    expiryDate:           'Expiry Date',
-
-    /* ── Projects ── */
-    projectsTitle:        'Charity Projects',
-    projectsSubtitle:     'Track charity projects and budgets',
-    addProject:           'Add Project',
-    projectCode:          'Project Code',
-    projectName:          'Project Name',
-    startDate:            'Start Date',
-    endDate:              'End Date',
-    budget:               'Planned Budget',
-    actualSpent:          'Actual Spent',
-    remaining:            'Remaining',
-    beneficiaryCount:     'Beneficiary Count',
-    projectManager:       'Project Manager',
-    fundingSource:        'Funding Source',
-
-    /* ── Installments ── */
-    installmentsTitle:    'Installments & Pledges',
-    installmentsSubtitle: 'Track pledged donation installments',
-    addInstallment:       'Add Installment',
-    pledgeTotal:          'Pledge Total',
-    installmentCount:     'Installment Count',
-    installmentNo:        'Installment No.',
-    dueDate:              'Due Date',
-    amountDue:            'Amount Due',
-    amountPaid:           'Amount Paid',
-    paymentDate:          'Payment Date',
-
-    /* ── Recurring ── */
-    recurringTitle:       'Recurring Expenses',
-    recurringSubtitle:    'Manage scheduled recurring expenses',
-    addRecurring:         'Add Recurring',
-    frequency:            'Frequency',
-    nextDueDate:          'Next Due Date',
-    lastPaidDate:         'Last Paid Date',
-
-    /* ── Reports ── */
-    reportsTitle:         'Reports',
-    reportsSubtitle:      'Financial and statistical reports',
-    monthlyReport:        'Monthly Report',
-    annualTotal:          'Annual Total',
-    totalIn:              'Total IN',
-    totalOut:             'Total OUT',
-    netBalance:           'Net Balance',
-    transactionCount:     'Transaction Count',
-
-    /* ── Dashboard ── */
-    dashboardTitle:       'Dashboard',
-    dashboardSubtitle:    'Overview of organization activities',
-    recentTransactions:   'Recent Transactions',
-    projectStatus:        'Project Status',
-    inventoryAlerts:      'Inventory Alerts',
-    pendingInstallments:  'Pending Installments',
-    upcomingPayments:     'Upcoming Payments',
-
-    /* ── Settings ── */
-    settingsTitle:        'Settings',
-    personalPreferences:  'Personal Preferences',
-    orgSettings:          'Organization Settings',
-    systemConfig:         'System Configuration',
-    language:             'Language',
-    arabic:               'العربية',
-    english:              'English',
-    displayName:          'Display Name',
-    orgNameAR:            'Organization Name (Arabic)',
-    orgNameEN:            'Organization Name (English)',
-
-    /* ── Lookups ── */
-    categories:           'Categories',
-    donorTypes:           'Donor Types',
-    islamicClasses:       'Islamic Classifications',
-    needTypes:            'Need Types',
-    paymentMethods:       'Payment Methods',
-    aidFrequencies:       'Aid Frequencies',
-    projectStatuses:      'Project Statuses',
-    projectCategories:    'Project Categories',
-    governorates:         'Governorates',
-    notificationPrefs:    'Notification Preferences',
-
-    /* ── Errors / Toasts ── */
-    errSignIn:            'Please sign in first',
-    errSession:           'Session expired — please sign in again',
-    errSetup:             'System not set up — please complete first-run setup',
-    errNoPermission:      'You do not have permission to access this page',
-    errLoadFailed:        'Failed to load',
-    errSaveFailed:        'Failed to save',
-    errDeleteFailed:      'Failed to delete',
-    successSaved:         'Saved successfully',
-    successDeleted:       'Deleted successfully',
-    successRestored:      'Restored successfully',
-    signedOut:            'Signed out successfully',
-
-    /* ── Role Labels ── */
-    roleSuperAdmin:           'Super Administrator',
-    roleSuperAdminDesc:       'Full system access — all pages and all actions',
-    roleDirector:             'Director',
-    roleDirectorDesc:         'Full operational access including sensitive delete',
-    roleAccountManager:       'Account Manager',
-    roleAccountManagerDesc:   'Full financial module access',
-    roleCaseManager:          'Case Manager',
-    roleCaseManagerDesc:      'Full access to beneficiaries and projects',
-    roleDataEntry:            'Data Entry',
-    roleDataEntryDesc:        'Create and edit — no delete',
-    roleInventoryManager:     'Inventory Manager',
-    roleInventoryManagerDesc: 'Full inventory access, view-only elsewhere',
-    roleViewer:               'Viewer',
-    roleViewerDesc:           'Read-only dashboard and reports',
-
-    /* ── iOS tap screen ── */
-    welcomeBack:              'Welcome Back',
-    tapToContinue:            'Tap to continue',
-    continue:                 'Continue',
+/* ══════════════════════════════════════════════════════════
+   SYNC INDICATOR
+══════════════════════════════════════════════════════════ */
+
+let syncQueue = [];
+
+function updateSyncIndicator(status) {
+  const indicator = document.getElementById('syncIndicator');
+  if (!indicator) return;
+  
+  indicator.className = `sync-indicator ${status}`;
+  const text = indicator.querySelector('.sync-text');
+  if (text) {
+    if (status === 'syncing') text.textContent = t('syncing') || 'Syncing...';
+    else if (status === 'synced') text.textContent = t('synced') || 'All changes saved';
+    else if (status === 'error') text.textContent = t('syncError') || 'Sync failed';
   }
-};
+}
+
+function clearSyncQueue() {
+  syncQueue = [];
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACCESS TOKEN MANAGEMENT
+══════════════════════════════════════════════════════════ */
+
+const SPREADSHEET_ID_KEY = (email) => `coms_spreadsheet_${email}`;
+
+function getSavedAccessToken() {
+  return sessionStorage.getItem('coms_access_token');
+}
+
+function saveAccessToken(token) {
+  sessionStorage.setItem('coms_access_token', token);
+}
+
+function clearAccessToken() {
+  sessionStorage.removeItem('coms_access_token');
+}
+
+/* ══════════════════════════════════════════════════════════
+   INITIALIZE ON PAGE LOAD
+══════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Apply translations
+  applyTranslations();
+  
+  // Set document direction based on language
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = LANG;
+  document.body.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+});
+
+// Export for use in other files (if using modules)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    t, setLanguage, applyTranslations,
+    readSheet, appendRow, updateRow, softDelete, restoreRecord,
+    checkPagePermissions, applyPermissionsToUI,
+    getCurrentTimestamp, formatDisplayDate, formatDisplayDateTime,
+    generateRecordID, escapeHTML, debounce, formatCurrency, formatNumber,
+    showToast, updateSyncIndicator, clearSyncQueue,
+    getSavedAccessToken, saveAccessToken, clearAccessToken,
+    SPREADSHEET_ID_KEY, ALL_PAGES, SHEET_DEFINITIONS
+  };
+}
