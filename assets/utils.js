@@ -704,3 +704,17 @@ window.LOOKUP_SEED_DATA = LOOKUP_SEED_DATA;
 window.SHEET_DEFINITIONS = SHEET_DEFINITIONS;
 window.ALL_PAGES = ALL_PAGES;
 window.DEFAULT_ROLES = DEFAULT_ROLES;
+
+// Force declare global functions after all definitions
+if (typeof window !== 'undefined') {
+    window.toggleUserMenu = toggleUserMenu;
+    window.setLanguage = setLanguage;
+    window.showToast = showToast;
+    window.escapeHTML = escapeHTML;
+    window.t = t;
+    window.renderSidebar = renderSidebar;
+    window.applyTranslations = applyTranslations;
+    
+    // Also make sure LOOKUP_SEED_DATA is available
+    window.LOOKUP_SEED_DATA = LOOKUP_SEED_DATA;
+}
