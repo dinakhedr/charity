@@ -234,12 +234,6 @@ function t(key) {
 // Set language and update UI
 function setLanguage(lang) {
   if (lang !== 'ar' && lang !== 'en') return;
-  
-  // Show loading feedback
-  if (typeof showToast === 'function') {
-    showToast(t('saving'), 'info');
-  }
-  
   LANG = lang;
   localStorage.setItem('app_lang', lang);
   
