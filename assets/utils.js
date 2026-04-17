@@ -695,7 +695,6 @@ window.renderSidebar = renderSidebar;
 window.toggleUserMenu = toggleUserMenu;
 window.setLanguage = setLanguage;
 window.applyTranslations = applyTranslations;
-window.signOut = signOut;
 window.showToast = showToast;
 window.escapeHTML = escapeHTML;
 window.t = t;
