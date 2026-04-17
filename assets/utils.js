@@ -234,6 +234,12 @@ function t(key) {
 // Set language and update UI
 function setLanguage(lang) {
   if (lang !== 'ar' && lang !== 'en') return;
+  
+  // Show loading feedback
+  if (typeof showToast === 'function') {
+    showToast(t('saving'), 'info');
+  }
+  
   LANG = lang;
   localStorage.setItem('app_lang', lang);
   
@@ -242,12 +248,20 @@ function setLanguage(lang) {
   document.documentElement.lang = lang;
   document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
   
+  // Re-render sidebar to update language (if auth state available)
+  if (typeof getAuthState === 'function') {
+    const authState = getAuthState();
+    if (authState && authState.email && authState.spreadsheetId) {
+      renderSidebar(authState.email, authState.userName, authState.role);
+    }
+  }
+  
   // Update all elements with data-t attributes
   if (typeof applyTranslations === 'function') {
     applyTranslations();
   }
   
-  // Show toast notification
+  // Show success notification
   if (typeof showToast === 'function') {
     showToast(t('successUpdated'), 'success');
   }
@@ -288,17 +302,33 @@ function formatDisplayDateTime(timestamp) {
 }
 
 function generateRecordID() {
-  return 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  return 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
 }
 
 async function readSheet(spreadsheetId, sheetName, options = {}) {
   const { includeDeleted = false, email = null } = options;
-  const token = getSavedAccessToken();
+  let token = getSavedAccessToken();
   if (!token) throw new Error('No access token');
   
   const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:Z`, {
     headers: { Authorization: `Bearer ${token}` }
   });
+  
+  // If token expired, redirect to home to re-authenticate
+  if (response.status === 401) {
+    clearAccessToken();
+    localStorage.removeItem('coms_user');
+    sessionStorage.removeItem('coms_permissions');
+    sessionStorage.removeItem('coms_role_dina.khedr@gmail.com');
+    if (typeof showToast === 'function') {
+      showToast('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى', 'error');
+    }
+    setTimeout(() => {
+      window.location.href = '../pages/Home.html';
+    }, 1500);
+    throw new Error('Session expired');
+  }
+  
   if (!response.ok) throw new Error('Failed to read sheet');
   
   const data = await response.json();
@@ -556,12 +586,14 @@ function renderSidebar(email, userName, role) {
 
 function toggleUserMenu() {
   const menu = document.getElementById('userMenu');
-  if (menu) {
-    // Remove any inline display style that might interfere
-    menu.style.display = '';
-    // Toggle the 'open' class
-    menu.classList.toggle('open');
+  if (!menu) {
+    console.warn('User menu element not found');
+    return;
   }
+  // Remove any inline display style that might interfere
+  menu.style.display = '';
+  // Toggle the 'open' class
+  menu.classList.toggle('open');
 }
 
 // Close user menu when clicking outside
