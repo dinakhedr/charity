@@ -157,12 +157,12 @@
           <table class="data-table" id="usersTable">
         <thead>
           <tr>
-            <th style="width:40px;"></th>
             <th>المستخدم</th>
             <th style="width:180px;">الدور</th>
             <th style="width:100px;">الحالة</th>
             <th style="width:160px;">آخر دخول</th>
             <th style="width:130px;">تاريخ الإضافة</th>
+            <th style="width:80px;"></th>
           </tr>
         </thead>
             <tbody id="usersBody">
@@ -217,32 +217,50 @@
             </select>
             <div style="margin-right:auto;font-size:0.8rem;color:var(--text-muted);" id="matrixRoleDesc"></div>
           </div>
-          <!-- Permission columns legend -->
-          <div style="padding:10px 20px;background:var(--bg-page);border-top:1px solid var(--border-default);display:flex;gap:20px;flex-wrap:wrap;">
-            <span class="text-xs text-muted"><strong>عرض</strong> — رؤية الصفحة</span>
-            <span class="text-xs text-muted"><strong>إضافة</strong> — إضافة سجلات</span>
-            <span class="text-xs text-muted"><strong>تعديل</strong> — تعديل سجلات</span>
-            <span class="text-xs text-muted"><strong>حذف</strong> — حذف (ناعم)</span>
-            <span class="text-xs text-muted"><strong>محذوف</strong> — عرض المحذوف</span>
-            <span class="text-xs text-muted"><strong>حساس</strong> — بيانات حساسة</span>
-            <span class="text-xs text-muted"><strong>تصدير</strong> — تصدير البيانات</span>
-          </div>
         </div>
 
         <div class="table-wrapper" id="matrixWrapper" style="display:none;">
           <table class="perm-table" id="matrixTable">
             <thead>
-              <tr>
-                <th style="min-width:160px;">الصفحة</th>
-                <th style="text-align:center;">عرض</th>
-                <th style="text-align:center;">إضافة</th>
-                <th style="text-align:center;">تعديل</th>
-                <th style="text-align:center;">حذف</th>
-                <th style="text-align:center;">محذوف</th>
-                <th style="text-align:center;">حساس</th>
-                <th style="text-align:center;">تصدير</th>
-              </tr>
-            </thead>
+  <tr>
+    <th style="min-width:160px;">الصفحة</th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">عرض</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">View</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">رؤية الصفحة</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">إضافة</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Create</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">إضافة سجلات</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">تعديل</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Edit</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تعديل سجلات</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">حذف</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Delete</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">حذف ناعم</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">محذوف</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Deleted</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">عرض المحذوف</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">حساس</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Sensitive</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">بيانات حساسة</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">تصدير</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Export</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تصدير البيانات</div>
+    </th>
+  </tr>
+</thead>
             <tbody id="matrixBody"></tbody>
           </table>
         </div>
@@ -390,13 +408,13 @@ const PAGE_GROUPS = {
 };
 
 const PERM_COLS = [
-  { key:'CanView',         label:'عرض' },
-  { key:'CanCreate',       label:'إضافة' },
-  { key:'CanEdit',         label:'تعديل' },
-  { key:'CanDelete',       label:'حذف' },
-  { key:'CanViewDeleted',  label:'محذوف' },
-  { key:'CanViewSensitive',label:'حساس' },
-  { key:'CanExport',       label:'تصدير' }
+  { key:'CanView',         label:'عرض',    en:'View' },
+  { key:'CanCreate',       label:'إضافة',  en:'Create' },
+  { key:'CanEdit',         label:'تعديل',  en:'Edit' },
+  { key:'CanDelete',       label:'حذف',    en:'Delete' },
+  { key:'CanViewDeleted',  label:'محذوف',  en:'Deleted' },
+  { key:'CanViewSensitive',label:'حساس',   en:'Sensitive' },
+  { key:'CanExport',       label:'تصدير',  en:'Export' }
 ];
 
 const BUILTIN_ROLES = ['SuperAdmin','Director','AccountManager','CaseManager','DataEntry','InventoryManager','Viewer'];
@@ -486,24 +504,21 @@ function renderUsers(list) {
       `;
 
     return `<tr class="${isDeleted ? 'row-deleted' : ''}">
-      <td style="width:80px;"><div style="display:flex;align-items:center;gap:6px;">${actions}</div></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="user-avatar" style="background:var(--blue-600);width:34px;height:34px;font-size:0.72rem;">${initials}</div>
-          <div>
-            <div style="font-weight:500;">${escapeHTML(u.FullName || '—')}</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
-          </div>
-        </div>
-      </td>
-      <td style="width:180px;">
-        <span class="badge badge-blue">${escapeHTML(roleLabel)}</span>
-        ${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}
-      </td>
-      <td style="width:100px;">${isDeleted ? '—' : statusBadge}</td>
-      <td style="width:160px;font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
-      <td style="width:130px;font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
-    </tr>`;
+  <td>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="user-avatar" style="background:var(--blue-600);width:34px;height:34px;font-size:0.72rem;">${initials}</div>
+      <div>
+        <div style="font-weight:500;">${escapeHTML(u.FullName || '—')}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
+      </div>
+    </div>
+  </td>
+  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}</td>
+  <td>${isDeleted ? '—' : statusBadge}</td>
+  <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
+  <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
+  <td><div style="display:flex;gap:6px;">${actions}</div></td>
+</tr>`;
   }).join('');
 }
 
