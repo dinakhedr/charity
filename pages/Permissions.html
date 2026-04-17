@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الصلاحيات — نظام إدارة الجمعية</title>
   <link rel="manifest" href="/charity/manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23185FA5'/><path d='M50 20C38 20 28 30 28 42c0 8 4 15 11 19l-3 19h28l-3-19c7-4 11-11 11-19 0-12-10-22-22-22z' fill='%231D9E75'/></svg>">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="../assets/styles.css">
 
   <style>
@@ -106,13 +106,13 @@
     <!-- Topbar -->
     <header class="topbar">
       <div>
-        <div class="topbar-title" data-t="permissionsTitle"></div>
-        <div class="topbar-subtitle" data-t="permissionsSubtitle"></div>
+        <div class="topbar-title">الصلاحيات والمستخدمون</div>
+        <div class="topbar-subtitle">إدارة المستخدمين والأدوار والصلاحيات</div>
       </div>
       <div class="topbar-actions">
         <div class="saving-pill" id="savingPill">
           <div class="saving-dot"></div>
-          <span id="savingText" data-t="allSaved"></span>
+          <span id="savingText">كل التغييرات محفوظة</span>
         </div>
       </div>
     </header>
@@ -122,23 +122,26 @@
 
       <!-- Tabs -->
       <div class="tabs" id="mainTabs">
-        <div class="tab active" onclick="switchTab('users')"  id="tab-users"  data-t="tabUsers"></div>
-        <div class="tab"        onclick="switchTab('roles')"  id="tab-roles"  data-t="tabRoles"></div>
-        <div class="tab"        onclick="switchTab('matrix')" id="tab-matrix" data-t="tabMatrix"></div>
+        <div class="tab active" onclick="switchTab('users')"   id="tab-users">المستخدمون</div>
+        <div class="tab"        onclick="switchTab('roles')"   id="tab-roles">الأدوار</div>
+        <div class="tab"        onclick="switchTab('matrix')"  id="tab-matrix">مصفوفة الصلاحيات</div>
       </div>
 
       <!-- ── TAB: Users ──────────────────────────────────────── -->
       <div id="tabUsers">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;" data-t="usersList"></h2>
+            <h2 class="page-title" style="font-size:1.1rem;">قائمة المستخدمين</h2>
           </div>
           <div class="page-header-actions">
             <div class="table-search" style="max-width:220px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" data-t-placeholder="search" oninput="filterUsers(this.value)">
+              <input type="text" placeholder="بحث بالاسم أو الإيميل…" oninput="filterUsers(this.value)">
             </div>
-            <button class="btn btn-primary" onclick="openUserModal()" data-requires="create" data-t="addUser"></button>
+            <button class="btn btn-primary" onclick="openUserModal()" data-requires="create">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              إضافة مستخدم
+            </button>
           </div>
         </div>
 
@@ -146,7 +149,7 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;" id="showDeletedToggle">
           <label class="form-check">
             <input type="checkbox" id="showDeleted" onchange="toggleDeleted(this.checked)">
-            <span class="form-check-label text-sm text-muted" data-t="showDeleted"></span>
+            <span class="form-check-label text-sm text-muted">عرض المستخدمين المحذوفين</span>
           </label>
         </div>
 
@@ -154,18 +157,18 @@
           <table class="data-table" id="usersTable">
         <thead>
           <tr>
-            <th style="text-align:right;" data-t="colUser"></th>
-            <th style="text-align:right;width:180px;" data-t="colRole"></th>
-            <th style="text-align:right;width:100px;" data-t="colStatus"></th>
-            <th style="text-align:right;width:160px;" data-t="colLastLogin"></th>
-            <th style="text-align:right;width:130px;" data-t="colDateAdded"></th>
+            <th>المستخدم</th>
+            <th style="width:180px;">الدور</th>
+            <th style="width:100px;">الحالة</th>
+            <th style="width:160px;">آخر دخول</th>
+            <th style="width:130px;">تاريخ الإضافة</th>
             <th style="width:80px;"></th>
           </tr>
         </thead>
             <tbody id="usersBody">
               <tr><td colspan="6" style="text-align:center;padding:40px;">
                 <div class="spinner" style="margin:0 auto 12px;"></div>
-                <span data-t="loading"></span>
+                جارٍ التحميل…
               </td></tr>
             </tbody>
           </table>
@@ -176,18 +179,18 @@
       <div id="tabRoles" style="display:none;">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;" data-t="rolesTitle"></h2>
-            <p class="page-subtitle" data-t="rolesSubtitle"></p>
+            <h2 class="page-title" style="font-size:1.1rem;">الأدوار الوظيفية</h2>
+            <p class="page-subtitle">الأدوار المدمجة لا يمكن حذفها — يمكن إضافة أدوار مخصصة</p>
           </div>
           <button class="btn btn-primary" onclick="openRoleModal()" data-requires="create">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span data-t="addCustomRole"></span>
+            إضافة دور مخصص
           </button>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="rolesGrid">
           <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
-            <div class="spinner" style="margin:0 auto 12px;"></div><span data-t="loading"></span>
+            <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
           </div>
         </div>
       </div>
@@ -196,21 +199,21 @@
       <div id="tabMatrix" style="display:none;">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;" data-t="matrixTitle"></h2>
-            <p class="page-subtitle" data-t="matrixSubtitle"></p>
+            <h2 class="page-title" style="font-size:1.1rem;">مصفوفة الصلاحيات</h2>
+            <p class="page-subtitle">اختر دوراً لعرض وتعديل صلاحياته على كل صفحة</p>
           </div>
           <div class="saving-pill" id="matrixSavingPill" style="display:none;">
             <div class="saving-dot"></div>
-            <span id="matrixSavingText" data-t="saving"></span>
+            <span id="matrixSavingText">جارٍ الحفظ…</span>
           </div>
         </div>
 
         <!-- Role selector -->
         <div class="card" style="margin-bottom:20px;">
           <div class="role-selector">
-            <label class="form-label" style="margin:0;white-space:nowrap;" data-t="colRole"></label>
+            <label class="form-label" style="margin:0;white-space:nowrap;">الدور:</label>
             <select class="form-select" id="matrixRoleSelect" onchange="loadMatrix(this.value)" style="max-width:280px;">
-              <option value="" data-t="selectRole"></option>
+              <option value="">اختر دوراً…</option>
             </select>
             <div style="margin-right:auto;font-size:0.8rem;color:var(--text-muted);" id="matrixRoleDesc"></div>
           </div>
@@ -219,45 +222,45 @@
         <div class="table-wrapper" id="matrixWrapper" style="display:none;">
           <table class="perm-table" id="matrixTable">
             <thead>
-              <tr>
-                <th style="min-width:160px;" data-t="colPage"></th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colView"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colViewEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colViewAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colCreate"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colCreateEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colCreateAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colEdit"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colEditEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colEditAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colDelete"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colDeleteEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colDeleteAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colViewDeleted"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colViewDeletedEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colViewDeletedAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colSensitive"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colSensitiveEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colSensitiveAr"></div>
-                </th>
-                <th style="text-align:center;min-width:80px;">
-                  <div style="font-weight:600;" data-t="colExport"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colExportEn"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colExportAr"></div>
-                </th>
-              </tr>
-            </thead>
+  <tr>
+    <th style="min-width:160px;">الصفحة</th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">عرض</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">View</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">رؤية الصفحة</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">إضافة</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Create</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">إضافة سجلات</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">تعديل</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Edit</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تعديل سجلات</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">حذف</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Delete</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">حذف ناعم</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">محذوف</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Deleted</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">عرض المحذوف</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">حساس</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Sensitive</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">بيانات حساسة</div>
+    </th>
+    <th style="text-align:center;min-width:80px;">
+      <div style="font-weight:600;">تصدير</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Export</div>
+      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تصدير البيانات</div>
+    </th>
+  </tr>
+</thead>
             <tbody id="matrixBody"></tbody>
           </table>
         </div>
@@ -266,8 +269,8 @@
           <div class="empty-state-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <div class="empty-state-title" data-t="selectRoleFirst"></div>
-          <div class="empty-state-text" data-t="selectRoleHint"></div>
+          <div class="empty-state-title">اختر دوراً</div>
+          <div class="empty-state-text">اختر دوراً من القائمة أعلاه لعرض وتعديل صلاحياته</div>
         </div>
       </div>
 
@@ -279,7 +282,7 @@
 <div class="modal-overlay" id="userModal">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 class="modal-title" id="userModalTitle" data-t="addUserTitle"></h3>
+      <h3 class="modal-title" id="userModalTitle">إضافة مستخدم جديد</h3>
       <button class="modal-close" onclick="closeModal('userModal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -288,36 +291,36 @@
       <input type="hidden" id="uRecordID">
       <div class="form-grid" style="gap:14px;">
         <div class="form-group span-full">
-          <label class="form-label" data-t="fullName"> <span class="required">*</span></label>
-          <input type="text" class="form-input" id="uFullName" data-required="true" placeholder="">
+          <label class="form-label">الاسم الكامل <span class="required">*</span></label>
+          <input type="text" class="form-input" id="uFullName" data-required="true" placeholder="الاسم بالكامل">
         </div>
         <div class="form-group span-full">
-          <label class="form-label" data-t="emailGoogle"> <span class="required">*</span></label>
+          <label class="form-label">البريد الإلكتروني (Google) <span class="required">*</span></label>
           <input type="email" class="form-input" id="uEmail" data-required="true" placeholder="user@gmail.com" dir="ltr">
-          <span class="form-hint" data-t="emailHint"></span>
+          <span class="form-hint">يجب أن يكون حساب Google فعّالاً</span>
         </div>
         <div class="form-group">
-          <label class="form-label" data-t="colRole"> <span class="required">*</span></label>
+          <label class="form-label">الدور <span class="required">*</span></label>
           <select class="form-select" id="uRole" data-required="true">
-            <option value="" data-t="selectRole"></option>
+            <option value="">اختر الدور…</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" data-t="status"></label>
+          <label class="form-label">الحالة</label>
           <select class="form-select" id="uStatus">
-            <option value="Active" data-t="active"></option>
-            <option value="Inactive" data-t="inactive"></option>
+            <option value="Active">نشط</option>
+            <option value="Inactive">غير نشط</option>
           </select>
         </div>
         <div class="form-group span-full">
-          <label class="form-label" data-t="notes"></label>
-          <textarea class="form-textarea" id="uNotes" rows="2" placeholder=""></textarea>
+          <label class="form-label">ملاحظات</label>
+          <textarea class="form-textarea" id="uNotes" rows="2" placeholder="أي ملاحظات إضافية…"></textarea>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('userModal')" data-t="cancel"></button>
-      <button class="btn btn-primary" onclick="saveUser()" id="saveUserBtn" data-t="saveUser"></button>
+      <button class="btn btn-secondary" onclick="closeModal('userModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveUser()" id="saveUserBtn">حفظ المستخدم</button>
     </div>
   </div>
 </div>
@@ -326,7 +329,7 @@
 <div class="modal-overlay" id="roleModal">
   <div class="modal-box modal-sm">
     <div class="modal-header">
-      <h3 class="modal-title" id="roleModalTitle" data-t="addRoleTitle"></h3>
+      <h3 class="modal-title" id="roleModalTitle">إضافة دور مخصص</h3>
       <button class="modal-close" onclick="closeModal('roleModal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -335,19 +338,19 @@
       <input type="hidden" id="rRecordID">
       <div class="form-grid" style="gap:14px;">
         <div class="form-group span-full">
-          <label class="form-label" data-t="roleNameEn"> <span class="required">*</span></label>
+          <label class="form-label">اسم الدور (بالإنجليزي) <span class="required">*</span></label>
           <input type="text" class="form-input" id="rRoleID" data-required="true" placeholder="e.g. FieldWorker" dir="ltr">
-          <span class="form-hint" data-t="roleNameHint"></span>
+          <span class="form-hint">يُستخدم كمعرّف داخلي — بدون مسافات</span>
         </div>
         <div class="form-group span-full">
-          <label class="form-label" data-t="description"> <span class="required">*</span></label>
-          <input type="text" class="form-input" id="rDesc" data-required="true" placeholder="">
+          <label class="form-label">الوصف <span class="required">*</span></label>
+          <input type="text" class="form-input" id="rDesc" data-required="true" placeholder="وصف مختصر للدور">
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('roleModal')" data-t="cancel"></button>
-      <button class="btn btn-primary" onclick="saveRole()" id="saveRoleBtn" data-t="saveRole"></button>
+      <button class="btn btn-secondary" onclick="closeModal('roleModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveRole()" id="saveRoleBtn">حفظ الدور</button>
     </div>
   </div>
 </div>
@@ -363,22 +366,20 @@
           <path d="M10 11v6M14 11v6"/>
         </svg>
       </div>
-      <div class="modal-confirm-title" id="confirmTitle" data-t="confirmTitle"></div>
+      <div class="modal-confirm-title" id="confirmTitle">هل أنت متأكد؟</div>
       <div class="modal-confirm-text" id="confirmMsg"></div>
     </div>
     <div class="modal-footer" style="justify-content:center;gap:12px;">
-      <button class="btn btn-secondary" onclick="closeModal('confirmModal')" data-t="cancel"></button>
-      <button class="btn btn-danger" id="confirmOk" data-t="confirm"></button>
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">إلغاء</button>
+      <button class="btn btn-danger"    id="confirmOk">تأكيد</button>
     </div>
   </div>
 </div>
 
 <div id="toastContainer" class="toast-container"></div>
 
-  <script src="../assets/config.js"></script>
-  <script src="../assets/utils.js"></script>
-  <script src="../assets/auth.js"></script>
-  
+<script src="../assets/utils.js"></script>
+<script src="../assets/auth.js"></script>
 <script>
 'use strict';
 
@@ -397,11 +398,13 @@ let _pendingConfirm = null;
 
 /* ── Page groups for matrix display ─────────────────────── */
 const PAGE_GROUPS = {
-  mainPages: { ar: 'الصفحات الرئيسية', en: 'Main Pages', pages: ['Dashboard','OwnerDashboard','Reports'] },
-  financialOps: { ar: 'العمليات المالية', en: 'Financial Operations', pages: ['Transactions','Receipts','Installments','Recurring'] },
-  records: { ar: 'السجلات', en: 'Records', pages: ['Donors','Beneficiaries','Inventory','Projects'] },
-  settings: { ar: 'الإعدادات', en: 'Settings', pages: ['Settings','Permissions'] },
-  referenceData: { ar: 'بيانات المرجعية', en: 'Reference Data', pages: ['Categories','DonorTypes','IslamicClasses','NeedTypes','PaymentMethods','AidFrequencies','ProjectStatuses','ProjectCategories','Governorates','NotificationPrefs'] }
+  'الصفحات الرئيسية': ['Dashboard','OwnerDashboard','Reports'],
+  'العمليات المالية':  ['Transactions','Receipts','Installments','Recurring'],
+  'السجلات':          ['Donors','Beneficiaries','Inventory','Projects'],
+  'الإعدادات':        ['Settings','Permissions'],
+  'بيانات المرجعية':  ['Categories','DonorTypes','IslamicClasses','NeedTypes',
+                       'PaymentMethods','AidFrequencies','ProjectStatuses',
+                       'ProjectCategories','Governorates','NotificationPrefs']
 };
 
 const PERM_COLS = [
@@ -417,55 +420,34 @@ const PERM_COLS = [
 const BUILTIN_ROLES = ['SuperAdmin','Director','AccountManager','CaseManager','DataEntry','InventoryManager','Viewer'];
 
 const ROLE_LABELS = {
-  SuperAdmin:      { get ar() { return t('roleSuperAdmin')      || 'مسؤول النظام الكامل'; },   get desc() { return t('roleSuperAdminDesc')      || 'صلاحيات كاملة على جميع الصفحات والبيانات'; } },
-  Director:        { get ar() { return t('roleDirector')        || 'المدير التنفيذي'; },         get desc() { return t('roleDirectorDesc')        || 'صلاحيات تشغيلية كاملة مع حذف العمليات المالية'; } },
-  AccountManager:  { get ar() { return t('roleAccountManager')  || 'مسؤول الحسابات'; },          get desc() { return t('roleAccountManagerDesc')  || 'صلاحيات كاملة على الوحدات المالية'; } },
-  CaseManager:     { get ar() { return t('roleCaseManager')     || 'مسؤول الحالات'; },           get desc() { return t('roleCaseManagerDesc')     || 'صلاحيات كاملة على المستفيدين والمشاريع'; } },
-  DataEntry:       { get ar() { return t('roleDataEntry')       || 'موظف إدخال بيانات'; },       get desc() { return t('roleDataEntryDesc')       || 'إضافة وتعديل فقط — بدون حذف'; } },
-  InventoryManager:{ get ar() { return t('roleInventoryManager')|| 'مسؤول المخزون'; },           get desc() { return t('roleInventoryManagerDesc')|| 'صلاحيات كاملة على المخزون العيني'; } },
-  Viewer:          { get ar() { return t('roleViewer')          || 'مشاهد فقط'; },               get desc() { return t('roleViewerDesc')          || 'قراءة فقط على لوحة التحكم والتقارير'; } }
+  SuperAdmin:      { ar:'مسؤول النظام الكامل',   desc:'صلاحيات كاملة على جميع الصفحات والبيانات' },
+  Director:        { ar:'المدير التنفيذي',         desc:'صلاحيات تشغيلية كاملة مع حذف العمليات المالية' },
+  AccountManager:  { ar:'مسؤول الحسابات',          desc:'صلاحيات كاملة على الوحدات المالية' },
+  CaseManager:     { ar:'مسؤول الحالات',           desc:'صلاحيات كاملة على المستفيدين والمشاريع' },
+  DataEntry:       { ar:'موظف إدخال بيانات',       desc:'إضافة وتعديل فقط — بدون حذف' },
+  InventoryManager:{ ar:'مسؤول المخزون',           desc:'صلاحيات كاملة على المخزون العيني' },
+  Viewer:          { ar:'مشاهد فقط',               desc:'قراءة فقط على لوحة التحكم والتقارير' }
 };
 
 /* ── Init ───────────────────────────────────────────────── */
 initPageAuth({
-  pageName: '',
+  pageName: 'Permissions',
   onLoadLocal: (email, sid) => {
     _email = email; _sid = sid;
   },
   onReady: async (sid, email, token, perms) => {
-    _sid = sid; _email = email;
-    _perms = {
-      canView: true, canCreate: true, canEdit: true,
-      canDelete: true, canViewDeleted: true,
-      canViewSensitive: true, canExport: true
-    };
+    _sid = sid; _email = email; _perms = perms;
     await Promise.all([loadUsers(), loadRoles()]);
     populateRoleDropdowns();
-
-    const me = _users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
-    if (me && (!me.LastLogin || me.LastLogin.trim() === '')) {
-      try {
-        await updateRow(sid, 'Users', me.RecordID,
-          { LastLogin: getCurrentTimestamp() }, email);
-      } catch { /* non-critical */ }
-    }
   }
 });
 
 /* ── Tab Switching ──────────────────────────────────────── */
 function switchTab(tab) {
-  // Update tab active states
-  document.getElementById(`tab-${tab}`).classList.add('active');
-  if (tab !== 'users') document.getElementById('tab-users').classList.remove('active');
-  if (tab !== 'roles') document.getElementById('tab-roles').classList.remove('active');
-  if (tab !== 'matrix') document.getElementById('tab-matrix').classList.remove('active');
-  
-  // Show/hide content panels
-  document.getElementById('tabUsers').style.display = tab === 'users' ? 'block' : 'none';
-  document.getElementById('tabRoles').style.display = tab === 'roles' ? 'block' : 'none';
-  document.getElementById('tabMatrix').style.display = tab === 'matrix' ? 'block' : 'none';
-  
-  // Load data when switching to a tab
+  ['users','roles','matrix'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
+  });
   if (tab === 'roles') renderRoles();
   if (tab === 'matrix') populateMatrixRoleSelect();
 }
@@ -480,7 +462,7 @@ async function loadUsers() {
     renderUsers();
   } catch (e) {
     document.getElementById('usersBody').innerHTML =
-      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-out);">${t('errLoadFailed')} — ${escapeHTML(e.message)}</td></tr>`;
+      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-out);">فشل التحميل — ${escapeHTML(e.message)}</td></tr>`;
   }
 }
 
@@ -492,8 +474,8 @@ function renderUsers(list) {
     body.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
         <div class="empty-state-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-        <div class="empty-state-title">${t('noUsers')}</div>
-        <div class="empty-state-text">${t('noUsersHint')}</div>
+        <div class="empty-state-title">لا يوجد مستخدمون</div>
+        <div class="empty-state-text">اضغط على "إضافة مستخدم" للبدء</div>
       </div>
     </td></tr>`;
     return;
@@ -504,19 +486,19 @@ function renderUsers(list) {
     const initials   = (u.FullName || u.Email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
     const roleLabel  = ROLE_LABELS[u.Role]?.ar || u.Role || '—';
     const statusBadge = u.Status === 'Active'
-      ? `<span class="badge status-active badge-dot">${t('active')}</span>`
-      : `<span class="badge status-inactive badge-dot">${t('inactive')}</span>`;
+      ? `<span class="badge status-active badge-dot">نشط</span>`
+      : `<span class="badge status-inactive badge-dot">غير نشط</span>`;
 
     const actions = isDeleted
       ? (_perms?.canViewDeleted
-          ? `<button class="btn btn-sm btn-secondary" onclick="restoreUser('${u.RecordID}')">${t('restore')}</button>`
+          ? `<button class="btn btn-sm btn-secondary" onclick="restoreUser('${u.RecordID}')">استعادة</button>`
           : '')
       : `
-        <button class="btn btn-sm btn-secondary btn-icon" onclick="openUserModal('${u.RecordID}')" title="${t('edit')}" ${!_perms?.canEdit ? 'disabled' : ''}>
+        <button class="btn btn-sm btn-secondary btn-icon" onclick="openUserModal('${u.RecordID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         ${u.Email !== _email && _perms?.canDelete ? `
-        <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteUser('${u.RecordID}')" title="${t('delete')}">
+        <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteUser('${u.RecordID}')" title="حذف">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>` : ''}
       `;
@@ -530,13 +512,13 @@ function renderUsers(list) {
         <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
       </div>
     </div>
-   </td>
-  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? `<span class="badge badge-deleted" style="margin-right:4px;">${t('deleted')}</span>` : ''}</td>
+  </td>
+  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}</td>
   <td>${isDeleted ? '—' : statusBadge}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
   <td><div style="display:flex;gap:6px;">${actions}</div></td>
-              </tr>`;
+</tr>`;
   }).join('');
 }
 
@@ -568,13 +550,13 @@ function openUserModal(recordID = null) {
   document.getElementById('uStatus').value   = 'Active';
   document.getElementById('uNotes').value    = '';
   document.getElementById('uEmail').disabled = false;
-  document.getElementById('userModalTitle').textContent = t('addUserTitle');
+  document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
 
   if (recordID) {
     const u = _users.find(x => x.RecordID === recordID);
     if (!u) return;
     _editingUser = u;
-    document.getElementById('userModalTitle').textContent = t('editUserTitle');
+    document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
     document.getElementById('uRecordID').value = u.RecordID;
     document.getElementById('uFullName').value = u.FullName  || '';
     document.getElementById('uEmail').value    = u.Email     || '';
@@ -598,49 +580,47 @@ async function saveUser() {
     ['uFullName','uEmail','uRole'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast(t('requiredFields'), 'error');
+    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
     return;
   }
 
   const btn = document.getElementById('saveUserBtn');
-  btn.disabled = true; btn.textContent = t('saving');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
 
   try {
     if (_editingUser) {
       await updateRow(_sid, 'Users', _editingUser.RecordID,
         { FullName: name, Role: role, Status: status, Notes: notes }, _email);
-      showToast(t('successSaved'), 'success');
+      showToast('تم تحديث المستخدم بنجاح', 'success');
     } else {
       const existing = _users.map(u => u.Email?.toLowerCase());
       if (existing.includes(email)) {
-        showToast(t('emailExists'), 'error');
-        btn.disabled = false; btn.textContent = t('saveUser');
+        showToast('هذا البريد الإلكتروني مسجّل مسبقاً', 'error');
+        btn.disabled = false; btn.textContent = 'حفظ المستخدم';
         return;
       }
+      const domainIDs = _users.map(u => u.Email).filter(Boolean);
       await appendRow(_sid, 'Users', {
         Email: email, FullName: name, Role: role,
         Status: status, LastLogin: '', Notes: notes
       }, _email);
-      showToast(t('successSaved'), 'success');
+      showToast(`تم إضافة ${name} بنجاح`, 'success');
     }
     closeModal('userModal');
     await loadUsers();
     populateRoleDropdowns();
   } catch (e) {
-    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
+    showToast('فشل الحفظ: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = t('saveUser');
+    btn.disabled = false; btn.textContent = 'حفظ المستخدم';
   }
 }
 
 function confirmDeleteUser(recordID) {
   const u = _users.find(x => x.RecordID === recordID);
   if (!u) return;
-  document.getElementById('confirmTitle').textContent = t('deleteUserTitle');
-  const msg = LANG === 'ar'
-    ? `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`
-    : `Delete "${u.FullName || u.Email}"? Their system access will be disabled.`;
-  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmTitle').textContent = 'حذف المستخدم';
+  document.getElementById('confirmMsg').textContent   = `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`;
   _pendingConfirm = () => deleteUser(recordID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
   openModal('confirmModal');
@@ -651,7 +631,7 @@ async function deleteUser(recordID) {
     await softDelete(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast(t('errDeleteFailed') + ': ' + e.message, 'error');
+    showToast('فشل الحذف: ' + e.message, 'error');
   }
 }
 
@@ -660,7 +640,7 @@ async function restoreUser(recordID) {
     await restoreRecord(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
+    showToast('فشل الاستعادة: ' + e.message, 'error');
   }
 }
 
@@ -715,11 +695,11 @@ function renderRoles() {
           <div class="role-name">${escapeHTML(r.RoleName || r.RoleID)}</div>
           <div style="font-size:0.72rem;color:var(--text-muted);font-family:monospace;" dir="ltr">${escapeHTML(r.RoleID)}</div>
           <div class="role-desc">${escapeHTML(r.Description || '')}</div>
-          <div class="role-count" style="margin-top:4px;">${count} ${LANG === 'ar' ? 'مستخدم' : 'user(s)'}</div>
+          <div class="role-count" style="margin-top:4px;">${count} مستخدم</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
           ${isBuiltin
-            ? `<span class="badge badge-blue" style="font-size:0.65rem;">${LANG === 'ar' ? 'مدمج' : 'Built-in'}</span>`
+            ? `<span class="badge badge-blue" style="font-size:0.65rem;">مدمج</span>`
             : `<button class="btn btn-sm btn-secondary btn-icon" onclick="openRoleModal('${r.RoleID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
@@ -741,13 +721,13 @@ function openRoleModal(roleID = null) {
   document.getElementById('rRoleID').value   = '';
   document.getElementById('rDesc').value     = '';
   document.getElementById('rRoleID').disabled = false;
-  document.getElementById('roleModalTitle').textContent = t('addRoleTitle');
+  document.getElementById('roleModalTitle').textContent = 'إضافة دور مخصص';
 
   if (roleID) {
     const r = _roles.find(x => x.RoleID === roleID);
     if (!r) return;
     _editingRole = r;
-    document.getElementById('roleModalTitle').textContent = t('editRoleTitle');
+    document.getElementById('roleModalTitle').textContent = 'تعديل الدور';
     document.getElementById('rRecordID').value = r.RecordID || '';
     document.getElementById('rRoleID').value   = r.RoleID   || '';
     document.getElementById('rDesc').value     = r.Description || '';
@@ -765,22 +745,22 @@ async function saveRole() {
     ['rRoleID','rDesc'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast(t('requiredFields'), 'error');
+    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
     return;
   }
 
   const btn = document.getElementById('saveRoleBtn');
-  btn.disabled = true; btn.textContent = t('saving');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
 
   try {
     if (_editingRole) {
       await updateRow(_sid, 'Roles', _editingRole.RecordID,
         { Description: desc }, _email);
-      showToast(t('successSaved'), 'success');
+      showToast('تم تحديث الدور بنجاح', 'success');
     } else {
       if (_roles.find(r => r.RoleID === roleID)) {
-        showToast(t('roleExists'), 'error');
-        btn.disabled = false; btn.textContent = t('saveRole');
+        showToast('هذا الدور موجود مسبقاً', 'error');
+        btn.disabled = false; btn.textContent = 'حفظ الدور';
         return;
       }
       await appendRow(_sid, 'Roles', { RoleID: roleID, RoleName: roleID, Description: desc }, _email);
@@ -796,7 +776,7 @@ async function saveRole() {
         await appendRow(_sid, 'Permissions', row, _email);
       }
 
-      showToast(t('successSaved'), 'success');
+      showToast(`تم إضافة الدور "${roleID}" بنجاح`, 'success');
     }
 
     closeModal('roleModal');
@@ -805,18 +785,15 @@ async function saveRole() {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
+    showToast('فشل الحفظ: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = t('saveRole');
+    btn.disabled = false; btn.textContent = 'حفظ الدور';
   }
 }
 
 function confirmDeleteRole(roleID) {
-  document.getElementById('confirmTitle').textContent = t('deleteRoleTitle');
-  const msg = LANG === 'ar'
-    ? `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`
-    : `Delete role "${roleID}"? Roles assigned to users cannot be deleted.`;
-  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmTitle').textContent = 'حذف الدور';
+  document.getElementById('confirmMsg').textContent   = `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`;
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); deleteRole(roleID); };
   openModal('confirmModal');
 }
@@ -831,7 +808,7 @@ async function deleteRole(roleID) {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast(t('errDeleteFailed') + ': ' + e.message, 'error');
+    showToast('فشل الحذف: ' + e.message, 'error');
   }
 }
 
@@ -840,7 +817,7 @@ function populateRoleDropdowns() {
   const sel = document.getElementById('uRole');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = `<option value="">${t('selectRole')}</option>`;
+  sel.innerHTML = '<option value="">اختر الدور…</option>';
 
   const builtins = BUILTIN_ROLES.map(rid => ({
     RoleID: rid,
@@ -866,7 +843,7 @@ function populateMatrixRoleSelect() {
   const sel = document.getElementById('matrixRoleSelect');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = `<option value="">${t('selectRole')}</option>`;
+  sel.innerHTML = '<option value="">اختر دوراً…</option>';
 
   const builtins = BUILTIN_ROLES.map(rid => ({ RoleID: rid, label: ROLE_LABELS[rid]?.ar || rid }));
   const customs  = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE')
@@ -896,7 +873,7 @@ async function loadMatrix(roleID) {
   document.getElementById('matrixEmpty').style.display   = 'none';
   document.getElementById('matrixBody').innerHTML =
     `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">
-      <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>${t('loading')}…
+      <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>جارٍ التحميل…
     </td></tr>`;
 
   try {
@@ -904,7 +881,7 @@ async function loadMatrix(roleID) {
       { includeDeleted: false, email: _email, forceRefresh: true });
     renderMatrix(roleID);
   } catch (e) {
-    showToast(t('errLoadFailed') + ': ' + e.message, 'error');
+    showToast('فشل تحميل الصلاحيات: ' + e.message, 'error');
   }
 }
 
@@ -914,10 +891,9 @@ function renderMatrix(roleID) {
   _matrix.filter(r => r.RoleID === roleID).forEach(r => { rolePerms[r.PageName] = r; });
 
   let html = '';
-  for (const [groupKey, group] of Object.entries(PAGE_GROUPS)) {
-    const groupLabel = LANG === 'ar' ? group.ar : group.en;
-    html += `<tr class="page-group-row"><td colspan="8">${escapeHTML(groupLabel)}</td></tr>`;
-    group.pages.forEach(page => {
+  for (const [groupLabel, pages] of Object.entries(PAGE_GROUPS)) {
+    html += `<tr class="page-group-row"><td colspan="8">${groupLabel}</td></tr>`;
+    pages.forEach(page => {
       const p = rolePerms[page] || {};
       const pageName = getPageLabel(page);
       html += `<tr>
@@ -941,8 +917,7 @@ function renderMatrix(roleID) {
   body.innerHTML = html;
 
   if (roleID === 'SuperAdmin') {
-    const msg = LANG === 'ar' ? 'المسؤول الكامل — لا يمكن تعديل صلاحياته' : 'Full administrator — permissions cannot be edited';
-    document.getElementById('matrixRoleDesc').textContent = msg;
+    document.getElementById('matrixRoleDesc').textContent = 'المسؤول الكامل — لا يمكن تعديل صلاحياته';
   }
 }
 
@@ -971,7 +946,7 @@ async function savePerm(roleID, pageName, permKey, value, recordID) {
     }
     setSavingState('saved');
   } catch (e) {
-    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
+    showToast('فشل حفظ الصلاحية: ' + e.message, 'error');
     setSavingState('error');
   }
 }
@@ -982,7 +957,7 @@ function setSavingState(state) {
   if (!pill) return;
   pill.style.display = 'inline-flex';
   pill.className = `saving-pill ${state === 'saving' ? 'saving' : state === 'saved' ? 'saved' : ''}`;
-  text.textContent = state === 'saving' ? t('saving') : state === 'saved' ? t('saved') : t('error');
+  text.textContent = state === 'saving' ? 'جارٍ الحفظ…' : state === 'saved' ? 'تم الحفظ' : 'فشل الحفظ';
   if (state === 'saved') {
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(() => { pill.style.display = 'none'; }, 2500);
@@ -992,32 +967,19 @@ function setSavingState(state) {
 /* ── Page label helper ──────────────────────────────────── */
 function getPageLabel(page) {
   const labels = {
-    Dashboard: { ar: 'لوحة التحكم', en: 'Dashboard' },
-    OwnerDashboard: { ar: 'لوحة المالك', en: 'Owner Dashboard' },
-    Reports: { ar: 'التقارير', en: 'Reports' },
-    Transactions: { ar: 'العمليات المالية', en: 'Transactions' },
-    Receipts: { ar: 'الإيصالات', en: 'Receipts' },
-    Installments: { ar: 'الأقساط', en: 'Installments' },
-    Recurring: { ar: 'المصروفات الدورية', en: 'Recurring' },
-    Donors: { ar: 'المتبرعون', en: 'Donors' },
-    Beneficiaries: { ar: 'المستفيدون', en: 'Beneficiaries' },
-    Inventory: { ar: 'المخزون', en: 'Inventory' },
-    Projects: { ar: 'المشاريع', en: 'Projects' },
-    Settings: { ar: 'الإعدادات', en: 'Settings' },
-    Permissions: { ar: 'الصلاحيات', en: 'Permissions' },
-    Categories: { ar: 'الفئات', en: 'Categories' },
-    DonorTypes: { ar: 'أنواع المتبرعين', en: 'Donor Types' },
-    IslamicClasses: { ar: 'التصنيفات الإسلامية', en: 'Islamic Classes' },
-    NeedTypes: { ar: 'أنواع الاحتياجات', en: 'Need Types' },
-    PaymentMethods: { ar: 'طرق الدفع', en: 'Payment Methods' },
-    AidFrequencies: { ar: 'تكرار المساعدات', en: 'Aid Frequencies' },
-    ProjectStatuses: { ar: 'حالات المشاريع', en: 'Project Statuses' },
-    ProjectCategories: { ar: 'فئات المشاريع', en: 'Project Categories' },
-    Governorates: { ar: 'المحافظات', en: 'Governorates' },
-    NotificationPrefs: { ar: 'تفضيلات الإشعارات', en: 'Notification Preferences' }
+    Dashboard: 'لوحة التحكم', OwnerDashboard: 'لوحة المالك', Reports: 'التقارير',
+    Transactions: 'العمليات المالية', Receipts: 'الإيصالات',
+    Installments: 'الأقساط', Recurring: 'المصروفات الدورية',
+    Donors: 'المتبرعون', Beneficiaries: 'المستفيدون',
+    Inventory: 'المخزون', Projects: 'المشاريع',
+    Settings: 'الإعدادات', Permissions: 'الصلاحيات',
+    Categories: 'الفئات', DonorTypes: 'أنواع المتبرعين',
+    IslamicClasses: 'التصنيفات الإسلامية', NeedTypes: 'أنواع الاحتياجات',
+    PaymentMethods: 'طرق الدفع', AidFrequencies: 'تكرار المساعدات',
+    ProjectStatuses: 'حالات المشاريع', ProjectCategories: 'فئات المشاريع',
+    Governorates: 'المحافظات', NotificationPrefs: 'تفضيلات الإشعارات'
   };
-  const label = labels[page];
-  return label ? (LANG === 'ar' ? label.ar : label.en) : page;
+  return labels[page] || page;
 }
 
 /* ── Modal helpers ──────────────────────────────────────── */
