@@ -286,6 +286,7 @@ h4 { font-size: 1rem; }
 }
 
 .sidebar-footer {
+  position: relative; 
   margin-top: auto;
   padding: 12px 8px;
   border-top: 1px solid rgba(255,255,255,0.1);
