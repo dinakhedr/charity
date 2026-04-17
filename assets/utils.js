@@ -9,6 +9,13 @@
    GLOBAL CONFIGURATION
 ══════════════════════════════════════════════════════════ */
 
+// ===== GOOGLE OAUTH CONFIGURATION =====
+const CLIENT_ID = '460184547236-7a4jn7lclo4317pnui9qjcu9d62buknn.apps.googleusercontent.com';
+
+// System Admin Configuration
+const SYSADMIN_EMAIL = 'dina.khedr@gmail.com';  // Replace with actual admin email
+const SYSADMIN_SHEET_ID = '1m41rWfsHWWh6LkKqDir8nnen0y0Yx8RzhPPQs73Bxis';  // Google Sheet ID for system config
+
 // All system pages for permissions matrix
 const ALL_PAGES = [
   'Dashboard', 'OwnerDashboard', 'Reports',
