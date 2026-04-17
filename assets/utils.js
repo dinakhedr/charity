@@ -236,11 +236,21 @@ function setLanguage(lang) {
   if (lang !== 'ar' && lang !== 'en') return;
   LANG = lang;
   localStorage.setItem('app_lang', lang);
+  
+  // Update HTML direction
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
   document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  if (typeof applyTranslations === 'function') applyTranslations();
-  if (typeof showToast === 'function') showToast(t('successUpdated'), 'success');
+  
+  // Update all elements with data-t attributes
+  if (typeof applyTranslations === 'function') {
+    applyTranslations();
+  }
+  
+  // Show toast notification
+  if (typeof showToast === 'function') {
+    showToast(t('successUpdated'), 'success');
+  }
 }
 
 // Apply translations to all elements with data-t attributes
@@ -684,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.renderSidebar = renderSidebar;
 window.toggleUserMenu = toggleUserMenu;
 window.setLanguage = setLanguage;
+window.applyTranslations = applyTranslations;
 window.signOut = signOut;
 window.showToast = showToast;
 window.escapeHTML = escapeHTML;
