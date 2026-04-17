@@ -523,7 +523,7 @@ function renderSidebar(email, userName, role) {
       <div class="user-role">${escapeHTML(roleLabel)}</div>
     </div>
   </div>
-  <div class="dropdown-menu" id="userMenu" style="display:none;">
+  <div class="dropdown-menu" id="userMenu">
     <div class="dropdown-item" onclick="setLanguage('ar')">
       <span>العربية</span>
       ${LANG === 'ar' ? '<span>✓</span>' : ''}
