@@ -41,7 +41,8 @@ const CONFIG = {
 
   // Application Settings
   app: {
-    name: 'نظام إدارة الجمعية الخيرية',
+    // App display name — use t('charityManagement') in the UI, not this field directly
+    name: 'Charity Management System',
     nameEn: 'Charity Management System',
     version: '1.0.0',
     environment: 'production',  // 'development' or 'production'

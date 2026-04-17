@@ -55,7 +55,7 @@ async function initPageAuth({ pageName = '', onLoadLocal = null, onReady }) {
   /* ── Step 1: Read user from localStorage ─────────────── */
   const user = _loadUser();
   if (!user || !user.email) {
-    _redirectHome(typeof t === 'function' ? t('errSignIn') : 'يرجى تسجيل الدخول أولاً');
+    _redirectHome(typeof t === 'function' ? t('errSignIn') : 'Please sign in first');
     return;
   }
 
@@ -66,7 +66,7 @@ async function initPageAuth({ pageName = '', onLoadLocal = null, onReady }) {
   /* ── Step 2: Read spreadsheetId ──────────────────────── */
   const sid = localStorage.getItem(SPREADSHEET_ID_KEY(email));
   if (!sid) {
-    _redirectHome(typeof t === 'function' ? t('errSetup') : 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي');
+    _redirectHome(typeof t === 'function' ? t('errSetup') : 'System not set up — please complete initial setup');
     return;
   }
   _auth.spreadsheetId = sid;
@@ -74,7 +74,7 @@ async function initPageAuth({ pageName = '', onLoadLocal = null, onReady }) {
   /* ── Step 3: Read cached access token ────────────────── */
   const token = getSavedAccessToken();
   if (!token) {
-    _redirectHome(typeof t === 'function' ? t('errSession') : 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى');
+    _redirectHome(typeof t === 'function' ? t('errSession') : 'Session expired — please sign in again');
     return;
   }
   _auth.accessToken = token;
@@ -120,7 +120,7 @@ function signOut() {
   localStorage.removeItem('coms_user');
   sessionStorage.removeItem('coms_permissions');
   sessionStorage.removeItem(`coms_role_${_auth.email}`);
-  showToast(typeof t === 'function' ? t('signedOut') : 'تم تسجيل الخروج بنجاح', 'info');
+  showToast(typeof t === 'function' ? t('signedOut') : 'Signed out successfully', 'success');
   setTimeout(() => { window.location.href = _homePath(); }, 800);
 }
 
@@ -163,7 +163,7 @@ async function _finalize(sid, email, token, pageName, onReady) {
 
   } catch (e) {
     console.error('Auth finalize error:', e);
-    showToast(typeof t === 'function' ? t('errLoadFailed') : 'حدث خطأ أثناء تحميل الصفحة', 'error');
+    showToast(typeof t === 'function' ? t('errLoadFailed') : 'An error occurred while loading the page', 'error');
     _hideLoading();
   }
 }
@@ -191,7 +191,7 @@ async function _loadRole(sid, email) {
 async function _checkAndEnforce(pageName, sid, email) {
   const perms = await checkPagePermissions(pageName, sid, email);
   if (!perms.canView) {
-    showToast(typeof t === 'function' ? t('errNoPermission') : 'ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
+    showToast(typeof t === 'function' ? t('errNoPermission') : 'You do not have permission to access this page', 'error');
     setTimeout(() => {
       window.location.href = _homePath();
     }, 1500);
@@ -461,10 +461,10 @@ function _authShowIOSTapScreen(onTap) {
   if (!overlay.id) { overlay.id = 'authLoadingOverlay'; document.body.appendChild(overlay); }
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:32px 28px;text-align:center;max-width:320px;width:100%;">
-      <h2 style="font-family:var(--font-sans);font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">${typeof t === 'function' ? t('welcomeBack') : 'مرحباً بعودتك'}</h2>
-      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;">${typeof t === 'function' ? t('tapToContinue') : 'اضغط للمتابعة'}</p>
+      <h2 style="font-family:var(--font-sans);font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">${typeof t === 'function' ? t('welcomeBack') : 'Welcome back'}</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;">${typeof t === 'function' ? t('tapToContinue') : 'Tap to continue'}</p>
       <button id="_iosTapBtn" style="width:100%;padding:13px;background:var(--blue-600);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:var(--font-sans);cursor:pointer;">
-        ${typeof t === 'function' ? t('continue') : 'متابعة'}
+        ${typeof t === 'function' ? t('continue') : 'Continue'}
       </button>
     </div>`;
   document.getElementById('_iosTapBtn').addEventListener('click', () => { onTap(); });

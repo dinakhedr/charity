@@ -136,7 +136,9 @@ const DEFAULT_ROLES = [
    Force-refresh available from Settings page.
 ══════════════════════════════════════════════════════════ */
 
-let LANG = localStorage.getItem('app_lang') || 'ar';
+let LANG = localStorage.getItem('app_lang')
+        || window.APP_CONFIG?.ui?.defaultLanguage
+        || 'ar';
 
 /* ── Translation cache ────────────────────────────────────
    Populated by loadTranslations(). Falls back to
@@ -192,6 +194,14 @@ const FALLBACK_TRANSLATIONS = {
   roleDataEntry:   { ar: 'موظف إدخال بيانات', en: 'Data Entry Clerk' },
   roleInventoryManager: { ar: 'مسؤول المخزون', en: 'Inventory Manager' },
   roleViewer:      { ar: 'مشاهد فقط',       en: 'Viewer Only' },
+  // iOS tap screen
+  welcomeBack:     { ar: 'مرحباً بعودتك',   en: 'Welcome back' },
+  tapToContinue:   { ar: 'اضغط للمتابعة',   en: 'Tap to continue' },
+  continue:        { ar: 'متابعة',           en: 'Continue' },
+  // Sync indicator (used before sheet loads)
+  syncing:         { ar: 'جارٍ المزامنة...', en: 'Syncing...' },
+  allSaved:        { ar: 'تم حفظ جميع التغييرات', en: 'All changes saved' },
+  errSaveFailed:   { ar: 'فشل الحفظ',        en: 'Sync failed' },
 };
 
 /* ── t(key) ───────────────────────────────────────────────
@@ -401,12 +411,16 @@ async function readSheet(spreadsheetId, sheetName, options = {}) {
     clearAccessToken();
     localStorage.removeItem('coms_user');
     sessionStorage.removeItem('coms_permissions');
-    sessionStorage.removeItem('coms_role_dina.khedr@gmail.com');
+    // Remove role cache for any logged-in user (not hardcoded email)
+    const _u = JSON.parse(localStorage.getItem('coms_user') || '{}');
+    if (_u?.email) sessionStorage.removeItem(`coms_role_${_u.email}`);
     if (typeof showToast === 'function') {
-      showToast('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى', 'error');
+      showToast(typeof t === 'function' ? t('errSession') : 'Session expired', 'error');
     }
     setTimeout(() => {
-      window.location.href = '../pages/Home.html';
+      // Use _homePath if available (defined in auth.js), otherwise best-guess
+      const home = typeof _homePath === 'function' ? _homePath() : '../pages/Home.html';
+      window.location.href = home;
     }, 1500);
     throw new Error('Session expired');
   }
@@ -711,10 +725,11 @@ function showToast(message, type = 'info') {
   
   container.appendChild(toast);
   setTimeout(() => toast.classList.add('show'), 10);
+  const duration = window.APP_CONFIG?.ui?.toastDuration || 3000;
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  }, duration);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -768,9 +783,9 @@ function updateSyncIndicator(status) {
   indicator.className = `sync-indicator ${status}`;
   const text = indicator.querySelector('.sync-text');
   if (text) {
-    if (status === 'syncing') text.textContent = 'Syncing...';
-    else if (status === 'synced') text.textContent = 'All changes saved';
-    else if (status === 'error') text.textContent = 'Sync failed';
+    if (status === 'syncing') text.textContent = typeof t === 'function' ? t('syncing') : 'Syncing...';
+    else if (status === 'synced') text.textContent = typeof t === 'function' ? t('allSaved') : 'All changes saved';
+    else if (status === 'error') text.textContent = typeof t === 'function' ? t('errSaveFailed') : 'Sync failed';
   }
 }
 
@@ -823,17 +838,3 @@ window.LOOKUP_SEED_DATA = LOOKUP_SEED_DATA;
 window.SHEET_DEFINITIONS = SHEET_DEFINITIONS;
 window.ALL_PAGES = ALL_PAGES;
 window.DEFAULT_ROLES = DEFAULT_ROLES;
-
-// Force declare global functions after all definitions
-if (typeof window !== 'undefined') {
-    window.toggleUserMenu = toggleUserMenu;
-    window.setLanguage = setLanguage;
-    window.showToast = showToast;
-    window.escapeHTML = escapeHTML;
-    window.t = t;
-    window.renderSidebar = renderSidebar;
-    window.applyTranslations = applyTranslations;
-    
-    // Also make sure LOOKUP_SEED_DATA is available
-    window.LOOKUP_SEED_DATA = LOOKUP_SEED_DATA;
-}
