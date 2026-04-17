@@ -645,10 +645,15 @@ function renderRoles() {
   const grid = document.getElementById('rolesGrid');
 
   /* Merge builtin + custom */
-  const builtinRows = BUILTIN_ROLES.map(rid => {
-    const existing = _roles.find(r => r.RoleID === rid);
-    return existing || { RoleID: rid, RoleName: ROLE_LABELS[rid]?.ar || rid, Description: ROLE_LABELS[rid]?.desc || '', IsDeleted: 'FALSE' };
-  });
+ const builtinRows = BUILTIN_ROLES.map(rid => {
+  const existing = _roles.find(r => r.RoleID === rid);
+  return {
+    ...(existing || {}),
+    RoleID:      rid,
+    RoleName:    ROLE_LABELS[rid]?.ar    || existing?.RoleName    || rid,
+    Description: ROLE_LABELS[rid]?.desc  || existing?.Description || ''
+  };
+});
 
   const customRows = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE');
   const allRoles   = [...builtinRows, ...customRows];
