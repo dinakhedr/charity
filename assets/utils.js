@@ -516,29 +516,29 @@ function renderSidebar(email, userName, role) {
     </div>
     
     <div class="sidebar-footer">
-      <div class="sidebar-user" onclick="toggleUserMenu()">
-        <div class="user-avatar">${initials}</div>
-        <div class="user-info">
-          <div class="user-name">${escapeHTML(userName || email)}</div>
-          <div class="user-role">${escapeHTML(roleLabel)}</div>
-        </div>
-      </div>
-      <div class="dropdown-menu" id="userMenu" style="display:none;">
-        <div class="dropdown-item" onclick="setLanguage('ar')">
-          <span>العربية</span>
-          ${LANG === 'ar' ? '<span>✓</span>' : ''}
-        </div>
-        <div class="dropdown-item" onclick="setLanguage('en')">
-          <span>English</span>
-          ${LANG === 'en' ? '<span>✓</span>' : ''}
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item danger" onclick="signOut()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          <span>${t('signOut')}</span>
-        </div>
-      </div>
+  <div class="sidebar-user" onclick="toggleUserMenu()">
+    <div class="user-avatar">${initials}</div>
+    <div class="user-info">
+      <div class="user-name">${escapeHTML(userName || email)}</div>
+      <div class="user-role">${escapeHTML(roleLabel)}</div>
     </div>
+  </div>
+  <div class="dropdown-menu" id="userMenu" style="display:none;">
+    <div class="dropdown-item" onclick="setLanguage('ar')">
+      <span>العربية</span>
+      ${LANG === 'ar' ? '<span>✓</span>' : ''}
+    </div>
+    <div class="dropdown-item" onclick="setLanguage('en')">
+      <span>English</span>
+      ${LANG === 'en' ? '<span>✓</span>' : ''}
+    </div>
+    <div class="dropdown-divider"></div>
+    <div class="dropdown-item danger" onclick="signOut()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>${t('signOut')}</span>
+    </div>
+  </div>
+</div>
   `;
   
   // Set active page
