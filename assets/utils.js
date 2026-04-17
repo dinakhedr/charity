@@ -135,7 +135,6 @@ let LANG = localStorage.getItem('app_lang') || 'ar';
 
 // English translations
 const LANG_EN = {
-  // Common
   'loading': 'Loading...',
   'save': 'Save',
   'cancel': 'Cancel',
@@ -143,27 +142,8 @@ const LANG_EN = {
   'edit': 'Edit',
   'add': 'Add',
   'search': 'Search',
-  'filter': 'Filter',
-  'export': 'Export',
-  'import': 'Import',
-  'refresh': 'Refresh',
-  'close': 'Close',
-  'confirm': 'Confirm',
-  'saving': 'Saving...',
-  'saved': 'Saved',
-  'error': 'Error',
-  'success': 'Success',
-  'warning': 'Warning',
-  'info': 'Info',
-  'allSaved': 'All changes saved',
-  'requiredFields': 'Please fill all required fields',
-  
-  // Auth & Navigation
   'signIn': 'Sign In',
   'signOut': 'Sign Out',
-  'welcomeBack': 'Welcome Back',
-  'tapToContinue': 'Tap to continue',
-  'continue': 'Continue',
   'errSignIn': 'Please sign in first',
   'errSetup': 'System not set up — please complete initial setup',
   'errSession': 'Session expired — please sign in again',
@@ -172,208 +152,28 @@ const LANG_EN = {
   'errSaveFailed': 'Failed to save',
   'errDeleteFailed': 'Failed to delete',
   'signedOut': 'Signed out successfully',
-  
-  // Permissions Page
-  'permissionsTitle': 'Permissions',
-  'permissionsSubtitle': 'Manage users, roles and permissions',
-  'usersList': 'User List',
-  'rolesTitle': 'Roles',
-  'rolesSubtitle': 'Manage system roles and their permissions',
-  'matrixTitle': 'Permissions Matrix',
-  'matrixSubtitle': 'Configure detailed permissions per role',
-  'tabUsers': 'Users',
-  'tabRoles': 'Roles',
-  'tabMatrix': 'Permissions Matrix',
-  'addUser': 'Add User',
-  'addCustomRole': 'Add Custom Role',
-  'showDeleted': 'Show deleted users',
-  'colUser': 'User',
-  'colRole': 'Role',
-  'colStatus': 'Status',
-  'colLastLogin': 'Last Login',
-  'colDateAdded': 'Date Added',
-  'colPage': 'Page',
-  'colView': 'View',
-  'colCreate': 'Create',
-  'colEdit': 'Edit',
-  'colDelete': 'Delete',
-  'colViewDeleted': 'Deleted',
-  'colSensitive': 'Sensitive',
-  'colExport': 'Export',
-  'selectRole': 'Select a role...',
-  'selectRoleFirst': 'Select a role first',
-  'selectRoleHint': 'Choose a role from the dropdown above to view and edit permissions',
-  'noUsers': 'No users found',
-  'noUsersHint': 'Click "Add User" to create your first user',
-  'deleted': 'Deleted',
-  'restore': 'Restore',
-  
-  // Matrix column headers (bilingual display)
-  'colViewEn': 'View',
-  'colViewAr': 'Page View',
-  'colCreateEn': 'Create',
-  'colCreateAr': 'Add Records',
-  'colEditEn': 'Edit',
-  'colEditAr': 'Edit Records',
-  'colDeleteEn': 'Delete',
-  'colDeleteAr': 'Soft Delete',
-  'colViewDeletedEn': 'Deleted',
-  'colViewDeletedAr': 'View Deleted',
-  'colSensitiveEn': 'Sensitive',
-  'colSensitiveAr': 'Sensitive Data',
-  'colExportEn': 'Export',
-  'colExportAr': 'Export Data',
-  
-  // User Modal
-  'addUserTitle': 'Add New User',
-  'editUserTitle': 'Edit User',
-  'fullName': 'Full Name',
-  'emailGoogle': 'Email (Google)',
-  'emailHint': 'Must be an active Google account',
-  'notes': 'Notes',
-  'saveUser': 'Save User',
-  'emailExists': 'User with this email already exists',
-  
-  // Role Modal
-  'addRoleTitle': 'Add Custom Role',
-  'editRoleTitle': 'Edit Role',
-  'roleNameEn': 'Role Name (English)',
-  'roleNameHint': 'Used as internal identifier — no spaces',
-  'description': 'Description',
-  'saveRole': 'Save Role',
-  'roleExists': 'Role with this ID already exists',
-  
-  // Confirm Modal
-  'confirmTitle': 'Are you sure?',
-  'deleteUserTitle': 'Delete User',
-  'deleteRoleTitle': 'Delete Role',
-  
-  // Status
-  'status': 'Status',
-  'active': 'Active',
-  'inactive': 'Inactive',
-  
-  // Role labels
-  'roleSuperAdmin': 'Super Administrator',
-  'roleSuperAdminDesc': 'Full access to all pages and data',
-  'roleDirector': 'Executive Director',
-  'roleDirectorDesc': 'Full operational permissions with financial deletion capability',
-  'roleAccountManager': 'Account Manager',
-  'roleAccountManagerDesc': 'Full access to financial modules',
-  'roleCaseManager': 'Case Manager',
-  'roleCaseManagerDesc': 'Full access to beneficiaries and projects',
-  'roleDataEntry': 'Data Entry Clerk',
-  'roleDataEntryDesc': 'Add and edit only — no deletion',
-  'roleInventoryManager': 'Inventory Manager',
-  'roleInventoryManagerDesc': 'Full access to inventory management',
-  'roleViewer': 'Viewer Only',
-  'roleViewerDesc': 'Read-only access to dashboard and reports',
-  
-  // Dashboard
-  'dashboardTitle': 'Dashboard',
-  'totalDonations': 'Total Donations',
-  'totalBeneficiaries': 'Total Beneficiaries',
-  'totalProjects': 'Total Projects',
-  'lowStockItems': 'Low Stock Items',
-  'recentTransactions': 'Recent Transactions',
-  'upcomingInstallments': 'Upcoming Installments',
-  'activeProjects': 'Active Projects',
-  
-  // Transactions
-  'transactionsTitle': 'Transactions',
-  'addTransaction': 'Add Transaction',
-  'date': 'Date',
-  'donor': 'Donor',
-  'beneficiary': 'Beneficiary',
-  'amount': 'Amount',
-  'paymentMethod': 'Payment Method',
-  'receiptNumber': 'Receipt Number',
-  
-  // Donors
-  'donorsTitle': 'Donors',
-  'addDonor': 'Add Donor',
-  'donorName': 'Donor Name',
-  'donorType': 'Donor Type',
-  'phone': 'Phone',
-  'address': 'Address',
-  
-  // Beneficiaries
-  'beneficiariesTitle': 'Beneficiaries',
-  'addBeneficiary': 'Add Beneficiary',
-  'idNumber': 'ID Number',
-  'islamicClass': 'Islamic Class',
-  'needType': 'Need Type',
-  
-  // Inventory
-  'inventoryTitle': 'Inventory',
-  'addItem': 'Add Item',
-  'itemName': 'Item Name',
-  'category': 'Category',
-  'quantity': 'Quantity',
-  'unit': 'Unit',
-  'minQuantity': 'Min Quantity',
-  'location': 'Location',
-  
-  // Projects
-  'projectsTitle': 'Projects',
-  'addProject': 'Add Project',
-  'projectName': 'Project Name',
-  'projectCategory': 'Project Category',
-  'startDate': 'Start Date',
-  'endDate': 'End Date',
-  'budget': 'Budget',
-  'projectStatus': 'Project Status',
-  
-  // Installments
-  'installmentsTitle': 'Installments',
-  'addInstallment': 'Add Installment',
-  'frequency': 'Frequency',
-  'nextDueDate': 'Next Due Date',
-  
-  // Recurring
-  'recurringTitle': 'Recurring Transactions',
-  'addRecurring': 'Add Recurring',
-  'nextDate': 'Next Date',
-  
-  // Settings
-  'settingsTitle': 'Settings',
-  'generalSettings': 'General Settings',
-  'language': 'Language',
-  'arabic': 'Arabic',
-  'english': 'English',
-  'theme': 'Theme',
-  'light': 'Light',
-  'dark': 'Dark',
-  'notifications': 'Notifications',
-  'backup': 'Backup',
-  'restore': 'Restore',
-  
-  // Reports
-  'reportsTitle': 'Reports',
-  'financialReports': 'Financial Reports',
-  'donorReports': 'Donor Reports',
-  'beneficiaryReports': 'Beneficiary Reports',
-  'inventoryReports': 'Inventory Reports',
-  'projectReports': 'Project Reports',
-  
-  // Success Messages
   'successSaved': 'Saved successfully',
   'successDeleted': 'Deleted successfully',
   'successRestored': 'Restored successfully',
   'successUpdated': 'Updated successfully',
-  
-  // Time
-  'today': 'Today',
-  'yesterday': 'Yesterday',
-  'thisWeek': 'This Week',
-  'thisMonth': 'This Month',
-  'thisYear': 'This Year',
-  'allTime': 'All Time'
+  'requiredFields': 'Please fill all required fields',
+  'allSaved': 'All changes saved',
+  'saving': 'Saving...',
+  'saved': 'Saved',
+  'error': 'Error',
+  'success': 'Success',
+  'warning': 'Warning',
+  'info': 'Info',
+  'active': 'Active',
+  'inactive': 'Inactive',
+  'deleted': 'Deleted',
+  'restore': 'Restore',
+  'confirm': 'Confirm',
+  'close': 'Close'
 };
 
 // Arabic translations
 const LANG_AR = {
-  // Common
   'loading': 'جارٍ التحميل...',
   'save': 'حفظ',
   'cancel': 'إلغاء',
@@ -381,27 +181,8 @@ const LANG_AR = {
   'edit': 'تعديل',
   'add': 'إضافة',
   'search': 'بحث',
-  'filter': 'تصفية',
-  'export': 'تصدير',
-  'import': 'استيراد',
-  'refresh': 'تحديث',
-  'close': 'إغلاق',
-  'confirm': 'تأكيد',
-  'saving': 'جارٍ الحفظ...',
-  'saved': 'تم الحفظ',
-  'error': 'خطأ',
-  'success': 'نجاح',
-  'warning': 'تحذير',
-  'info': 'معلومات',
-  'allSaved': 'تم حفظ جميع التغييرات',
-  'requiredFields': 'الرجاء تعبئة جميع الحقول المطلوبة',
-  
-  // Auth & Navigation
   'signIn': 'تسجيل الدخول',
   'signOut': 'تسجيل الخروج',
-  'welcomeBack': 'مرحباً بعودتك',
-  'tapToContinue': 'اضغط للمتابعة',
-  'continue': 'متابعة',
   'errSignIn': 'يرجى تسجيل الدخول أولاً',
   'errSetup': 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي',
   'errSession': 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى',
@@ -410,203 +191,24 @@ const LANG_AR = {
   'errSaveFailed': 'فشل الحفظ',
   'errDeleteFailed': 'فشل الحذف',
   'signedOut': 'تم تسجيل الخروج بنجاح',
-  
-  // Permissions Page
-  'permissionsTitle': 'الصلاحيات',
-  'permissionsSubtitle': 'إدارة المستخدمين والأدوار والصلاحيات',
-  'usersList': 'قائمة المستخدمين',
-  'rolesTitle': 'الأدوار',
-  'rolesSubtitle': 'إدارة أدوار النظام والصلاحيات المرتبطة بها',
-  'matrixTitle': 'مصفوفة الصلاحيات',
-  'matrixSubtitle': 'تكوين الصلاحيات التفصيلية لكل دور',
-  'tabUsers': 'المستخدمون',
-  'tabRoles': 'الأدوار',
-  'tabMatrix': 'مصفوفة الصلاحيات',
-  'addUser': 'إضافة مستخدم',
-  'addCustomRole': 'إضافة دور مخصص',
-  'showDeleted': 'عرض المستخدمين المحذوفين',
-  'colUser': 'المستخدم',
-  'colRole': 'الدور',
-  'colStatus': 'الحالة',
-  'colLastLogin': 'آخر دخول',
-  'colDateAdded': 'تاريخ الإضافة',
-  'colPage': 'الصفحة',
-  'colView': 'عرض',
-  'colCreate': 'إضافة',
-  'colEdit': 'تعديل',
-  'colDelete': 'حذف',
-  'colViewDeleted': 'محذوف',
-  'colSensitive': 'حساس',
-  'colExport': 'تصدير',
-  'selectRole': 'اختر دوراً...',
-  'selectRoleFirst': 'اختر دوراً أولاً',
-  'selectRoleHint': 'اختر دوراً من القائمة أعلاه لعرض وتعديل الصلاحيات',
-  'noUsers': 'لا يوجد مستخدمون',
-  'noUsersHint': 'انقر على "إضافة مستخدم" لإنشاء أول مستخدم',
-  'deleted': 'محذوف',
-  'restore': 'استعادة',
-  
-  // Matrix column headers (bilingual display)
-  'colViewEn': 'View',
-  'colViewAr': 'رؤية الصفحة',
-  'colCreateEn': 'Create',
-  'colCreateAr': 'إضافة سجلات',
-  'colEditEn': 'Edit',
-  'colEditAr': 'تعديل سجلات',
-  'colDeleteEn': 'Delete',
-  'colDeleteAr': 'حذف ناعم',
-  'colViewDeletedEn': 'Deleted',
-  'colViewDeletedAr': 'عرض المحذوف',
-  'colSensitiveEn': 'Sensitive',
-  'colSensitiveAr': 'بيانات حساسة',
-  'colExportEn': 'Export',
-  'colExportAr': 'تصدير البيانات',
-  
-  // User Modal
-  'addUserTitle': 'إضافة مستخدم جديد',
-  'editUserTitle': 'تعديل المستخدم',
-  'fullName': 'الاسم الكامل',
-  'emailGoogle': 'البريد الإلكتروني (Google)',
-  'emailHint': 'يجب أن يكون حساب Google فعّالاً',
-  'notes': 'ملاحظات',
-  'saveUser': 'حفظ المستخدم',
-  'emailExists': 'هذا البريد الإلكتروني مسجل مسبقاً',
-  
-  // Role Modal
-  'addRoleTitle': 'إضافة دور مخصص',
-  'editRoleTitle': 'تعديل الدور',
-  'roleNameEn': 'اسم الدور (بالإنجليزي)',
-  'roleNameHint': 'يُستخدم كمعرّف داخلي — بدون مسافات',
-  'description': 'الوصف',
-  'saveRole': 'حفظ الدور',
-  'roleExists': 'هذا المعرف موجود مسبقاً',
-  
-  // Confirm Modal
-  'confirmTitle': 'هل أنت متأكد؟',
-  'deleteUserTitle': 'حذف المستخدم',
-  'deleteRoleTitle': 'حذف الدور',
-  
-  // Status
-  'status': 'الحالة',
-  'active': 'نشط',
-  'inactive': 'غير نشط',
-  
-  // Role labels
-  'roleSuperAdmin': 'مسؤول النظام الكامل',
-  'roleSuperAdminDesc': 'صلاحيات كاملة على جميع الصفحات والبيانات',
-  'roleDirector': 'المدير التنفيذي',
-  'roleDirectorDesc': 'صلاحيات تشغيلية كاملة مع حذف العمليات المالية',
-  'roleAccountManager': 'مسؤول الحسابات',
-  'roleAccountManagerDesc': 'صلاحيات كاملة على الوحدات المالية',
-  'roleCaseManager': 'مسؤول الحالات',
-  'roleCaseManagerDesc': 'صلاحيات كاملة على المستفيدين والمشاريع',
-  'roleDataEntry': 'موظف إدخال بيانات',
-  'roleDataEntryDesc': 'إضافة وتعديل فقط — بدون حذف',
-  'roleInventoryManager': 'مسؤول المخزون',
-  'roleInventoryManagerDesc': 'صلاحيات كاملة على المخزون العيني',
-  'roleViewer': 'مشاهد فقط',
-  'roleViewerDesc': 'قراءة فقط على لوحة التحكم والتقارير',
-  
-  // Dashboard
-  'dashboardTitle': 'لوحة التحكم',
-  'totalDonations': 'إجمالي التبرعات',
-  'totalBeneficiaries': 'إجمالي المستفيدين',
-  'totalProjects': 'إجمالي المشاريع',
-  'lowStockItems': 'الأصناف منخفضة المخزون',
-  'recentTransactions': 'آخر المعاملات',
-  'upcomingInstallments': 'الأقساط القادمة',
-  'activeProjects': 'المشاريع النشطة',
-  
-  // Transactions
-  'transactionsTitle': 'المعاملات',
-  'addTransaction': 'إضافة معاملة',
-  'date': 'التاريخ',
-  'donor': 'المتبرع',
-  'beneficiary': 'المستفيد',
-  'amount': 'المبلغ',
-  'paymentMethod': 'طريقة الدفع',
-  'receiptNumber': 'رقم الإيصال',
-  
-  // Donors
-  'donorsTitle': 'المتبرعون',
-  'addDonor': 'إضافة متبرع',
-  'donorName': 'اسم المتبرع',
-  'donorType': 'نوع المتبرع',
-  'phone': 'الهاتف',
-  'address': 'العنوان',
-  
-  // Beneficiaries
-  'beneficiariesTitle': 'المستفيدون',
-  'addBeneficiary': 'إضافة مستفيد',
-  'idNumber': 'رقم الهوية',
-  'islamicClass': 'التصنيف الإسلامي',
-  'needType': 'نوع الاحتياج',
-  
-  // Inventory
-  'inventoryTitle': 'المخزون',
-  'addItem': 'إضافة صنف',
-  'itemName': 'اسم الصنف',
-  'category': 'الفئة',
-  'quantity': 'الكمية',
-  'unit': 'الوحدة',
-  'minQuantity': 'الحد الأدنى',
-  'location': 'الموقع',
-  
-  // Projects
-  'projectsTitle': 'المشاريع',
-  'addProject': 'إضافة مشروع',
-  'projectName': 'اسم المشروع',
-  'projectCategory': 'فئة المشروع',
-  'startDate': 'تاريخ البداية',
-  'endDate': 'تاريخ النهاية',
-  'budget': 'الميزانية',
-  'projectStatus': 'حالة المشروع',
-  
-  // Installments
-  'installmentsTitle': 'الأقساط',
-  'addInstallment': 'إضافة قسط',
-  'frequency': 'التكرار',
-  'nextDueDate': 'تاريخ الاستحقاق القادم',
-  
-  // Recurring
-  'recurringTitle': 'المعاملات الدورية',
-  'addRecurring': 'إضافة معاملة دورية',
-  'nextDate': 'التاريخ القادم',
-  
-  // Settings
-  'settingsTitle': 'الإعدادات',
-  'generalSettings': 'الإعدادات العامة',
-  'language': 'اللغة',
-  'arabic': 'العربية',
-  'english': 'الإنجليزية',
-  'theme': 'المظهر',
-  'light': 'فاتح',
-  'dark': 'داكن',
-  'notifications': 'الإشعارات',
-  'backup': 'نسخ احتياطي',
-  'restore': 'استعادة',
-  
-  // Reports
-  'reportsTitle': 'التقارير',
-  'financialReports': 'التقارير المالية',
-  'donorReports': 'تقارير المتبرعين',
-  'beneficiaryReports': 'تقارير المستفيدين',
-  'inventoryReports': 'تقارير المخزون',
-  'projectReports': 'تقارير المشاريع',
-  
-  // Success Messages
   'successSaved': 'تم الحفظ بنجاح',
   'successDeleted': 'تم الحذف بنجاح',
   'successRestored': 'تمت الاستعادة بنجاح',
   'successUpdated': 'تم التحديث بنجاح',
-  
-  // Time
-  'today': 'اليوم',
-  'yesterday': 'أمس',
-  'thisWeek': 'هذا الأسبوع',
-  'thisMonth': 'هذا الشهر',
-  'thisYear': 'هذه السنة',
-  'allTime': 'كل الوقت'
+  'requiredFields': 'الرجاء تعبئة جميع الحقول المطلوبة',
+  'allSaved': 'تم حفظ جميع التغييرات',
+  'saving': 'جارٍ الحفظ...',
+  'saved': 'تم الحفظ',
+  'error': 'خطأ',
+  'success': 'نجاح',
+  'warning': 'تحذير',
+  'info': 'معلومات',
+  'active': 'نشط',
+  'inactive': 'غير نشط',
+  'deleted': 'محذوف',
+  'restore': 'استعادة',
+  'confirm': 'تأكيد',
+  'close': 'إغلاق'
 };
 
 // Translation function
@@ -620,21 +222,11 @@ function setLanguage(lang) {
   if (lang !== 'ar' && lang !== 'en') return;
   LANG = lang;
   localStorage.setItem('app_lang', lang);
-  
-  // Update HTML direction
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
   document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  
-  // Update all elements with data-t attributes
-  if (typeof applyTranslations === 'function') {
-    applyTranslations();
-  }
-  
-  // Show toast notification
-  if (typeof showToast === 'function') {
-    showToast(t('successUpdated'), 'success');
-  }
+  if (typeof applyTranslations === 'function') applyTranslations();
+  if (typeof showToast === 'function') showToast(t('successUpdated'), 'success');
 }
 
 // Apply translations to all elements with data-t attributes
@@ -657,49 +249,32 @@ function applyTranslations() {
    GOOGLE SHEETS API WRAPPER
 ══════════════════════════════════════════════════════════ */
 
-// Get current timestamp
 function getCurrentTimestamp() {
-  const now = new Date();
-  return now.toISOString();
+  return new Date().toISOString();
 }
 
-// Format date for display
 function formatDisplayDate(timestamp) {
   if (!timestamp) return '';
-  const date = new Date(timestamp);
-  return date.toLocaleDateString(LANG === 'ar' ? 'ar-EG' : 'en-US');
+  return new Date(timestamp).toLocaleDateString(LANG === 'ar' ? 'ar-EG' : 'en-US');
 }
 
-// Format datetime for display
 function formatDisplayDateTime(timestamp) {
   if (!timestamp) return '';
-  const date = new Date(timestamp);
-  return date.toLocaleString(LANG === 'ar' ? 'ar-EG' : 'en-US');
+  return new Date(timestamp).toLocaleString(LANG === 'ar' ? 'ar-EG' : 'en-US');
 }
 
-// Generate unique RecordID
 function generateRecordID() {
   return 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// Read sheet data
 async function readSheet(spreadsheetId, sheetName, options = {}) {
-  const {
-    includeDeleted = false,
-    email = null,
-    forceRefresh = false
-  } = options;
-  
+  const { includeDeleted = false, email = null } = options;
   const token = getSavedAccessToken();
   if (!token) throw new Error('No access token');
   
-  const range = `${sheetName}!A:Z`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?majorDimension=ROWS`;
-  
-  const response = await fetch(url, {
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:Z`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  
   if (!response.ok) throw new Error('Failed to read sheet');
   
   const data = await response.json();
@@ -710,37 +285,24 @@ async function readSheet(spreadsheetId, sheetName, options = {}) {
   const records = [];
   
   for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
     const record = {};
-    headers.forEach((header, idx) => {
-      record[header] = row[idx] || '';
-    });
-    
-    // Filter deleted
+    headers.forEach((header, idx) => { record[header] = rows[i][idx] || ''; });
     if (!includeDeleted && record.IsDeleted === 'TRUE') continue;
-    
-    // Filter by email if provided
     if (email && record.Email && record.Email.toLowerCase() !== email.toLowerCase()) continue;
-    
     records.push(record);
   }
-  
   return records;
 }
 
-// Append row to sheet
 async function appendRow(spreadsheetId, sheetName, data, userEmail) {
   const token = getSavedAccessToken();
   if (!token) throw new Error('No access token');
   
   const now = getCurrentTimestamp();
   const recordID = generateRecordID();
-  
-  // Get headers
   const headers = SHEET_DEFINITIONS[sheetName];
   if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
   
-  // Prepare row data
   const row = headers.map(header => {
     if (header === 'RecordID') return recordID;
     if (header === 'CreatedAt') return now;
@@ -752,34 +314,153 @@ async function appendRow(spreadsheetId, sheetName, data, userEmail) {
     return data[header] || '';
   });
   
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${String.fromCharCode(65 + headers.length - 1)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  
-  const response = await fetch(url, {
+  const lastCol = String.fromCharCode(65 + headers.length - 1);
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${lastCol}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      values: [row]
-    })
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [row] })
   });
-  
   if (!response.ok) throw new Error('Failed to append row');
-  
   return { RecordID: recordID, ...data };
 }
 
-// Update row in sheet
 async function updateRow(spreadsheetId, sheetName, recordID, updates, userEmail) {
   const token = getSavedAccessToken();
   if (!token) throw new Error('No access token');
   
-  // First find the row
   const records = await readSheet(spreadsheetId, sheetName, { includeDeleted: true });
   const record = records.find(r => r.RecordID === recordID);
   if (!record) throw new Error('Record not found');
   
-  // Find row index (add 2 because of 1-indexed and header row)
   const headers = SHEET_DEFINITIONS[sheetName];
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${String.fromCharCode(65
+  const lastCol = String.fromCharCode(65 + headers.length - 1);
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A:${lastCol}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error('Failed to read sheet for update');
+  
+  const data = await response.json();
+  const rows = data.values || [];
+  let rowIndex = -1;
+  for (let i = 1; i < rows.length; i++) {
+    const recordIDIndex = headers.indexOf('RecordID');
+    if (rows[i][recordIDIndex] === recordID) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+  if (rowIndex === -1) throw new Error('Row not found');
+  
+  const now = getCurrentTimestamp();
+  const updatedRow = [...rows[rowIndex - 1]];
+  headers.forEach((header, idx) => {
+    if (header === 'ModifiedAt') updatedRow[idx] = now;
+    else if (header === 'ModifiedBy') updatedRow[idx] = userEmail;
+    else if (updates[header] !== undefined) updatedRow[idx] = updates[header];
+  });
+  
+  const updateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A${rowIndex}:${lastCol}${rowIndex}?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [updatedRow] })
+  });
+  if (!updateResponse.ok) throw new Error('Failed to update row');
+  return true;
+}
+
+async function softDelete(spreadsheetId, sheetName, recordID, userEmail) {
+  return updateRow(spreadsheetId, sheetName, recordID, { IsDeleted: 'TRUE', DeletedAt: getCurrentTimestamp() }, userEmail);
+}
+
+async function restoreRecord(spreadsheetId, sheetName, recordID, userEmail) {
+  return updateRow(spreadsheetId, sheetName, recordID, { IsDeleted: 'FALSE', DeletedAt: '' }, userEmail);
+}
+
+async function checkPagePermissions(pageName, spreadsheetId, email) {
+  const users = await readSheet(spreadsheetId, 'Users', { includeDeleted: false });
+  const user = users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
+  if (!user) return { canView: false, canCreate: false, canEdit: false, canDelete: false, canViewDeleted: false, canViewSensitive: false, canExport: false };
+  if (user.Role === 'SuperAdmin') return { canView: true, canCreate: true, canEdit: true, canDelete: true, canViewDeleted: true, canViewSensitive: true, canExport: true };
+  
+  const permissions = await readSheet(spreadsheetId, 'Permissions', { includeDeleted: false });
+  const perm = permissions.find(p => p.RoleID === user.Role && p.PageName === pageName);
+  if (!perm) return { canView: false, canCreate: false, canEdit: false, canDelete: false, canViewDeleted: false, canViewSensitive: false, canExport: false };
+  
+  return {
+    canView: perm.CanView === 'TRUE',
+    canCreate: perm.CanCreate === 'TRUE',
+    canEdit: perm.CanEdit === 'TRUE',
+    canDelete: perm.CanDelete === 'TRUE',
+    canViewDeleted: perm.CanViewDeleted === 'TRUE',
+    canViewSensitive: perm.CanViewSensitive === 'TRUE',
+    canExport: perm.CanExport === 'TRUE'
+  };
+}
+
+function applyPermissionsToUI(perms) {
+  if (!perms) return;
+  if (!perms.canCreate) document.querySelectorAll('[data-requires="create"]').forEach(el => { el.disabled = true; });
+  if (!perms.canEdit) document.querySelectorAll('[data-requires="edit"]').forEach(el => { el.disabled = true; });
+  if (!perms.canDelete) document.querySelectorAll('[data-requires="delete"]').forEach(el => { el.disabled = true; });
+  if (!perms.canViewDeleted) { const toggle = document.getElementById('showDeletedToggle'); if (toggle) toggle.style.display = 'none'; }
+  if (!perms.canExport) document.querySelectorAll('[data-requires="export"]').forEach(el => { el.disabled = true; });
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ'}</div><div class="toast-message">${escapeHTML(message)}</div>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACCESS TOKEN MANAGEMENT
+══════════════════════════════════════════════════════════ */
+
+const SPREADSHEET_ID_KEY = (email) => `coms_spreadsheet_${email}`;
+
+function getSavedAccessToken() {
+  return sessionStorage.getItem('coms_access_token');
+}
+
+function saveAccessToken(token) {
+  sessionStorage.setItem('coms_access_token', token);
+}
+
+function clearAccessToken() {
+  sessionStorage.removeItem('coms_access_token');
+}
+
+/* ══════════════════════════════════════════════════════════
+   INITIALIZE ON PAGE LOAD
+══════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = LANG;
+  document.body.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+});
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    t, setLanguage, applyTranslations,
+    readSheet, appendRow, updateRow, softDelete, restoreRecord,
+    checkPagePermissions, applyPermissionsToUI,
+    getCurrentTimestamp, formatDisplayDate, formatDisplayDateTime,
+    generateRecordID, escapeHTML, showToast,
+    getSavedAccessToken, saveAccessToken, clearAccessToken,
+    SPREADSHEET_ID_KEY, ALL_PAGES, SHEET_DEFINITIONS, LOOKUP_SEED_DATA, DEFAULT_ROLES,
+    CLIENT_ID, SYSADMIN_EMAIL, SYSADMIN_SHEET_ID
+  };
+}
