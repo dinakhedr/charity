@@ -556,8 +556,8 @@ function renderSidebar(email, userName, role) {
 function toggleUserMenu() {
   const menu = document.getElementById('userMenu');
   if (menu) {
-    const isVisible = menu.style.display === 'block';
-    menu.style.display = isVisible ? 'none' : 'block';
+    // Toggle the 'open' class instead of display property
+    menu.classList.toggle('open');
   }
 }
 
