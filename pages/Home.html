@@ -231,24 +231,24 @@
           <button class="btn btn-secondary btn-sm" onclick="loadOrgs()">تحديث</button>
         </div>
       </div>
-<table class="data-table" style="direction:rtl;">
-  <thead>
-    <tr>
-      <th style="text-align:right;">الجمعية</th>
-      <th style="text-align:right;">المسؤول</th>
-      <th style="text-align:right;">المحافظة</th>
-      <th style="text-align:right;">الحالة</th>
-      <th style="text-align:right;">تاريخ التسجيل</th>
-      <th style="text-align:right;">الملف</th>
-      <th></th>
-    </tr>
-  </thead>
+      <table class="data-table" style="direction:rtl;">
+        <thead>
+          <tr>
+            <th style="text-align:right;">الجمعية</th>
+            <th style="text-align:right;">المسؤول</th>
+            <th style="text-align:right;">المحافظة</th>
+            <th style="text-align:right;">الحالة</th>
+            <th style="text-align:right;">تاريخ التسجيل</th>
+            <th style="text-align:right;">الملف</th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody id="orgsBody">
           <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
             <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
           </td></tr>
         </tbody>
-      </table>
+       </table>
     </div>
   </div>
 </div>
@@ -348,10 +348,10 @@
         <h2 class="wiz-title">النظام جاهز!</h2>
         <p class="wiz-desc">تم إعداد نظامك بنجاح. يمكنك الآن البدء.</p>
       </div>
-<div class="wiz-footer" style="gap:10px;">
-  <button class="btn btn-secondary w-full" onclick="window.location.href='Permissions.html'">إدارة المستخدمين</button>
-  <button class="btn btn-primary w-full" onclick="window.location.href='Dashboard.html'">لوحة التحكم</button>
-</div>
+      <div class="wiz-footer" style="gap:10px;">
+        <button class="btn btn-secondary w-full" onclick="window.location.href='Permissions.html'">إدارة المستخدمين</button>
+        <button class="btn btn-primary w-full" onclick="window.location.href='Dashboard.html'">لوحة التحكم</button>
+      </div>
     </div>
   </div>
 </div>
@@ -384,10 +384,11 @@
 </div>
 
 <div id="toastContainer" class="toast-container"></div>
-  <script src="../assets/config.js"></script>
-  <script src="../assets/utils.js"></script>
-  <script src="../assets/auth.js"></script>
-  
+
+<script src="../assets/config.js"></script>
+<script src="../assets/utils.js"></script>
+<script src="../assets/auth.js"></script>
+
 <script>
 'use strict';
 
@@ -409,13 +410,11 @@ window.addEventListener('load', boot);
 async function boot() {
   setStep('جارٍ التهيئة…');
 
-  /* Returning from OAuth redirect? */
   if (window.location.hash.includes('access_token')) {
     await handleRedirect();
     return;
   }
 
-  /* Existing session? */
   const tok  = getSavedAccessToken();
   const user = _loadUser();
   if (tok && user) {
@@ -455,7 +454,7 @@ async function handleRedirect() {
   history.replaceState(null, '', window.location.pathname);
 
   if (!token) {
-    toast('لم يتم استلام التوكن — حاول مرة أخرى', 'error');
+    showToast('لم يتم استلام التوكن — حاول مرة أخرى', 'error');
     show('screenSignIn');
     return;
   }
@@ -475,7 +474,7 @@ async function handleRedirect() {
     await branchCheck();
   } catch (e) {
     console.error(e);
-    toast('تعذّر الحصول على بيانات الحساب: ' + e.message, 'error');
+    showToast('تعذّر الحصول على بيانات الحساب: ' + e.message, 'error');
     show('screenSignIn');
   }
 }
@@ -510,25 +509,23 @@ async function branchCheck() {
       if (await isActiveUser(match.SpreadsheetId)) return;
     }
 
-    /* Regular user — check localStorage first (returning user, fast path) */
-const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
-if (sid && await isActiveUser(sid)) return;
+    const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
+    if (sid && await isActiveUser(sid)) return;
 
-/* First time — scan completed orgs from config sheet */
-const completedOrgs = orgs.filter(o => o.SetupStatus === 'Completed' && o.SpreadsheetId);
-for (const org of completedOrgs) {
-  const found = await isActiveUser(org.SpreadsheetId);
-  if (found) {
-    localStorage.setItem(SPREADSHEET_ID_KEY(_email), org.SpreadsheetId);
-    return;
-  }
-}
+    const completedOrgs = orgs.filter(o => o.SetupStatus === 'Completed' && o.SpreadsheetId);
+    for (const org of completedOrgs) {
+      const found = await isActiveUser(org.SpreadsheetId);
+      if (found) {
+        localStorage.setItem(SPREADSHEET_ID_KEY(_email), org.SpreadsheetId);
+        return;
+      }
+    }
 
     document.getElementById('pendingEmail').textContent = _email;
     show('screenPending');
   } catch (e) {
     console.error(e);
-    toast('خطأ أثناء التحقق: ' + e.message, 'error');
+    showToast('خطأ أثناء التحقق: ' + e.message, 'error');
     show('screenSignIn');
   }
 }
@@ -541,7 +538,7 @@ async function isActiveUser(sid) {
       u.Email?.trim().toLowerCase() === _email.trim().toLowerCase() && u.Status === 'Active'
     );
     if (u) {
-      toast(`مرحباً، ${u.FullName || _email}`, 'success');
+      showToast(`مرحباً، ${u.FullName || _email}`, 'success');
       setTimeout(() => { window.location.href = 'Dashboard.html'; }, 900);
       return true;
     }
@@ -663,7 +660,7 @@ function filterOrgs(q) {
 }
 
 function resendTip(i) {
-  toast(`أخبر ${_allOrgs[i].SuperAdminEmail} بفتح التطبيق وتسجيل الدخول`, 'info', 5000);
+  showToast(`أخبر ${_allOrgs[i].SuperAdminEmail} بفتح التطبيق وتسجيل الدخول`, 'info', 5000);
 }
 
 function openOnboardModal() {
@@ -682,7 +679,7 @@ async function submitOnboard() {
     document.getElementById(id).classList.toggle('error', e);
     if (e) ok = false;
   });
-  if (!ok) { toast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+  if (!ok) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
 
   const btn = document.getElementById('onboardBtn');
   btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
@@ -697,10 +694,10 @@ async function submitOnboard() {
       CreatedAt: getCurrentTimestamp(), CompletedAt: '', Notes: document.getElementById('mNotes').value.trim()
     });
     closeModal('onboardModal');
-    toast('تم التسجيل بنجاح — أخبر المسؤول بفتح التطبيق', 'success', 5000);
+    showToast('تم التسجيل بنجاح — أخبر المسؤول بفتح التطبيق', 'success', 5000);
     await loadOrgs();
   } catch (e) {
-    toast('فشل الحفظ: ' + e.message, 'error');
+    showToast('فشل الحفظ: ' + e.message, 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'تسجيل الجمعية';
   }
@@ -734,7 +731,7 @@ function step2Next() {
                   ['wAdminName', document.getElementById('wAdminName').value.trim()]];
   let ok = true;
   checks.forEach(([id, v]) => { document.getElementById(id).classList.toggle('error', !v); if (!v) ok = false; });
-  if (!ok) { toast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+  if (!ok) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   _wizOrg = { ..._wizOrg,
     OrgNameAR: checks[0][1], OrgNameEN: checks[1][1], Governorate: checks[2][1],
     ContactEmail: document.getElementById('wContact').value.trim(),
@@ -801,14 +798,11 @@ async function runSetup() {
       await updateConfigRow(rowIdx + 2, { SetupStatus: 'Completed', SpreadsheetId: sid, CompletedAt: getCurrentTimestamp() });
     }
 
-    const link = `https://docs.google.com/spreadsheets/d/${sid}`;
-    document.getElementById('sheetLink').href = link;
-    document.getElementById('sheetLink').textContent = link;
     goStep(4);
 
   } catch (e) {
     console.error(e);
-    toast('فشل الإعداد: ' + e.message, 'error');
+    showToast('فشل الإعداد: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = 'إعادة المحاولة';
   }
 }
@@ -829,29 +823,21 @@ function fillGov(selId, selected = '') {
   if (!sel) return;
   sel.innerHTML = '<option value="">اختر المحافظة…</option>';
   const trimmed = (selected || '').trim();
-  (LOOKUP_SEED_DATA.LKP_Governorates || []).forEach(r => {
-    const name = (r[2] || '').trim();
-    const opt  = document.createElement('option');
-    opt.value       = name;
-    opt.textContent = name;
-    if (name && trimmed && name === trimmed) opt.selected = true;
-    sel.appendChild(opt);
-  });
+  // Use LOOKUP_SEED_DATA.Governorates from utils.js
+  if (window.LOOKUP_SEED_DATA && window.LOOKUP_SEED_DATA.Governorates) {
+    window.LOOKUP_SEED_DATA.Governorates.forEach(r => {
+      const name = r[0] || '';
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name && trimmed && name === trimmed) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
 }
 
-function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
+function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-
-function toast(msg, type = 'success', dur = 3500) {
-  const c = document.getElementById('toastContainer');
-  const icons = { success:'✓', error:'✕', warning:'!', info:'i' };
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<div class="toast-icon">${icons[type]||'i'}</div><span>${escapeHTML(msg)}</span>`;
-  c.appendChild(t);
-  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-  setTimeout(() => { t.classList.add('hide'); t.addEventListener('transitionend', () => t.remove(), {once:true}); }, dur);
-}
 
 function _saveUser(u) { try { localStorage.setItem('coms_user', JSON.stringify(u)); } catch {} }
 function _loadUser()  { try { return JSON.parse(localStorage.getItem('coms_user')); } catch { return null; } }
