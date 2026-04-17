@@ -474,7 +474,7 @@ async function loadUsers() {
     renderUsers();
   } catch (e) {
     document.getElementById('usersBody').innerHTML =
-      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-out);">فشل التحميل — ${escapeHTML(e.message)}</td></tr>`;
+      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-out);">${t('errLoadFailed')} — ${escapeHTML(e.message)}</td></tr>`;
   }
 }
 
@@ -486,8 +486,8 @@ function renderUsers(list) {
     body.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
         <div class="empty-state-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-        <div class="empty-state-title">لا يوجد مستخدمون</div>
-        <div class="empty-state-text">اضغط على "إضافة مستخدم" للبدء</div>
+        <div class="empty-state-title">${t('noUsers')}</div>
+        <div class="empty-state-text">${t('noUsersHint')}</div>
       </div>
     </td></tr>`;
     return;
@@ -498,19 +498,19 @@ function renderUsers(list) {
     const initials   = (u.FullName || u.Email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
     const roleLabel  = ROLE_LABELS[u.Role]?.ar || u.Role || '—';
     const statusBadge = u.Status === 'Active'
-      ? `<span class="badge status-active badge-dot">نشط</span>`
-      : `<span class="badge status-inactive badge-dot">غير نشط</span>`;
+      ? `<span class="badge status-active badge-dot">${t('active')}</span>`
+      : `<span class="badge status-inactive badge-dot">${t('inactive')}</span>`;
 
     const actions = isDeleted
       ? (_perms?.canViewDeleted
-          ? `<button class="btn btn-sm btn-secondary" onclick="restoreUser('${u.RecordID}')">استعادة</button>`
+          ? `<button class="btn btn-sm btn-secondary" onclick="restoreUser('${u.RecordID}')">${t('restore')}</button>`
           : '')
       : `
-        <button class="btn btn-sm btn-secondary btn-icon" onclick="openUserModal('${u.RecordID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
+        <button class="btn btn-sm btn-secondary btn-icon" onclick="openUserModal('${u.RecordID}')" title="${t('edit')}" ${!_perms?.canEdit ? 'disabled' : ''}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         ${u.Email !== _email && _perms?.canDelete ? `
-        <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteUser('${u.RecordID}')" title="حذف">
+        <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDeleteUser('${u.RecordID}')" title="${t('delete')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>` : ''}
       `;
@@ -525,7 +525,7 @@ function renderUsers(list) {
       </div>
     </div>
   </td>
-  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? '<span class="badge badge-deleted" style="margin-right:4px;">محذوف</span>' : ''}</td>
+  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? `<span class="badge badge-deleted" style="margin-right:4px;">${t('deleted')}</span>` : ''}</td>
   <td>${isDeleted ? '—' : statusBadge}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
@@ -562,13 +562,13 @@ function openUserModal(recordID = null) {
   document.getElementById('uStatus').value   = 'Active';
   document.getElementById('uNotes').value    = '';
   document.getElementById('uEmail').disabled = false;
-  document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
+  document.getElementById('userModalTitle').textContent = t('addUserTitle');
 
   if (recordID) {
     const u = _users.find(x => x.RecordID === recordID);
     if (!u) return;
     _editingUser = u;
-    document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
+    document.getElementById('userModalTitle').textContent = t('editUserTitle');
     document.getElementById('uRecordID').value = u.RecordID;
     document.getElementById('uFullName').value = u.FullName  || '';
     document.getElementById('uEmail').value    = u.Email     || '';
@@ -592,47 +592,48 @@ async function saveUser() {
     ['uFullName','uEmail','uRole'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+    showToast(t('requiredFields'), 'error');
     return;
   }
 
   const btn = document.getElementById('saveUserBtn');
-  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  btn.disabled = true; btn.textContent = t('saving');
 
   try {
     if (_editingUser) {
       await updateRow(_sid, 'Users', _editingUser.RecordID,
         { FullName: name, Role: role, Status: status, Notes: notes }, _email);
-      showToast('تم تحديث المستخدم بنجاح', 'success');
+      showToast(t('successSaved'), 'success');
     } else {
       const existing = _users.map(u => u.Email?.toLowerCase());
       if (existing.includes(email)) {
-        showToast('هذا البريد الإلكتروني مسجّل مسبقاً', 'error');
-        btn.disabled = false; btn.textContent = 'حفظ المستخدم';
+        showToast(t('emailExists'), 'error');
+        btn.disabled = false; btn.textContent = t('saveUser');
         return;
       }
-      const domainIDs = _users.map(u => u.Email).filter(Boolean);
       await appendRow(_sid, 'Users', {
         Email: email, FullName: name, Role: role,
         Status: status, LastLogin: '', Notes: notes
       }, _email);
-      showToast(`تم إضافة ${name} بنجاح`, 'success');
+      showToast(t('successSaved'), 'success');
     }
     closeModal('userModal');
     await loadUsers();
     populateRoleDropdowns();
   } catch (e) {
-    showToast('فشل الحفظ: ' + e.message, 'error');
+    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'حفظ المستخدم';
+    btn.disabled = false; btn.textContent = t('saveUser');
   }
 }
 
 function confirmDeleteUser(recordID) {
   const u = _users.find(x => x.RecordID === recordID);
   if (!u) return;
-  document.getElementById('confirmTitle').textContent = 'حذف المستخدم';
-  document.getElementById('confirmMsg').textContent   = `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`;
+  document.getElementById('confirmTitle').textContent = t('deleteUserTitle');
+  document.getElementById('confirmMsg').textContent   = LANG === 'ar'
+    ? `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`
+    : `Delete "${u.FullName || u.Email}"? Their system access will be disabled.`;
   _pendingConfirm = () => deleteUser(recordID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
   openModal('confirmModal');
@@ -643,7 +644,7 @@ async function deleteUser(recordID) {
     await softDelete(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast('فشل الحذف: ' + e.message, 'error');
+    showToast(t('errDeleteFailed') + ': ' + e.message, 'error');
   }
 }
 
@@ -652,7 +653,7 @@ async function restoreUser(recordID) {
     await restoreRecord(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast('فشل الاستعادة: ' + e.message, 'error');
+    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
   }
 }
 
@@ -707,11 +708,11 @@ function renderRoles() {
           <div class="role-name">${escapeHTML(r.RoleName || r.RoleID)}</div>
           <div style="font-size:0.72rem;color:var(--text-muted);font-family:monospace;" dir="ltr">${escapeHTML(r.RoleID)}</div>
           <div class="role-desc">${escapeHTML(r.Description || '')}</div>
-          <div class="role-count" style="margin-top:4px;">${count} مستخدم</div>
+          <div class="role-count" style="margin-top:4px;">${count} ${LANG === 'ar' ? 'مستخدم' : 'user(s)'}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
           ${isBuiltin
-            ? `<span class="badge badge-blue" style="font-size:0.65rem;">مدمج</span>`
+            ? `<span class="badge badge-blue" style="font-size:0.65rem;">${LANG === 'ar' ? 'مدمج' : 'Built-in'}</span>`
             : `<button class="btn btn-sm btn-secondary btn-icon" onclick="openRoleModal('${r.RoleID}')" title="تعديل" ${!_perms?.canEdit ? 'disabled' : ''}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
@@ -733,13 +734,13 @@ function openRoleModal(roleID = null) {
   document.getElementById('rRoleID').value   = '';
   document.getElementById('rDesc').value     = '';
   document.getElementById('rRoleID').disabled = false;
-  document.getElementById('roleModalTitle').textContent = 'إضافة دور مخصص';
+  document.getElementById('roleModalTitle').textContent = t('addRoleTitle');
 
   if (roleID) {
     const r = _roles.find(x => x.RoleID === roleID);
     if (!r) return;
     _editingRole = r;
-    document.getElementById('roleModalTitle').textContent = 'تعديل الدور';
+    document.getElementById('roleModalTitle').textContent = t('editRoleTitle');
     document.getElementById('rRecordID').value = r.RecordID || '';
     document.getElementById('rRoleID').value   = r.RoleID   || '';
     document.getElementById('rDesc').value     = r.Description || '';
@@ -757,22 +758,22 @@ async function saveRole() {
     ['rRoleID','rDesc'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+    showToast(t('requiredFields'), 'error');
     return;
   }
 
   const btn = document.getElementById('saveRoleBtn');
-  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  btn.disabled = true; btn.textContent = t('saving');
 
   try {
     if (_editingRole) {
       await updateRow(_sid, 'Roles', _editingRole.RecordID,
         { Description: desc }, _email);
-      showToast('تم تحديث الدور بنجاح', 'success');
+      showToast(t('successSaved'), 'success');
     } else {
       if (_roles.find(r => r.RoleID === roleID)) {
-        showToast('هذا الدور موجود مسبقاً', 'error');
-        btn.disabled = false; btn.textContent = 'حفظ الدور';
+        showToast(t('roleExists'), 'error');
+        btn.disabled = false; btn.textContent = t('saveRole');
         return;
       }
       await appendRow(_sid, 'Roles', { RoleID: roleID, RoleName: roleID, Description: desc }, _email);
@@ -788,7 +789,7 @@ async function saveRole() {
         await appendRow(_sid, 'Permissions', row, _email);
       }
 
-      showToast(`تم إضافة الدور "${roleID}" بنجاح`, 'success');
+      showToast(t('successSaved'), 'success');
     }
 
     closeModal('roleModal');
@@ -797,15 +798,17 @@ async function saveRole() {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast('فشل الحفظ: ' + e.message, 'error');
+    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'حفظ الدور';
+    btn.disabled = false; btn.textContent = t('saveRole');
   }
 }
 
 function confirmDeleteRole(roleID) {
-  document.getElementById('confirmTitle').textContent = 'حذف الدور';
-  document.getElementById('confirmMsg').textContent   = `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`;
+  document.getElementById('confirmTitle').textContent = t('deleteRoleTitle');
+  document.getElementById('confirmMsg').textContent   = LANG === 'ar'
+    ? `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`
+    : `Delete role "${roleID}"? Roles assigned to users cannot be deleted.`;
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); deleteRole(roleID); };
   openModal('confirmModal');
 }
@@ -820,7 +823,7 @@ async function deleteRole(roleID) {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast('فشل الحذف: ' + e.message, 'error');
+    showToast(t('errDeleteFailed') + ': ' + e.message, 'error');
   }
 }
 
@@ -829,7 +832,7 @@ function populateRoleDropdowns() {
   const sel = document.getElementById('uRole');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = '<option value="">اختر الدور…</option>';
+  sel.innerHTML = `<option value="">${t('selectRole')}</option>`;
 
   const builtins = BUILTIN_ROLES.map(rid => ({
     RoleID: rid,
@@ -855,7 +858,7 @@ function populateMatrixRoleSelect() {
   const sel = document.getElementById('matrixRoleSelect');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = '<option value="">اختر دوراً…</option>';
+  sel.innerHTML = `<option value="">${t('selectRole')}</option>`;
 
   const builtins = BUILTIN_ROLES.map(rid => ({ RoleID: rid, label: ROLE_LABELS[rid]?.ar || rid }));
   const customs  = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE')
