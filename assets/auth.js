@@ -322,10 +322,15 @@ async function setupSpreadsheet(spreadsheetId, accessToken, adminEmail) {
   valueData.push({ range: 'Roles!A2', values: rolesRows });
 
   /* Admin user — LastLogin intentionally empty so first login redirects to Permissions */
-  const adminUserRow = [
-    adminEmail,
-    _loadUser()?.name || adminEmail,
-    'SuperAdmin',
+const stored = _loadUser();
+const adminName = (stored?.name && stored.name !== stored.email)
+  ? stored.name
+  : adminEmail;
+
+const adminUserRow = [
+  adminEmail,
+  adminName,
+  'SuperAdmin',
     'Active',
     '',
     'First admin user',
