@@ -1728,21 +1728,21 @@ function renderSidebar(userEmail, userName, userRole) {
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   const navItems = [
-    { page: 'Dashboard.html',     icon: gridIcon(),   label: 'Dashboard',     labelAR: 'لوحة التحكم' },
-    { page: 'Transactions.html',  icon: txIcon(),     label: 'Transactions',  labelAR: 'العمليات' },
-    { page: 'Donors.html',        icon: heartIcon(),  label: 'Donors',        labelAR: 'المتبرعون' },
-    { page: 'Beneficiaries.html', icon: usersIcon(),  label: 'Beneficiaries', labelAR: 'المستفيدون' },
-    { page: 'Receipts.html',      icon: receiptIcon(),label: 'Receipts',      labelAR: 'الإيصالات' },
-    { page: 'Inventory.html',     icon: boxIcon(),    label: 'Inventory',     labelAR: 'المخزون' },
-    { page: 'Projects.html',      icon: projIcon(),   label: 'Projects',      labelAR: 'المشاريع' },
-    { page: 'Installments.html',  icon: calIcon(),    label: 'Installments',  labelAR: 'الأقساط' },
-    { page: 'Recurring.html',     icon: repeatIcon(), label: 'Recurring',     labelAR: 'الدوريات' },
-    { page: 'Reports.html',       icon: chartIcon(),  label: 'Reports',       labelAR: 'التقارير' }
+    { page: 'Dashboard.html',     icon: gridIcon(),    key: 'dashboard'     },
+    { page: 'Transactions.html',  icon: txIcon(),      key: 'transactions'  },
+    { page: 'Donors.html',        icon: heartIcon(),   key: 'donors'        },
+    { page: 'Beneficiaries.html', icon: usersIcon(),   key: 'beneficiaries' },
+    { page: 'Receipts.html',      icon: receiptIcon(), key: 'receipts'      },
+    { page: 'Inventory.html',     icon: boxIcon(),     key: 'inventory'     },
+    { page: 'Projects.html',      icon: projIcon(),    key: 'projects'      },
+    { page: 'Installments.html',  icon: calIcon(),     key: 'installments'  },
+    { page: 'Recurring.html',     icon: repeatIcon(),  key: 'recurring'     },
+    { page: 'Reports.html',       icon: chartIcon(),   key: 'reports'       }
   ];
 
   const adminItems = [
-    { page: 'Settings.html',    icon: settingsIcon(),   label: 'Settings',    labelAR: 'الإعدادات' },
-    { page: 'Permissions.html', icon: lockIcon(),       label: 'Permissions', labelAR: 'الصلاحيات', adminOnly: true }
+    { page: 'Settings.html',    icon: settingsIcon(), key: 'settings'    },
+    { page: 'Permissions.html', icon: lockIcon(),     key: 'permissions', adminOnly: true }
   ];
 
   const current = getActivePage();
@@ -1750,13 +1750,17 @@ function renderSidebar(userEmail, userName, userRole) {
   const navHTML = (items) => items
     .filter(i => !i.adminOnly || userRole === 'SuperAdmin')
     .map(i => {
-      const page = i.page.replace('.html', '');
+      const page   = i.page.replace('.html', '');
       const active = page === current ? 'active' : '';
       return `<a href="${i.page}" class="nav-item ${active}">
         <span class="nav-icon">${i.icon}</span>
-        <span>${i.labelAR}</span>
+        <span>${t(i.key)}</span>
       </a>`;
     }).join('');
+
+  const isAR      = LANG === 'ar';
+  const langLabel = isAR ? 'EN' : 'ع';
+  const nextLang  = isAR ? 'en' : 'ar';
 
   sidebar.innerHTML = `
     <div class="sidebar-brand">
@@ -1766,18 +1770,18 @@ function renderSidebar(userEmail, userName, userRole) {
         </svg>
       </div>
       <div class="sidebar-brand-text">
-        الجمعية الخيرية
-        <div class="sidebar-brand-sub">Charity Management</div>
+        ${t('appShort')}
+        <div class="sidebar-brand-sub">${t('charityManagement')}</div>
       </div>
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">القائمة الرئيسية</div>
+      <div class="sidebar-section-label">${t('navMain')}</div>
       <nav class="sidebar-nav">${navHTML(navItems)}</nav>
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">النظام</div>
+      <div class="sidebar-section-label">${t('navSystem')}</div>
       <nav class="sidebar-nav">${navHTML(adminItems)}</nav>
     </div>
 
@@ -1789,9 +1793,27 @@ function renderSidebar(userEmail, userName, userRole) {
           <div class="user-role">${escapeHTML(userRole || 'Viewer')}</div>
         </div>
       </div>
-      <div class="sync-indicator synced" id="syncIndicator" style="padding:6px 10px;margin-top:4px;">
-        <div class="sync-dot"></div>
-        <span class="sync-text text-xs">All changes saved</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-top:4px;">
+        <div class="sync-indicator synced" id="syncIndicator">
+          <div class="sync-dot"></div>
+          <span class="sync-text text-xs">${t('allSaved')}</span>
+        </div>
+        <button onclick="setLang('${nextLang}')" style="
+          background:rgba(255,255,255,0.12);
+          border:1px solid rgba(255,255,255,0.2);
+          color:#fff;
+          border-radius:6px;
+          padding:3px 10px;
+          font-size:0.72rem;
+          font-weight:600;
+          cursor:pointer;
+          font-family:var(--font-sans);
+          transition:background 0.15s;
+        " onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+           onmouseout="this.style.background='rgba(255,255,255,0.12)'"
+           title="${isAR ? 'Switch to English' : 'التبديل إلى العربية'}">
+          ${langLabel}
+        </button>
       </div>
     </div>
   `;
@@ -1813,3 +1835,655 @@ const repeatIcon  = () => svgIcon('<polyline points="17 1 21 5 17 9"/><path d="M
 const chartIcon   = () => svgIcon('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>');
 const settingsIcon= () => svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
 const lockIcon    = () => svgIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>');
+
+/* ============================================================
+   SECTION 19 — BILINGUAL TRANSLATION SYSTEM
+   ============================================================ */
+
+/* ── Language state ───────────────────────────────────────── */
+const LANG_KEY = 'coms_lang';
+let LANG = localStorage.getItem(LANG_KEY) || 'ar';
+
+/* ── Switch language and reload ───────────────────────────── */
+function setLang(lang) {
+  localStorage.setItem(LANG_KEY, lang);
+  location.reload();
+}
+
+/* ── Get current language ─────────────────────────────────── */
+function getLang() { return LANG; }
+
+/* ── Translate a key ──────────────────────────────────────── */
+function t(key) {
+  return (T[LANG] && T[LANG][key]) || (T['ar'] && T['ar'][key]) || key;
+}
+
+/* ── Apply translations to all [data-t] elements ─────────── */
+function applyTranslations() {
+  document.documentElement.setAttribute('lang', LANG);
+  document.documentElement.setAttribute('dir', LANG === 'ar' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  document.querySelectorAll('[data-t-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-t-placeholder');
+    const val = t(key);
+    if (val) el.placeholder = val;
+  });
+  document.querySelectorAll('[data-t-title]').forEach(el => {
+    const key = el.getAttribute('data-t-title');
+    const val = t(key);
+    if (val) el.title = val;
+  });
+}
+
+/* ── Full translations dictionary ─────────────────────────── */
+const T = {
+  ar: {
+    /* ── App ── */
+    appName:              'نظام إدارة الجمعية الخيرية',
+    appShort:             'الجمعية الخيرية',
+    charityManagement:    'Charity Management',
+
+    /* ── Navigation ── */
+    navMain:              'القائمة الرئيسية',
+    navSystem:            'النظام',
+    dashboard:            'لوحة التحكم',
+    transactions:         'العمليات',
+    donors:               'المتبرعون',
+    beneficiaries:        'المستفيدون',
+    receipts:             'الإيصالات',
+    inventory:            'المخزون',
+    projects:             'المشاريع',
+    installments:         'الأقساط',
+    recurring:            'الدوريات',
+    reports:              'التقارير',
+    settings:             'الإعدادات',
+    permissions:          'الصلاحيات',
+
+    /* ── Common Actions ── */
+    add:                  'إضافة',
+    edit:                 'تعديل',
+    delete:               'حذف',
+    restore:              'استعادة',
+    save:                 'حفظ',
+    cancel:               'إلغاء',
+    confirm:              'تأكيد',
+    search:               'بحث',
+    filter:               'تصفية',
+    export:               'تصدير',
+    refresh:              'تحديث',
+    close:                'إغلاق',
+    back:                 'رجوع',
+    next:                 'التالي',
+    loading:              'جارٍ التحميل…',
+    saving:               'جارٍ الحفظ…',
+    saved:                'تم الحفظ',
+    allSaved:             'كل التغييرات محفوظة',
+    syncing:              'جارٍ المزامنة…',
+    synced:               'تمت المزامنة',
+
+    /* ── Status ── */
+    active:               'نشط',
+    inactive:             'غير نشط',
+    pending:              'في الانتظار',
+    completed:            'مكتمل',
+    cancelled:            'ملغي',
+    onHold:               'موقوف مؤقتاً',
+    underReview:          'قيد المراجعة',
+    deleted:              'محذوف',
+    issued:               'مُصدَر',
+    voided:               'ملغي',
+
+    /* ── Direction ── */
+    dirIn:                'وارد',
+    dirOut:               'صادر',
+
+    /* ── Permissions Page ── */
+    permissionsTitle:     'الصلاحيات والمستخدمون',
+    permissionsSubtitle:  'إدارة المستخدمين والأدوار والصلاحيات',
+    tabUsers:             'المستخدمون',
+    tabRoles:             'الأدوار',
+    tabMatrix:            'مصفوفة الصلاحيات',
+    usersList:            'قائمة المستخدمين',
+    addUser:              'إضافة مستخدم',
+    showDeleted:          'عرض المستخدمين المحذوفين',
+    rolesTitle:           'الأدوار الوظيفية',
+    rolesSubtitle:        'الأدوار المدمجة لا يمكن حذفها — يمكن إضافة أدوار مخصصة',
+    addCustomRole:        'إضافة دور مخصص',
+    matrixTitle:          'مصفوفة الصلاحيات',
+    matrixSubtitle:       'اختر دوراً لعرض وتعديل صلاحياته على كل صفحة',
+    selectRole:           'اختر دوراً…',
+    colUser:              'المستخدم',
+    colRole:              'الدور',
+    colStatus:            'الحالة',
+    colLastLogin:         'آخر دخول',
+    colDateAdded:         'تاريخ الإضافة',
+    colPage:              'الصفحة',
+    colView:              'عرض',
+    colCreate:            'إضافة',
+    colEdit:              'تعديل',
+    colDelete:            'حذف',
+    colViewDeleted:       'محذوف',
+    colSensitive:         'حساس',
+    colExport:            'تصدير',
+
+    /* ── User Modal ── */
+    addUserTitle:         'إضافة مستخدم جديد',
+    editUserTitle:        'تعديل المستخدم',
+    fullName:             'الاسم الكامل',
+    emailGoogle:          'البريد الإلكتروني (Google)',
+    emailHint:            'يجب أن يكون حساب Google فعّالاً',
+    roleLabel:            'الدور',
+    statusLabel:          'الحالة',
+    notes:                'ملاحظات',
+    saveUser:             'حفظ المستخدم',
+    emailExists:          'هذا البريد الإلكتروني مسجّل مسبقاً',
+    requiredFields:       'يرجى ملء جميع الحقول المطلوبة',
+
+    /* ── Role Modal ── */
+    addRoleTitle:         'إضافة دور مخصص',
+    editRoleTitle:        'تعديل الدور',
+    roleIdLabel:          'اسم الدور (بالإنجليزي)',
+    roleIdHint:           'يُستخدم كمعرّف داخلي — بدون مسافات',
+    roleDesc:             'الوصف',
+    saveRole:             'حفظ الدور',
+    roleExists:           'هذا الدور موجود مسبقاً',
+
+    /* ── Confirm Modal ── */
+    deleteUserTitle:      'حذف المستخدم',
+    deleteRoleTitle:      'حذف الدور',
+    areYouSure:           'هل أنت متأكد؟',
+
+    /* ── Empty States ── */
+    noUsers:              'لا يوجد مستخدمون',
+    noUsersHint:          'اضغط على "إضافة مستخدم" للبدء',
+    noOrgs:               'لا توجد جمعيات مسجلة',
+    noOrgsHint:           'اضغط على "تسجيل جمعية جديدة" للبدء',
+    selectRoleFirst:      'اختر دوراً',
+    selectRoleHint:       'اختر دوراً من القائمة أعلاه لعرض وتعديل صلاحياته',
+
+    /* ── Transactions ── */
+    transactionsTitle:    'العمليات المالية والعينية',
+    transactionsSubtitle: 'سجل جميع الإيرادات والمصروفات',
+    addTransaction:       'إضافة عملية',
+    cashAmount:           'المبلغ النقدي',
+    inKindValue:          'القيمة التقديرية',
+    inKindDesc:           'وصف العيني',
+    paymentMethod:        'طريقة الدفع',
+    islamicClass:         'التصنيف الإسلامي',
+    receiptRef:           'مرجع الإيصال',
+    category:             'الفئة',
+    categoryCode:         'كود الفئة',
+
+    /* ── Donors ── */
+    donorsTitle:          'سجل المتبرعين',
+    donorsSubtitle:       'إدارة قاعدة بيانات المتبرعين',
+    addDonor:             'إضافة متبرع',
+    donorType:            'نوع المتبرع',
+    firstDonation:        'تاريخ أول تبرع',
+    totalDonated:         'إجمالي التبرعات',
+    lastDonation:         'آخر تبرع',
+    notificationPref:     'تفضيل الإشعار',
+    phone:                'رقم الهاتف',
+    address:              'العنوان',
+    governorate:          'المحافظة',
+
+    /* ── Beneficiaries ── */
+    beneficiariesTitle:   'سجل المستفيدين',
+    beneficiariesSubtitle:'إدارة ملفات المستفيدين',
+    addBeneficiary:       'إضافة مستفيد',
+    familySize:           'عدد أفراد الأسرة',
+    district:             'المنطقة',
+    needType:             'نوع الاحتياج',
+    regDate:              'تاريخ التسجيل',
+    fileStatus:           'حالة الملف',
+    totalAid:             'إجمالي المساعدات',
+    lastAid:              'آخر مساعدة',
+    aidFrequency:         'تكرار المساعدة',
+    verified:             'تم التحقق',
+
+    /* ── Receipts ── */
+    receiptsTitle:        'سجل الإيصالات',
+    receiptsSubtitle:     'إيصالات الوارد والصادر',
+    addReceipt:           'إضافة إيصال',
+    receiptNo:            'رقم الإيصال',
+    issuedBy:             'أصدره',
+    receiptStatus:        'حالة الإيصال',
+    donorPayer:           'المتبرع / الجهة',
+    beneficiaryName:      'اسم المستفيد',
+
+    /* ── Inventory ── */
+    inventoryTitle:       'المخزون العيني',
+    inventorySubtitle:    'إدارة المخزون من التبرعات العينية',
+    addItem:              'إضافة صنف',
+    itemCode:             'كود الصنف',
+    itemName:             'اسم الصنف',
+    unit:                 'الوحدة',
+    openingStock:         'الرصيد الافتتاحي',
+    totalIn:              'الوارد',
+    totalOut:             'الصادر',
+    currentStock:         'الرصيد الحالي',
+    estUnitValue:         'القيمة التقديرية للوحدة',
+    totalValue:           'إجمالي القيمة',
+    storageLocation:      'مكان التخزين',
+    expiryDate:           'تاريخ الانتهاء',
+
+    /* ── Projects ── */
+    projectsTitle:        'المشاريع الخيرية',
+    projectsSubtitle:     'تتبع المشاريع الخيرية والميزانيات',
+    addProject:           'إضافة مشروع',
+    projectCode:          'كود المشروع',
+    projectName:          'اسم المشروع',
+    startDate:            'تاريخ البداية',
+    endDate:              'تاريخ الانتهاء',
+    budget:               'الميزانية المخططة',
+    actualSpent:          'المصروف الفعلي',
+    remaining:            'الرصيد المتبقي',
+    beneficiaryCount:     'عدد المستفيدين',
+    projectManager:       'المسؤول',
+    fundingSource:        'مصدر التمويل',
+
+    /* ── Installments ── */
+    installmentsTitle:    'الأقساط والتعهدات',
+    installmentsSubtitle: 'متابعة أقساط التبرعات المتعهد بها',
+    addInstallment:       'إضافة قسط',
+    pledgeTotal:          'إجمالي التعهد',
+    installmentCount:     'عدد الأقساط',
+    installmentNo:        'رقم القسط',
+    dueDate:              'تاريخ الاستحقاق',
+    amountDue:            'المبلغ المستحق',
+    amountPaid:           'المبلغ المدفوع',
+    paymentDate:          'تاريخ الدفع',
+
+    /* ── Recurring ── */
+    recurringTitle:       'المصروفات الدورية',
+    recurringSubtitle:    'إدارة المصروفات المتكررة والمجدولة',
+    addRecurring:         'إضافة مصروف دوري',
+    frequency:            'التكرار',
+    nextDueDate:          'تاريخ الاستحقاق القادم',
+    lastPaidDate:         'آخر دفعة',
+
+    /* ── Reports ── */
+    reportsTitle:         'التقارير',
+    reportsSubtitle:      'التقارير المالية والإحصائية',
+    monthlyReport:        'التقرير الشهري',
+    annualTotal:          'الإجمالي السنوي',
+    totalIn:              'إجمالي الوارد',
+    totalOut:             'إجمالي الصادر',
+    netBalance:           'صافي الرصيد',
+    transactionCount:     'عدد العمليات',
+
+    /* ── Dashboard ── */
+    dashboardTitle:       'لوحة التحكم',
+    dashboardSubtitle:    'نظرة عامة على أنشطة الجمعية',
+    recentTransactions:   'آخر العمليات',
+    projectStatus:        'حالة المشاريع',
+    inventoryAlerts:      'تنبيهات المخزون',
+    pendingInstallments:  'الأقساط المعلقة',
+    upcomingPayments:     'المدفوعات القادمة',
+
+    /* ── Settings ── */
+    settingsTitle:        'الإعدادات',
+    personalPreferences:  'التفضيلات الشخصية',
+    orgSettings:          'إعدادات الجمعية',
+    systemConfig:         'إعدادات النظام',
+    language:             'اللغة',
+    arabic:               'العربية',
+    english:              'English',
+    displayName:          'الاسم الظاهر',
+    orgNameAR:            'اسم الجمعية بالعربي',
+    orgNameEN:            'اسم الجمعية بالإنجليزي',
+
+    /* ── Lookups ── */
+    categories:           'الفئات',
+    donorTypes:           'أنواع المتبرعين',
+    islamicClasses:       'التصنيفات الإسلامية',
+    needTypes:            'أنواع الاحتياجات',
+    paymentMethods:       'طرق الدفع',
+    aidFrequencies:       'تكرار المساعدات',
+    projectStatuses:      'حالات المشاريع',
+    projectCategories:    'فئات المشاريع',
+    governorates:         'المحافظات',
+    notificationPrefs:    'تفضيلات الإشعارات',
+
+    /* ── Errors / Toasts ── */
+    errSignIn:            'يرجى تسجيل الدخول أولاً',
+    errSession:           'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى',
+    errSetup:             'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي',
+    errNoPermission:      'ليس لديك صلاحية للوصول إلى هذه الصفحة',
+    errLoadFailed:        'فشل التحميل',
+    errSaveFailed:        'فشل الحفظ',
+    errDeleteFailed:      'فشل الحذف',
+    successSaved:         'تم الحفظ بنجاح',
+    successDeleted:       'تم الحذف بنجاح',
+    successRestored:      'تم الاستعادة بنجاح',
+    signedOut:            'تم تسجيل الخروج بنجاح',
+
+    /* ── Role Labels ── */
+    roleSuperAdmin:           'مسؤول النظام الكامل',
+    roleSuperAdminDesc:       'صلاحيات كاملة على جميع الصفحات والبيانات',
+    roleDirector:             'المدير التنفيذي',
+    roleDirectorDesc:         'صلاحيات تشغيلية كاملة مع حذف العمليات المالية',
+    roleAccountManager:       'مسؤول الحسابات',
+    roleAccountManagerDesc:   'صلاحيات كاملة على الوحدات المالية',
+    roleCaseManager:          'مسؤول الحالات',
+    roleCaseManagerDesc:      'صلاحيات كاملة على المستفيدين والمشاريع',
+    roleDataEntry:            'موظف إدخال بيانات',
+    roleDataEntryDesc:        'إضافة وتعديل فقط — بدون حذف',
+    roleInventoryManager:     'مسؤول المخزون',
+    roleInventoryManagerDesc: 'صلاحيات كاملة على المخزون العيني',
+    roleViewer:               'مشاهد فقط',
+    roleViewerDesc:           'قراءة فقط على لوحة التحكم والتقارير',
+
+    /* ── iOS tap screen ── */
+    welcomeBack:              'مرحباً بعودتك',
+    tapToContinue:            'اضغط للمتابعة',
+    continue:                 'متابعة',
+  },
+
+  en: {
+    /* ── App ── */
+    appName:              'Charity Organization Management System',
+    appShort:             'Charity Org',
+    charityManagement:    'Charity Management',
+
+    /* ── Navigation ── */
+    navMain:              'Main Menu',
+    navSystem:            'System',
+    dashboard:            'Dashboard',
+    transactions:         'Transactions',
+    donors:               'Donors',
+    beneficiaries:        'Beneficiaries',
+    receipts:             'Receipts',
+    inventory:            'Inventory',
+    projects:             'Projects',
+    installments:         'Installments',
+    recurring:            'Recurring',
+    reports:              'Reports',
+    settings:             'Settings',
+    permissions:          'Permissions',
+
+    /* ── Common Actions ── */
+    add:                  'Add',
+    edit:                 'Edit',
+    delete:               'Delete',
+    restore:              'Restore',
+    save:                 'Save',
+    cancel:               'Cancel',
+    confirm:              'Confirm',
+    search:               'Search',
+    filter:               'Filter',
+    export:               'Export',
+    refresh:              'Refresh',
+    close:                'Close',
+    back:                 'Back',
+    next:                 'Next',
+    loading:              'Loading…',
+    saving:               'Saving…',
+    saved:                'Saved',
+    allSaved:             'All changes saved',
+    syncing:              'Syncing…',
+    synced:               'Synced',
+
+    /* ── Status ── */
+    active:               'Active',
+    inactive:             'Inactive',
+    pending:              'Pending',
+    completed:            'Completed',
+    cancelled:            'Cancelled',
+    onHold:               'On Hold',
+    underReview:          'Under Review',
+    deleted:              'Deleted',
+    issued:               'Issued',
+    voided:               'Voided',
+
+    /* ── Direction ── */
+    dirIn:                'IN',
+    dirOut:               'OUT',
+
+    /* ── Permissions Page ── */
+    permissionsTitle:     'Permissions & Users',
+    permissionsSubtitle:  'Manage users, roles and permissions',
+    tabUsers:             'Users',
+    tabRoles:             'Roles',
+    tabMatrix:            'Permissions Matrix',
+    usersList:            'Users List',
+    addUser:              'Add User',
+    showDeleted:          'Show deleted users',
+    rolesTitle:           'Roles',
+    rolesSubtitle:        'Built-in roles cannot be deleted — custom roles can be added',
+    addCustomRole:        'Add Custom Role',
+    matrixTitle:          'Permissions Matrix',
+    matrixSubtitle:       'Select a role to view and edit its permissions per page',
+    selectRole:           'Select a role…',
+    colUser:              'User',
+    colRole:              'Role',
+    colStatus:            'Status',
+    colLastLogin:         'Last Login',
+    colDateAdded:         'Date Added',
+    colPage:              'Page',
+    colView:              'View',
+    colCreate:            'Create',
+    colEdit:              'Edit',
+    colDelete:            'Delete',
+    colViewDeleted:       'Deleted',
+    colSensitive:         'Sensitive',
+    colExport:            'Export',
+
+    /* ── User Modal ── */
+    addUserTitle:         'Add New User',
+    editUserTitle:        'Edit User',
+    fullName:             'Full Name',
+    emailGoogle:          'Email (Google Account)',
+    emailHint:            'Must be an active Google account',
+    roleLabel:            'Role',
+    statusLabel:          'Status',
+    notes:                'Notes',
+    saveUser:             'Save User',
+    emailExists:          'This email is already registered',
+    requiredFields:       'Please fill in all required fields',
+
+    /* ── Role Modal ── */
+    addRoleTitle:         'Add Custom Role',
+    editRoleTitle:        'Edit Role',
+    roleIdLabel:          'Role Name (English)',
+    roleIdHint:           'Used as internal identifier — no spaces',
+    roleDesc:             'Description',
+    saveRole:             'Save Role',
+    roleExists:           'This role already exists',
+
+    /* ── Confirm Modal ── */
+    deleteUserTitle:      'Delete User',
+    deleteRoleTitle:      'Delete Role',
+    areYouSure:           'Are you sure?',
+
+    /* ── Empty States ── */
+    noUsers:              'No users found',
+    noUsersHint:          'Click "Add User" to get started',
+    noOrgs:               'No organizations registered',
+    noOrgsHint:           'Click "Register New Organization" to get started',
+    selectRoleFirst:      'Select a Role',
+    selectRoleHint:       'Choose a role from the dropdown above to view and edit its permissions',
+
+    /* ── Transactions ── */
+    transactionsTitle:    'Financial & In-Kind Transactions',
+    transactionsSubtitle: 'Complete log of all income and expenses',
+    addTransaction:       'Add Transaction',
+    cashAmount:           'Cash Amount',
+    inKindValue:          'In-Kind Est. Value',
+    inKindDesc:           'In-Kind Description',
+    paymentMethod:        'Payment Method',
+    islamicClass:         'Islamic Classification',
+    receiptRef:           'Receipt Reference',
+    category:             'Category',
+    categoryCode:         'Category Code',
+
+    /* ── Donors ── */
+    donorsTitle:          'Donors Registry',
+    donorsSubtitle:       'Manage your donor database',
+    addDonor:             'Add Donor',
+    donorType:            'Donor Type',
+    firstDonation:        'First Donation Date',
+    totalDonated:         'Total Donated',
+    lastDonation:         'Last Donation',
+    notificationPref:     'Notification Preference',
+    phone:                'Phone',
+    address:              'Address',
+    governorate:          'Governorate',
+
+    /* ── Beneficiaries ── */
+    beneficiariesTitle:   'Beneficiaries Registry',
+    beneficiariesSubtitle:'Manage beneficiary case files',
+    addBeneficiary:       'Add Beneficiary',
+    familySize:           'Family Size',
+    district:             'District',
+    needType:             'Need Type',
+    regDate:              'Registration Date',
+    fileStatus:           'File Status',
+    totalAid:             'Total Aid Received',
+    lastAid:              'Last Aid Date',
+    aidFrequency:         'Aid Frequency',
+    verified:             'Verified',
+
+    /* ── Receipts ── */
+    receiptsTitle:        'Receipts Log',
+    receiptsSubtitle:     'IN & OUT receipts',
+    addReceipt:           'Add Receipt',
+    receiptNo:            'Receipt No.',
+    issuedBy:             'Issued By',
+    receiptStatus:        'Receipt Status',
+    donorPayer:           'Donor / Payer',
+    beneficiaryName:      'Beneficiary Name',
+
+    /* ── Inventory ── */
+    inventoryTitle:       'In-Kind Inventory',
+    inventorySubtitle:    'Manage in-kind donated goods',
+    addItem:              'Add Item',
+    itemCode:             'Item Code',
+    itemName:             'Item Name',
+    unit:                 'Unit',
+    openingStock:         'Opening Stock',
+    totalIn:              'Total IN',
+    totalOut:             'Total OUT',
+    currentStock:         'Current Stock',
+    estUnitValue:         'Est. Unit Value',
+    totalValue:           'Total Value',
+    storageLocation:      'Storage Location',
+    expiryDate:           'Expiry Date',
+
+    /* ── Projects ── */
+    projectsTitle:        'Charity Projects',
+    projectsSubtitle:     'Track charity projects and budgets',
+    addProject:           'Add Project',
+    projectCode:          'Project Code',
+    projectName:          'Project Name',
+    startDate:            'Start Date',
+    endDate:              'End Date',
+    budget:               'Planned Budget',
+    actualSpent:          'Actual Spent',
+    remaining:            'Remaining',
+    beneficiaryCount:     'Beneficiary Count',
+    projectManager:       'Project Manager',
+    fundingSource:        'Funding Source',
+
+    /* ── Installments ── */
+    installmentsTitle:    'Installments & Pledges',
+    installmentsSubtitle: 'Track pledged donation installments',
+    addInstallment:       'Add Installment',
+    pledgeTotal:          'Pledge Total',
+    installmentCount:     'Installment Count',
+    installmentNo:        'Installment No.',
+    dueDate:              'Due Date',
+    amountDue:            'Amount Due',
+    amountPaid:           'Amount Paid',
+    paymentDate:          'Payment Date',
+
+    /* ── Recurring ── */
+    recurringTitle:       'Recurring Expenses',
+    recurringSubtitle:    'Manage scheduled recurring expenses',
+    addRecurring:         'Add Recurring',
+    frequency:            'Frequency',
+    nextDueDate:          'Next Due Date',
+    lastPaidDate:         'Last Paid Date',
+
+    /* ── Reports ── */
+    reportsTitle:         'Reports',
+    reportsSubtitle:      'Financial and statistical reports',
+    monthlyReport:        'Monthly Report',
+    annualTotal:          'Annual Total',
+    totalIn:              'Total IN',
+    totalOut:             'Total OUT',
+    netBalance:           'Net Balance',
+    transactionCount:     'Transaction Count',
+
+    /* ── Dashboard ── */
+    dashboardTitle:       'Dashboard',
+    dashboardSubtitle:    'Overview of organization activities',
+    recentTransactions:   'Recent Transactions',
+    projectStatus:        'Project Status',
+    inventoryAlerts:      'Inventory Alerts',
+    pendingInstallments:  'Pending Installments',
+    upcomingPayments:     'Upcoming Payments',
+
+    /* ── Settings ── */
+    settingsTitle:        'Settings',
+    personalPreferences:  'Personal Preferences',
+    orgSettings:          'Organization Settings',
+    systemConfig:         'System Configuration',
+    language:             'Language',
+    arabic:               'العربية',
+    english:              'English',
+    displayName:          'Display Name',
+    orgNameAR:            'Organization Name (Arabic)',
+    orgNameEN:            'Organization Name (English)',
+
+    /* ── Lookups ── */
+    categories:           'Categories',
+    donorTypes:           'Donor Types',
+    islamicClasses:       'Islamic Classifications',
+    needTypes:            'Need Types',
+    paymentMethods:       'Payment Methods',
+    aidFrequencies:       'Aid Frequencies',
+    projectStatuses:      'Project Statuses',
+    projectCategories:    'Project Categories',
+    governorates:         'Governorates',
+    notificationPrefs:    'Notification Preferences',
+
+    /* ── Errors / Toasts ── */
+    errSignIn:            'Please sign in first',
+    errSession:           'Session expired — please sign in again',
+    errSetup:             'System not set up — please complete first-run setup',
+    errNoPermission:      'You do not have permission to access this page',
+    errLoadFailed:        'Failed to load',
+    errSaveFailed:        'Failed to save',
+    errDeleteFailed:      'Failed to delete',
+    successSaved:         'Saved successfully',
+    successDeleted:       'Deleted successfully',
+    successRestored:      'Restored successfully',
+    signedOut:            'Signed out successfully',
+
+    /* ── Role Labels ── */
+    roleSuperAdmin:           'Super Administrator',
+    roleSuperAdminDesc:       'Full system access — all pages and all actions',
+    roleDirector:             'Director',
+    roleDirectorDesc:         'Full operational access including sensitive delete',
+    roleAccountManager:       'Account Manager',
+    roleAccountManagerDesc:   'Full financial module access',
+    roleCaseManager:          'Case Manager',
+    roleCaseManagerDesc:      'Full access to beneficiaries and projects',
+    roleDataEntry:            'Data Entry',
+    roleDataEntryDesc:        'Create and edit — no delete',
+    roleInventoryManager:     'Inventory Manager',
+    roleInventoryManagerDesc: 'Full inventory access, view-only elsewhere',
+    roleViewer:               'Viewer',
+    roleViewerDesc:           'Read-only dashboard and reports',
+
+    /* ── iOS tap screen ── */
+    welcomeBack:              'Welcome Back',
+    tapToContinue:            'Tap to continue',
+    continue:                 'Continue',
+  }
+};
