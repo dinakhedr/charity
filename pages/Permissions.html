@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -436,10 +436,23 @@ initPageAuth({
     _email = email; _sid = sid;
   },
   onReady: async (sid, email, token, perms) => {
-    _sid = sid; _email = email; _perms = perms;
-    await Promise.all([loadUsers(), loadRoles()]);
-    populateRoleDropdowns();
+  _sid = sid; _email = email; _perms = perms;
+  
+  // Apply saved language preference
+  const savedLang = localStorage.getItem('app_lang');
+  if (savedLang === 'en') {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = 'en';
+    document.body.dir = 'ltr';
+    // Also update the global LANG variable if needed
+    if (typeof window.LANG !== 'undefined') {
+      window.LANG = 'en';
+    }
   }
+  
+  await Promise.all([loadUsers(), loadRoles()]);
+  populateRoleDropdowns();
+}
 });
 
 /* ── Tab Switching ──────────────────────────────────────── */
