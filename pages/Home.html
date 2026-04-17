@@ -508,8 +508,19 @@ async function branchCheck() {
       if (await isActiveUser(match.SpreadsheetId)) return;
     }
 
-    const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
-    if (sid && await isActiveUser(sid)) return;
+    /* Regular user — check localStorage first (returning user, fast path) */
+const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
+if (sid && await isActiveUser(sid)) return;
+
+/* First time — scan completed orgs from config sheet */
+const completedOrgs = orgs.filter(o => o.SetupStatus === 'Completed' && o.SpreadsheetId);
+for (const org of completedOrgs) {
+  const found = await isActiveUser(org.SpreadsheetId);
+  if (found) {
+    localStorage.setItem(SPREADSHEET_ID_KEY(_email), org.SpreadsheetId);
+    return;
+  }
+}
 
     document.getElementById('pendingEmail').textContent = _email;
     show('screenPending');
