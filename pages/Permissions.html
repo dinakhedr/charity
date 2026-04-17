@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@
     .perm-table th {
       padding:10px 14px; font-size:0.72rem; font-weight:600;
       color:var(--text-secondary); text-transform:uppercase;
-      letter-spacing:0.05em; text-align:right;
+      letter-spacing:0.05em; text-align:start;
       background:var(--bg-page); border-bottom:1px solid var(--border-default);
       white-space:nowrap;
     }
@@ -154,7 +154,7 @@
         </div>
 
         <div class="table-wrapper">
-          <table class="data-table" id="usersTable" dir="ltr">
+          <table class="data-table" id="usersTable">
         <thead>
           <tr>
             <th>User</th>
@@ -436,23 +436,10 @@ initPageAuth({
     _email = email; _sid = sid;
   },
   onReady: async (sid, email, token, perms) => {
-  _sid = sid; _email = email; _perms = perms;
-  
-  // Apply saved language preference
-  const savedLang = localStorage.getItem('app_lang');
-  if (savedLang === 'en') {
-    document.documentElement.dir = 'ltr';
-    document.documentElement.lang = 'en';
-    document.body.dir = 'ltr';
-    // Also update the global LANG variable if needed
-    if (typeof window.LANG !== 'undefined') {
-      window.LANG = 'en';
-    }
+    _sid = sid; _email = email; _perms = perms;
+    await Promise.all([loadUsers(), loadRoles()]);
+    populateRoleDropdowns();
   }
-  
-  await Promise.all([loadUsers(), loadRoles()]);
-  populateRoleDropdowns();
-}
 });
 
 /* ── Tab Switching ──────────────────────────────────────── */
@@ -633,7 +620,7 @@ function confirmDeleteUser(recordID) {
   const u = _users.find(x => x.RecordID === recordID);
   if (!u) return;
   document.getElementById('confirmTitle').textContent = 'Delete User';
-  document.getElementById('confirmMsg').textContent   = `Are you sure you want to delete "${u.FullName || u.Email}"? Their system access will be disabled.`;
+  document.getElementById('confirmMsg').textContent   = `Are you sure you want to delete "${u.FullName || u.Email}"? Their access will be disabled.`;
   _pendingConfirm = () => deleteUser(recordID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
   openModal('confirmModal');
