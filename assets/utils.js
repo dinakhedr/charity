@@ -1620,13 +1620,13 @@ const LOOKUP_SEED_DATA = {
  * Seed data for Roles and Permissions sheets.
  */
 const DEFAULT_ROLES = [
-  ['SuperAdmin','Super Administrator','Full system access — all pages and all actions'],
-  ['Director','Director','Full operational access including sensitive delete'],
-  ['AccountManager','Account Manager','Full financial module access'],
-  ['CaseManager','Case Manager','Full access to beneficiaries and projects'],
-  ['DataEntry','Data Entry','Create and edit — no delete'],
-  ['InventoryManager','Inventory Manager','Full inventory access, view-only elsewhere'],
-  ['Viewer','Viewer','Read-only dashboard and reports']
+  ['SuperAdmin','مسؤول النظام الكامل','صلاحيات كاملة على جميع الصفحات والبيانات'],
+  ['Director','المدير التنفيذي','صلاحيات تشغيلية كاملة مع حذف العمليات المالية'],
+  ['AccountManager','مسؤول الحسابات','صلاحيات كاملة على الوحدات المالية'],
+  ['CaseManager','مسؤول الحالات','صلاحيات كاملة على المستفيدين والمشاريع'],
+  ['DataEntry','موظف إدخال بيانات','إضافة وتعديل فقط — بدون حذف'],
+  ['InventoryManager','مسؤول المخزون','صلاحيات كاملة على المخزون العيني'],
+  ['Viewer','مشاهد فقط','قراءة فقط على لوحة التحكم والتقارير']
 ];
 
 const ALL_PAGES = [
