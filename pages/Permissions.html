@@ -223,38 +223,38 @@
                 <th style="min-width:160px;" data-t="colPage"></th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colView"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">View</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">رؤية الصفحة</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colViewEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colViewAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colCreate"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Create</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">إضافة سجلات</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colCreateEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colCreateAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colEdit"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Edit</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تعديل سجلات</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colEditEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colEditAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colDelete"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Delete</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">حذف ناعم</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colDeleteEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colDeleteAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colViewDeleted"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Deleted</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">عرض المحذوف</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colViewDeletedEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colViewDeletedAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colSensitive"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Sensitive</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">بيانات حساسة</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colSensitiveEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colSensitiveAr"></div>
                 </th>
                 <th style="text-align:center;min-width:80px;">
                   <div style="font-weight:600;" data-t="colExport"></div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Export</div>
-                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تصدير البيانات</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;" data-t="colExportEn"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);" data-t="colExportAr"></div>
                 </th>
               </tr>
             </thead>
@@ -279,7 +279,7 @@
 <div class="modal-overlay" id="userModal">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 class="modal-title" id="userModalTitle">إضافة مستخدم جديد</h3>
+      <h3 class="modal-title" id="userModalTitle" data-t="addUserTitle"></h3>
       <button class="modal-close" onclick="closeModal('userModal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -288,36 +288,36 @@
       <input type="hidden" id="uRecordID">
       <div class="form-grid" style="gap:14px;">
         <div class="form-group span-full">
-          <label class="form-label">الاسم الكامل <span class="required">*</span></label>
-          <input type="text" class="form-input" id="uFullName" data-required="true" placeholder="الاسم بالكامل">
+          <label class="form-label" data-t="fullName"> <span class="required">*</span></label>
+          <input type="text" class="form-input" id="uFullName" data-required="true" placeholder="">
         </div>
         <div class="form-group span-full">
-          <label class="form-label">البريد الإلكتروني (Google) <span class="required">*</span></label>
+          <label class="form-label" data-t="emailGoogle"> <span class="required">*</span></label>
           <input type="email" class="form-input" id="uEmail" data-required="true" placeholder="user@gmail.com" dir="ltr">
-          <span class="form-hint">يجب أن يكون حساب Google فعّالاً</span>
+          <span class="form-hint" data-t="emailHint"></span>
         </div>
         <div class="form-group">
-          <label class="form-label">الدور <span class="required">*</span></label>
+          <label class="form-label" data-t="colRole"> <span class="required">*</span></label>
           <select class="form-select" id="uRole" data-required="true">
-            <option value="">اختر الدور…</option>
+            <option value="" data-t="selectRole"></option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">الحالة</label>
+          <label class="form-label" data-t="status"></label>
           <select class="form-select" id="uStatus">
-            <option value="Active">نشط</option>
-            <option value="Inactive">غير نشط</option>
+            <option value="Active" data-t="active"></option>
+            <option value="Inactive" data-t="inactive"></option>
           </select>
         </div>
         <div class="form-group span-full">
-          <label class="form-label">ملاحظات</label>
-          <textarea class="form-textarea" id="uNotes" rows="2" placeholder="أي ملاحظات إضافية…"></textarea>
+          <label class="form-label" data-t="notes"></label>
+          <textarea class="form-textarea" id="uNotes" rows="2" placeholder=""></textarea>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('userModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveUser()" id="saveUserBtn">حفظ المستخدم</button>
+      <button class="btn btn-secondary" onclick="closeModal('userModal')" data-t="cancel"></button>
+      <button class="btn btn-primary" onclick="saveUser()" id="saveUserBtn" data-t="saveUser"></button>
     </div>
   </div>
 </div>
@@ -326,7 +326,7 @@
 <div class="modal-overlay" id="roleModal">
   <div class="modal-box modal-sm">
     <div class="modal-header">
-      <h3 class="modal-title" id="roleModalTitle">إضافة دور مخصص</h3>
+      <h3 class="modal-title" id="roleModalTitle" data-t="addRoleTitle"></h3>
       <button class="modal-close" onclick="closeModal('roleModal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -335,19 +335,19 @@
       <input type="hidden" id="rRecordID">
       <div class="form-grid" style="gap:14px;">
         <div class="form-group span-full">
-          <label class="form-label">اسم الدور (بالإنجليزي) <span class="required">*</span></label>
+          <label class="form-label" data-t="roleNameEn"> <span class="required">*</span></label>
           <input type="text" class="form-input" id="rRoleID" data-required="true" placeholder="e.g. FieldWorker" dir="ltr">
-          <span class="form-hint">يُستخدم كمعرّف داخلي — بدون مسافات</span>
+          <span class="form-hint" data-t="roleNameHint"></span>
         </div>
         <div class="form-group span-full">
-          <label class="form-label">الوصف <span class="required">*</span></label>
-          <input type="text" class="form-input" id="rDesc" data-required="true" placeholder="وصف مختصر للدور">
+          <label class="form-label" data-t="description"> <span class="required">*</span></label>
+          <input type="text" class="form-input" id="rDesc" data-required="true" placeholder="">
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('roleModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveRole()" id="saveRoleBtn">حفظ الدور</button>
+      <button class="btn btn-secondary" onclick="closeModal('roleModal')" data-t="cancel"></button>
+      <button class="btn btn-primary" onclick="saveRole()" id="saveRoleBtn" data-t="saveRole"></button>
     </div>
   </div>
 </div>
@@ -363,12 +363,12 @@
           <path d="M10 11v6M14 11v6"/>
         </svg>
       </div>
-      <div class="modal-confirm-title" id="confirmTitle">هل أنت متأكد؟</div>
+      <div class="modal-confirm-title" id="confirmTitle" data-t="confirmTitle"></div>
       <div class="modal-confirm-text" id="confirmMsg"></div>
     </div>
     <div class="modal-footer" style="justify-content:center;gap:12px;">
-      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">إلغاء</button>
-      <button class="btn btn-danger"    id="confirmOk">تأكيد</button>
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')" data-t="cancel"></button>
+      <button class="btn btn-danger" id="confirmOk" data-t="confirm"></button>
     </div>
   </div>
 </div>
@@ -395,13 +395,11 @@ let _pendingConfirm = null;
 
 /* ── Page groups for matrix display ─────────────────────── */
 const PAGE_GROUPS = {
-  'الصفحات الرئيسية': ['Dashboard','OwnerDashboard','Reports'],
-  'العمليات المالية':  ['Transactions','Receipts','Installments','Recurring'],
-  'السجلات':          ['Donors','Beneficiaries','Inventory','Projects'],
-  'الإعدادات':        ['Settings','Permissions'],
-  'بيانات المرجعية':  ['Categories','DonorTypes','IslamicClasses','NeedTypes',
-                       'PaymentMethods','AidFrequencies','ProjectStatuses',
-                       'ProjectCategories','Governorates','NotificationPrefs']
+  mainPages: { ar: 'الصفحات الرئيسية', en: 'Main Pages', pages: ['Dashboard','OwnerDashboard','Reports'] },
+  financialOps: { ar: 'العمليات المالية', en: 'Financial Operations', pages: ['Transactions','Receipts','Installments','Recurring'] },
+  records: { ar: 'السجلات', en: 'Records', pages: ['Donors','Beneficiaries','Inventory','Projects'] },
+  settings: { ar: 'الإعدادات', en: 'Settings', pages: ['Settings','Permissions'] },
+  referenceData: { ar: 'بيانات المرجعية', en: 'Reference Data', pages: ['Categories','DonorTypes','IslamicClasses','NeedTypes','PaymentMethods','AidFrequencies','ProjectStatuses','ProjectCategories','Governorates','NotificationPrefs'] }
 };
 
 const PERM_COLS = [
@@ -522,13 +520,13 @@ function renderUsers(list) {
         <div style="font-size:0.75rem;color:var(--text-muted);" dir="ltr">${escapeHTML(u.Email || '—')}</div>
       </div>
     </div>
-  </td>
+   </td>
   <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? `<span class="badge badge-deleted" style="margin-right:4px;">${t('deleted')}</span>` : ''}</td>
   <td>${isDeleted ? '—' : statusBadge}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
   <td><div style="display:flex;gap:6px;">${actions}</div></td>
-</tr>`;
+              </tr>`;
   }).join('');
 }
 
@@ -629,9 +627,10 @@ function confirmDeleteUser(recordID) {
   const u = _users.find(x => x.RecordID === recordID);
   if (!u) return;
   document.getElementById('confirmTitle').textContent = t('deleteUserTitle');
-  document.getElementById('confirmMsg').textContent   = LANG === 'ar'
+  const msg = LANG === 'ar'
     ? `هل تريد حذف "${u.FullName || u.Email}"؟ سيتم تعطيل وصوله للنظام.`
     : `Delete "${u.FullName || u.Email}"? Their system access will be disabled.`;
+  document.getElementById('confirmMsg').textContent = msg;
   _pendingConfirm = () => deleteUser(recordID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
   openModal('confirmModal');
@@ -804,9 +803,10 @@ async function saveRole() {
 
 function confirmDeleteRole(roleID) {
   document.getElementById('confirmTitle').textContent = t('deleteRoleTitle');
-  document.getElementById('confirmMsg').textContent   = LANG === 'ar'
+  const msg = LANG === 'ar'
     ? `هل تريد حذف الدور "${roleID}"؟ لا يمكن حذف دور مرتبط بمستخدمين.`
     : `Delete role "${roleID}"? Roles assigned to users cannot be deleted.`;
+  document.getElementById('confirmMsg').textContent = msg;
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); deleteRole(roleID); };
   openModal('confirmModal');
 }
@@ -886,7 +886,7 @@ async function loadMatrix(roleID) {
   document.getElementById('matrixEmpty').style.display   = 'none';
   document.getElementById('matrixBody').innerHTML =
     `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">
-      <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>جارٍ التحميل…
+      <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>${t('loading')}…
     </td></tr>`;
 
   try {
@@ -894,7 +894,7 @@ async function loadMatrix(roleID) {
       { includeDeleted: false, email: _email, forceRefresh: true });
     renderMatrix(roleID);
   } catch (e) {
-    showToast('فشل تحميل الصلاحيات: ' + e.message, 'error');
+    showToast(t('errLoadFailed') + ': ' + e.message, 'error');
   }
 }
 
@@ -904,9 +904,10 @@ function renderMatrix(roleID) {
   _matrix.filter(r => r.RoleID === roleID).forEach(r => { rolePerms[r.PageName] = r; });
 
   let html = '';
-  for (const [groupLabel, pages] of Object.entries(PAGE_GROUPS)) {
-    html += `<tr class="page-group-row"><td colspan="8">${groupLabel}</td></tr>`;
-    pages.forEach(page => {
+  for (const [groupKey, group] of Object.entries(PAGE_GROUPS)) {
+    const groupLabel = LANG === 'ar' ? group.ar : group.en;
+    html += `<tr class="page-group-row"><td colspan="8">${escapeHTML(groupLabel)}</td></tr>`;
+    group.pages.forEach(page => {
       const p = rolePerms[page] || {};
       const pageName = getPageLabel(page);
       html += `<tr>
@@ -930,7 +931,8 @@ function renderMatrix(roleID) {
   body.innerHTML = html;
 
   if (roleID === 'SuperAdmin') {
-    document.getElementById('matrixRoleDesc').textContent = 'المسؤول الكامل — لا يمكن تعديل صلاحياته';
+    const msg = LANG === 'ar' ? 'المسؤول الكامل — لا يمكن تعديل صلاحياته' : 'Full administrator — permissions cannot be edited';
+    document.getElementById('matrixRoleDesc').textContent = msg;
   }
 }
 
@@ -959,7 +961,7 @@ async function savePerm(roleID, pageName, permKey, value, recordID) {
     }
     setSavingState('saved');
   } catch (e) {
-    showToast('فشل حفظ الصلاحية: ' + e.message, 'error');
+    showToast(t('errSaveFailed') + ': ' + e.message, 'error');
     setSavingState('error');
   }
 }
@@ -970,7 +972,7 @@ function setSavingState(state) {
   if (!pill) return;
   pill.style.display = 'inline-flex';
   pill.className = `saving-pill ${state === 'saving' ? 'saving' : state === 'saved' ? 'saved' : ''}`;
-  text.textContent = state === 'saving' ? 'جارٍ الحفظ…' : state === 'saved' ? 'تم الحفظ' : 'فشل الحفظ';
+  text.textContent = state === 'saving' ? t('saving') : state === 'saved' ? t('saved') : t('error');
   if (state === 'saved') {
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(() => { pill.style.display = 'none'; }, 2500);
@@ -980,19 +982,32 @@ function setSavingState(state) {
 /* ── Page label helper ──────────────────────────────────── */
 function getPageLabel(page) {
   const labels = {
-    Dashboard: 'لوحة التحكم', OwnerDashboard: 'لوحة المالك', Reports: 'التقارير',
-    Transactions: 'العمليات المالية', Receipts: 'الإيصالات',
-    Installments: 'الأقساط', Recurring: 'المصروفات الدورية',
-    Donors: 'المتبرعون', Beneficiaries: 'المستفيدون',
-    Inventory: 'المخزون', Projects: 'المشاريع',
-    Settings: 'الإعدادات', Permissions: 'الصلاحيات',
-    Categories: 'الفئات', DonorTypes: 'أنواع المتبرعين',
-    IslamicClasses: 'التصنيفات الإسلامية', NeedTypes: 'أنواع الاحتياجات',
-    PaymentMethods: 'طرق الدفع', AidFrequencies: 'تكرار المساعدات',
-    ProjectStatuses: 'حالات المشاريع', ProjectCategories: 'فئات المشاريع',
-    Governorates: 'المحافظات', NotificationPrefs: 'تفضيلات الإشعارات'
+    Dashboard: { ar: 'لوحة التحكم', en: 'Dashboard' },
+    OwnerDashboard: { ar: 'لوحة المالك', en: 'Owner Dashboard' },
+    Reports: { ar: 'التقارير', en: 'Reports' },
+    Transactions: { ar: 'العمليات المالية', en: 'Transactions' },
+    Receipts: { ar: 'الإيصالات', en: 'Receipts' },
+    Installments: { ar: 'الأقساط', en: 'Installments' },
+    Recurring: { ar: 'المصروفات الدورية', en: 'Recurring' },
+    Donors: { ar: 'المتبرعون', en: 'Donors' },
+    Beneficiaries: { ar: 'المستفيدون', en: 'Beneficiaries' },
+    Inventory: { ar: 'المخزون', en: 'Inventory' },
+    Projects: { ar: 'المشاريع', en: 'Projects' },
+    Settings: { ar: 'الإعدادات', en: 'Settings' },
+    Permissions: { ar: 'الصلاحيات', en: 'Permissions' },
+    Categories: { ar: 'الفئات', en: 'Categories' },
+    DonorTypes: { ar: 'أنواع المتبرعين', en: 'Donor Types' },
+    IslamicClasses: { ar: 'التصنيفات الإسلامية', en: 'Islamic Classes' },
+    NeedTypes: { ar: 'أنواع الاحتياجات', en: 'Need Types' },
+    PaymentMethods: { ar: 'طرق الدفع', en: 'Payment Methods' },
+    AidFrequencies: { ar: 'تكرار المساعدات', en: 'Aid Frequencies' },
+    ProjectStatuses: { ar: 'حالات المشاريع', en: 'Project Statuses' },
+    ProjectCategories: { ar: 'فئات المشاريع', en: 'Project Categories' },
+    Governorates: { ar: 'المحافظات', en: 'Governorates' },
+    NotificationPrefs: { ar: 'تفضيلات الإشعارات', en: 'Notification Preferences' }
   };
-  return labels[page] || page;
+  const label = labels[page];
+  return label ? (LANG === 'ar' ? label.ar : label.en) : page;
 }
 
 /* ── Modal helpers ──────────────────────────────────────── */
