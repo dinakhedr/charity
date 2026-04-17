@@ -457,8 +457,8 @@ function switchTab(tab) {
 ══════════════════════════════════════════════════════════ */
 async function loadUsers() {
   try {
-    _users = await readSheet(_sid, 'Users',
-      { includeDeleted: true, email: _email, forceRefresh: true });
+    // Remove the email filter to get ALL users
+    _users = await readSheet(_sid, 'Users', { includeDeleted: true });
     renderUsers();
   } catch (e) {
     document.getElementById('usersBody').innerHTML =
@@ -649,8 +649,7 @@ async function restoreUser(recordID) {
 ══════════════════════════════════════════════════════════ */
 async function loadRoles() {
   try {
-    _roles = await readSheet(_sid, 'Roles',
-      { includeDeleted: false, email: _email, forceRefresh: true });
+    _roles = await readSheet(_sid, 'Roles', { includeDeleted: false });
   } catch (e) {
     _roles = [];
   }
@@ -876,13 +875,13 @@ async function loadMatrix(roleID) {
       <div class="spinner spinner-sm" style="margin:0 auto 8px;"></div>جارٍ التحميل…
     </td></tr>`;
 
-  try {
-    _matrix = await readSheet(_sid, 'Permissions',
-      { includeDeleted: false, email: _email, forceRefresh: true });
+try {
+    _matrix = await readSheet(_sid, 'Permissions', { includeDeleted: false });
     renderMatrix(roleID);
   } catch (e) {
     showToast('فشل تحميل الصلاحيات: ' + e.message, 'error');
   }
+}
 }
 
 function renderMatrix(roleID) {
