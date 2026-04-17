@@ -139,6 +139,9 @@ async function _finalize(sid, email, token, pageName, onReady) {
     /* Render sidebar */
     renderSidebar(email, _auth.userName, role);
 
+    /* Apply translations after sidebar is rendered so dir takes effect */
+    if (typeof applyTranslations === 'function') applyTranslations();
+
     /* Apply UI permissions */
     applyPermissionsToUI(perms);
 

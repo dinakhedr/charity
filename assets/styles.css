@@ -1491,3 +1491,219 @@ h4 { font-size: 1rem; }
 @media (min-width: 769px) {
   .mobile-only { display: none !important; }
 }
+
+/* ── LTR Overrides (English mode) ─────────────────────────── */
+
+/* Sidebar — move to left, flip nav item direction */
+[dir="ltr"] .sidebar {
+  right: auto;
+  left: 0;
+}
+
+[dir="ltr"] .main-content {
+  margin-right: 0;
+  margin-left: var(--sidebar-width);
+}
+
+[dir="ltr"] .nav-item {
+  flex-direction: row;
+}
+
+[dir="ltr"] .nav-badge {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+[dir="ltr"] .sidebar-section-label {
+  text-align: left;
+  padding: 0 16px 8px;
+}
+
+[dir="ltr"] .sidebar-brand {
+  flex-direction: row;
+}
+
+[dir="ltr"] .sidebar-brand-text {
+  text-align: left;
+}
+
+[dir="ltr"] .sidebar-user {
+  flex-direction: row;
+}
+
+[dir="ltr"] .user-info {
+  text-align: left;
+}
+
+[dir="ltr"] .sync-indicator {
+  flex-direction: row;
+}
+
+/* Topbar */
+[dir="ltr"] .topbar-title,
+[dir="ltr"] .topbar-subtitle {
+  text-align: left;
+}
+
+[dir="ltr"] .topbar-actions {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Page content */
+[dir="ltr"] .page-header {
+  flex-direction: row;
+}
+
+[dir="ltr"] .page-title,
+[dir="ltr"] .page-subtitle {
+  text-align: left;
+}
+
+[dir="ltr"] .page-header-actions {
+  flex-direction: row;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Tables */
+[dir="ltr"] .data-table th {
+  text-align: left;
+}
+
+[dir="ltr"] .data-table td {
+  text-align: left;
+}
+
+[dir="ltr"] .table-toolbar {
+  flex-direction: row;
+}
+
+[dir="ltr"] .table-actions {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+[dir="ltr"] .table-pagination {
+  flex-direction: row;
+}
+
+/* Tabs */
+[dir="ltr"] .tabs {
+  flex-direction: row;
+}
+
+/* KPI cards */
+[dir="ltr"] .kpi-label,
+[dir="ltr"] .kpi-value,
+[dir="ltr"] .kpi-meta {
+  text-align: left;
+}
+
+/* Cards */
+[dir="ltr"] .card-header {
+  flex-direction: row;
+}
+
+[dir="ltr"] .card-title {
+  text-align: left;
+}
+
+[dir="ltr"] .card-footer {
+  flex-direction: row;
+}
+
+/* Forms */
+[dir="ltr"] .form-label {
+  text-align: left;
+}
+
+[dir="ltr"] .form-hint,
+[dir="ltr"] .form-error {
+  text-align: left;
+}
+
+[dir="ltr"] .form-select {
+  background-position: right 12px center;
+  padding-right: 32px;
+  padding-left: 12px;
+}
+
+/* Modals */
+[dir="ltr"] .modal-header {
+  flex-direction: row;
+}
+
+[dir="ltr"] .modal-title {
+  text-align: left;
+}
+
+[dir="ltr"] .modal-footer {
+  flex-direction: row;
+}
+
+[dir="ltr"] .modal-confirm-title,
+[dir="ltr"] .modal-confirm-text {
+  text-align: center;
+}
+
+/* Badges */
+[dir="ltr"] .badge {
+  flex-direction: row;
+}
+
+/* Dropdown */
+[dir="ltr"] .dropdown-menu {
+  right: auto;
+  left: 0;
+}
+
+[dir="ltr"] .dropdown-item {
+  flex-direction: row;
+}
+
+/* Toast */
+[dir="ltr"] .toast-container {
+  right: auto;
+  left: 20px;
+}
+
+[dir="ltr"] .toast {
+  border-left: 3px solid transparent;
+  border-right: none;
+}
+
+[dir="ltr"] .toast.success { border-left-color: var(--color-in); border-right: none; }
+[dir="ltr"] .toast.error   { border-left-color: var(--color-out); border-right: none; }
+[dir="ltr"] .toast.warning { border-left-color: var(--color-warning); border-right: none; }
+[dir="ltr"] .toast.info    { border-left-color: var(--blue-600); border-right: none; }
+
+/* Filters */
+[dir="ltr"] .filters-bar {
+  flex-direction: row;
+}
+
+/* Role cards */
+[dir="ltr"] .role-card {
+  flex-direction: row;
+}
+
+[dir="ltr"] .role-info {
+  text-align: left;
+}
+
+/* Saving pill */
+[dir="ltr"] .saving-pill {
+  flex-direction: row;
+}
+
+/* Empty state */
+[dir="ltr"] .empty-state-title,
+[dir="ltr"] .empty-state-text {
+  text-align: center;
+}
+
+/* Sidebar footer language toggle */
+[dir="ltr"] .sidebar-footer > div {
+  flex-direction: row;
+}
