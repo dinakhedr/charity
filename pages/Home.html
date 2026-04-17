@@ -231,10 +231,18 @@
           <button class="btn btn-secondary btn-sm" onclick="loadOrgs()">تحديث</button>
         </div>
       </div>
-      <table class="data-table">
-        <thead>
-          <tr><th>الجمعية</th><th>المسؤول</th><th>المحافظة</th><th>الحالة</th><th>تاريخ التسجيل</th><th>الملف</th><th></th></tr>
-        </thead>
+<table class="data-table" style="direction:rtl;">
+  <thead>
+    <tr>
+      <th style="text-align:right;">الجمعية</th>
+      <th style="text-align:right;">المسؤول</th>
+      <th style="text-align:right;">المحافظة</th>
+      <th style="text-align:right;">الحالة</th>
+      <th style="text-align:right;">تاريخ التسجيل</th>
+      <th style="text-align:right;">الملف</th>
+      <th></th>
+    </tr>
+  </thead>
         <tbody id="orgsBody">
           <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
             <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
