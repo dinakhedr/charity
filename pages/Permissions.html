@@ -431,7 +431,6 @@ initPageAuth({
   pageName: '',
   onLoadLocal: (email, sid) => {
     _email = email; _sid = sid;
-    applyTranslations();
   },
   onReady: async (sid, email, token, perms) => {
     _sid = sid; _email = email;
@@ -440,7 +439,6 @@ initPageAuth({
       canDelete: true, canViewDeleted: true,
       canViewSensitive: true, canExport: true
     };
-    applyTranslations();
     await Promise.all([loadUsers(), loadRoles()]);
     populateRoleDropdowns();
 
