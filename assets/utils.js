@@ -516,14 +516,15 @@ function renderSidebar(email, userName, role) {
     </div>
     
     <div class="sidebar-footer">
-  <div class="sidebar-user" onclick="toggleUserMenu()">
-    <div class="user-avatar">${initials}</div>
-    <div class="user-info">
-      <div class="user-name">${escapeHTML(userName || email)}</div>
+        <div class="sidebar-user" onclick="toggleUserMenu()">
+       <div class="user-avatar">${initials}</div>
+       <div class="user-info">
+         <div class="user-name">${escapeHTML(userName || email)}</div>
       <div class="user-role">${escapeHTML(roleLabel)}</div>
     </div>
   </div>
-  <div class="dropdown-menu" id="userMenu">
+    
+    <div class="dropdown-menu" id="userMenu">
     <div class="dropdown-item" onclick="setLanguage('ar')">
       <span>العربية</span>
       ${LANG === 'ar' ? '<span>✓</span>' : ''}
@@ -556,7 +557,9 @@ function renderSidebar(email, userName, role) {
 function toggleUserMenu() {
   const menu = document.getElementById('userMenu');
   if (menu) {
-    // Toggle the 'open' class instead of display property
+    // Remove any inline display style that might interfere
+    menu.style.display = '';
+    // Toggle the 'open' class
     menu.classList.toggle('open');
   }
 }
@@ -565,8 +568,8 @@ function toggleUserMenu() {
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('userMenu');
   const userBtn = document.querySelector('.sidebar-user');
-  if (menu && userBtn && !userBtn.contains(e.target)) {
-    menu.style.display = 'none';
+  if (menu && userBtn && !userBtn.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.remove('open');  // Use classList.remove instead of style.display
   }
 });
 
