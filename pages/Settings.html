@@ -591,6 +591,54 @@
                 </div>
               </div>
             </div>
+
+            <div class="settings-section">
+              <div class="settings-section-header">
+                <div class="settings-section-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+                <div>
+                  <div class="settings-section-title">Translations</div>
+                  <div class="settings-section-desc">UI labels loaded from the SysAdmin Translations sheet</div>
+                </div>
+              </div>
+              <div class="settings-section-body">
+                <div class="setting-row">
+                  <div>
+                    <div class="setting-label">Translation Cache</div>
+                    <div class="setting-desc">Labels are cached for 24 hours. Force a refresh to pick up changes made in the Translations sheet immediately.</div>
+                  </div>
+                  <div class="setting-control" style="display:flex;align-items:center;gap:8px;">
+                    <span class="info-value" id="translationCacheAge">—</span>
+                    <button class="btn btn-secondary" onclick="refreshTranslations()" id="refreshTranslationsBtn">
+                      Refresh Now
+                    </button>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <div class="setting-label">Keys Loaded</div>
+                    <div class="setting-desc">Number of translation keys currently active</div>
+                  </div>
+                  <div class="setting-control">
+                    <span class="info-value" id="translationKeyCount">—</span>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <div class="setting-label">Source Sheet</div>
+                    <div class="setting-desc">The SysAdmin config spreadsheet — Translations tab</div>
+                  </div>
+                  <div class="setting-control">
+                    <a href="https://docs.google.com/spreadsheets/d/1m41rWfsHWWh6LkKqDir8nnen0y0Yx8RzhPPQs73Bxis" 
+                       target="_blank" rel="noopener"
+                       class="btn btn-sm btn-secondary" style="padding:4px 10px;font-size:0.75rem;">
+                      Open Sheet ↗
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- ── PANEL: Notifications ──────────────────────── -->
@@ -839,6 +887,7 @@ initPageAuth({
     loadSyncInterval();
     updateLangButtons();
     populateConfigWarnings();
+    populateTranslationInfo();
   }
 });
 
@@ -1112,6 +1161,62 @@ function saveSyncInterval() {
   const val = document.getElementById('syncInterval')?.value || '300000';
   localStorage.setItem('coms_sync_interval', val);
   showToast('Sync interval updated', 'success');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TRANSLATIONS CACHE
+══════════════════════════════════════════════════════════════ */
+function populateTranslationInfo() {
+  const tsRaw  = localStorage.getItem('coms_translations_ts');
+  const cached = localStorage.getItem('coms_translations');
+  const ageEl  = document.getElementById('translationCacheAge');
+  const keyEl  = document.getElementById('translationKeyCount');
+
+  if (!tsRaw || !cached) {
+    if (ageEl) ageEl.textContent = 'Not cached yet';
+    if (keyEl) keyEl.textContent = '—';
+    return;
+  }
+
+  const age     = Date.now() - parseInt(tsRaw, 10);
+  const hours   = Math.floor(age / 3600000);
+  const minutes = Math.floor((age % 3600000) / 60000);
+  if (ageEl) ageEl.textContent = hours > 0
+    ? `Cached ${hours}h ${minutes}m ago`
+    : `Cached ${minutes}m ago`;
+
+  try {
+    const keys = Object.keys(JSON.parse(cached)).length;
+    if (keyEl) keyEl.textContent = `${keys} keys`;
+  } catch { if (keyEl) keyEl.textContent = '—'; }
+}
+
+async function refreshTranslations() {
+  const btn = document.getElementById('refreshTranslationsBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Refreshing…'; }
+
+  const token = getSavedAccessToken?.();
+  if (!token) {
+    showToast('No active session — cannot refresh', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Refresh Now'; }
+    return;
+  }
+
+  if (typeof clearTranslationsCache === 'function') clearTranslationsCache();
+
+  const ok = typeof loadTranslations === 'function'
+    ? await loadTranslations(token, true)
+    : false;
+
+  if (ok) {
+    if (typeof applyTranslations === 'function') applyTranslations();
+    populateTranslationInfo();
+    showToast('Translations refreshed successfully', 'success');
+  } else {
+    showToast('Could not fetch translations — fallback labels active', 'error');
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Refresh Now'; }
 }
 
 /* ══════════════════════════════════════════════════════════════
