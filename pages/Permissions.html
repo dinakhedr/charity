@@ -454,10 +454,18 @@ initPageAuth({
 
 /* ── Tab Switching ──────────────────────────────────────── */
 function switchTab(tab) {
-  ['users','roles','matrix'].forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
-    document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).style.display = t === tab ? 'block' : 'none';
-  });
+  // Update tab active states
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab !== 'users') document.getElementById('tab-users').classList.remove('active');
+  if (tab !== 'roles') document.getElementById('tab-roles').classList.remove('active');
+  if (tab !== 'matrix') document.getElementById('tab-matrix').classList.remove('active');
+  
+  // Show/hide content panels
+  document.getElementById('tabUsers').style.display = tab === 'users' ? 'block' : 'none';
+  document.getElementById('tabRoles').style.display = tab === 'roles' ? 'block' : 'none';
+  document.getElementById('tabMatrix').style.display = tab === 'matrix' ? 'block' : 'none';
+  
+  // Load data when switching to a tab
   if (tab === 'roles') renderRoles();
   if (tab === 'matrix') populateMatrixRoleSelect();
 }
