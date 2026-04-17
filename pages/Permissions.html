@@ -106,13 +106,13 @@
     <!-- Topbar -->
     <header class="topbar">
       <div>
-        <div class="topbar-title">الصلاحيات والمستخدمون</div>
-        <div class="topbar-subtitle">إدارة المستخدمين والأدوار والصلاحيات</div>
+        <div class="topbar-title" data-t="permissionsTitle"></div>
+        <div class="topbar-subtitle" data-t="permissionsSubtitle"></div>
       </div>
       <div class="topbar-actions">
         <div class="saving-pill" id="savingPill">
           <div class="saving-dot"></div>
-          <span id="savingText">كل التغييرات محفوظة</span>
+          <span id="savingText" data-t="allSaved"></span>
         </div>
       </div>
     </header>
@@ -122,26 +122,23 @@
 
       <!-- Tabs -->
       <div class="tabs" id="mainTabs">
-        <div class="tab active" onclick="switchTab('users')"   id="tab-users">المستخدمون</div>
-        <div class="tab"        onclick="switchTab('roles')"   id="tab-roles">الأدوار</div>
-        <div class="tab"        onclick="switchTab('matrix')"  id="tab-matrix">مصفوفة الصلاحيات</div>
+        <div class="tab active" onclick="switchTab('users')"  id="tab-users"  data-t="tabUsers"></div>
+        <div class="tab"        onclick="switchTab('roles')"  id="tab-roles"  data-t="tabRoles"></div>
+        <div class="tab"        onclick="switchTab('matrix')" id="tab-matrix" data-t="tabMatrix"></div>
       </div>
 
       <!-- ── TAB: Users ──────────────────────────────────────── -->
       <div id="tabUsers">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;">قائمة المستخدمين</h2>
+            <h2 class="page-title" style="font-size:1.1rem;" data-t="usersList"></h2>
           </div>
           <div class="page-header-actions">
             <div class="table-search" style="max-width:220px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" placeholder="بحث بالاسم أو الإيميل…" oninput="filterUsers(this.value)">
+              <input type="text" data-t-placeholder="search" oninput="filterUsers(this.value)">
             </div>
-            <button class="btn btn-primary" onclick="openUserModal()" data-requires="create">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              إضافة مستخدم
-            </button>
+            <button class="btn btn-primary" onclick="openUserModal()" data-requires="create" data-t="addUser"></button>
           </div>
         </div>
 
@@ -149,7 +146,7 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;" id="showDeletedToggle">
           <label class="form-check">
             <input type="checkbox" id="showDeleted" onchange="toggleDeleted(this.checked)">
-            <span class="form-check-label text-sm text-muted">عرض المستخدمين المحذوفين</span>
+            <span class="form-check-label text-sm text-muted" data-t="showDeleted"></span>
           </label>
         </div>
 
@@ -157,18 +154,18 @@
           <table class="data-table" id="usersTable">
         <thead>
           <tr>
-            <th>المستخدم</th>
-            <th style="width:180px;">الدور</th>
-            <th style="width:100px;">الحالة</th>
-            <th style="width:160px;">آخر دخول</th>
-            <th style="width:130px;">تاريخ الإضافة</th>
+            <th style="text-align:right;" data-t="colUser"></th>
+            <th style="text-align:right;width:180px;" data-t="colRole"></th>
+            <th style="text-align:right;width:100px;" data-t="colStatus"></th>
+            <th style="text-align:right;width:160px;" data-t="colLastLogin"></th>
+            <th style="text-align:right;width:130px;" data-t="colDateAdded"></th>
             <th style="width:80px;"></th>
           </tr>
         </thead>
             <tbody id="usersBody">
               <tr><td colspan="6" style="text-align:center;padding:40px;">
                 <div class="spinner" style="margin:0 auto 12px;"></div>
-                جارٍ التحميل…
+                <span data-t="loading"></span>
               </td></tr>
             </tbody>
           </table>
@@ -179,18 +176,18 @@
       <div id="tabRoles" style="display:none;">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;">الأدوار الوظيفية</h2>
-            <p class="page-subtitle">الأدوار المدمجة لا يمكن حذفها — يمكن إضافة أدوار مخصصة</p>
+            <h2 class="page-title" style="font-size:1.1rem;" data-t="rolesTitle"></h2>
+            <p class="page-subtitle" data-t="rolesSubtitle"></p>
           </div>
           <button class="btn btn-primary" onclick="openRoleModal()" data-requires="create">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            إضافة دور مخصص
+            <span data-t="addCustomRole"></span>
           </button>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="rolesGrid">
           <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
-            <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
+            <div class="spinner" style="margin:0 auto 12px;"></div><span data-t="loading"></span>
           </div>
         </div>
       </div>
@@ -199,21 +196,21 @@
       <div id="tabMatrix" style="display:none;">
         <div class="page-header">
           <div class="page-header-left">
-            <h2 class="page-title" style="font-size:1.1rem;">مصفوفة الصلاحيات</h2>
-            <p class="page-subtitle">اختر دوراً لعرض وتعديل صلاحياته على كل صفحة</p>
+            <h2 class="page-title" style="font-size:1.1rem;" data-t="matrixTitle"></h2>
+            <p class="page-subtitle" data-t="matrixSubtitle"></p>
           </div>
           <div class="saving-pill" id="matrixSavingPill" style="display:none;">
             <div class="saving-dot"></div>
-            <span id="matrixSavingText">جارٍ الحفظ…</span>
+            <span id="matrixSavingText" data-t="saving"></span>
           </div>
         </div>
 
         <!-- Role selector -->
         <div class="card" style="margin-bottom:20px;">
           <div class="role-selector">
-            <label class="form-label" style="margin:0;white-space:nowrap;">الدور:</label>
+            <label class="form-label" style="margin:0;white-space:nowrap;" data-t="colRole"></label>
             <select class="form-select" id="matrixRoleSelect" onchange="loadMatrix(this.value)" style="max-width:280px;">
-              <option value="">اختر دوراً…</option>
+              <option value="" data-t="selectRole"></option>
             </select>
             <div style="margin-right:auto;font-size:0.8rem;color:var(--text-muted);" id="matrixRoleDesc"></div>
           </div>
@@ -222,45 +219,45 @@
         <div class="table-wrapper" id="matrixWrapper" style="display:none;">
           <table class="perm-table" id="matrixTable">
             <thead>
-  <tr>
-    <th style="min-width:160px;">الصفحة</th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">عرض</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">View</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">رؤية الصفحة</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">إضافة</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Create</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">إضافة سجلات</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">تعديل</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Edit</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تعديل سجلات</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">حذف</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Delete</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">حذف ناعم</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">محذوف</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Deleted</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">عرض المحذوف</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">حساس</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Sensitive</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">بيانات حساسة</div>
-    </th>
-    <th style="text-align:center;min-width:80px;">
-      <div style="font-weight:600;">تصدير</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Export</div>
-      <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تصدير البيانات</div>
-    </th>
-  </tr>
-</thead>
+              <tr>
+                <th style="min-width:160px;" data-t="colPage"></th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colView"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">View</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">رؤية الصفحة</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colCreate"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Create</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">إضافة سجلات</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colEdit"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Edit</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تعديل سجلات</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colDelete"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Delete</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">حذف ناعم</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colViewDeleted"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Deleted</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">عرض المحذوف</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colSensitive"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Sensitive</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">بيانات حساسة</div>
+                </th>
+                <th style="text-align:center;min-width:80px;">
+                  <div style="font-weight:600;" data-t="colExport"></div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Export</div>
+                  <div style="font-weight:400;font-size:0.65rem;color:var(--text-muted);">تصدير البيانات</div>
+                </th>
+              </tr>
+            </thead>
             <tbody id="matrixBody"></tbody>
           </table>
         </div>
@@ -269,8 +266,8 @@
           <div class="empty-state-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <div class="empty-state-title">اختر دوراً</div>
-          <div class="empty-state-text">اختر دوراً من القائمة أعلاه لعرض وتعديل صلاحياته</div>
+          <div class="empty-state-title" data-t="selectRoleFirst"></div>
+          <div class="empty-state-text" data-t="selectRoleHint"></div>
         </div>
       </div>
 
@@ -420,25 +417,40 @@ const PERM_COLS = [
 const BUILTIN_ROLES = ['SuperAdmin','Director','AccountManager','CaseManager','DataEntry','InventoryManager','Viewer'];
 
 const ROLE_LABELS = {
-  SuperAdmin:      { ar:'مسؤول النظام الكامل',   desc:'صلاحيات كاملة على جميع الصفحات والبيانات' },
-  Director:        { ar:'المدير التنفيذي',         desc:'صلاحيات تشغيلية كاملة مع حذف العمليات المالية' },
-  AccountManager:  { ar:'مسؤول الحسابات',          desc:'صلاحيات كاملة على الوحدات المالية' },
-  CaseManager:     { ar:'مسؤول الحالات',           desc:'صلاحيات كاملة على المستفيدين والمشاريع' },
-  DataEntry:       { ar:'موظف إدخال بيانات',       desc:'إضافة وتعديل فقط — بدون حذف' },
-  InventoryManager:{ ar:'مسؤول المخزون',           desc:'صلاحيات كاملة على المخزون العيني' },
-  Viewer:          { ar:'مشاهد فقط',               desc:'قراءة فقط على لوحة التحكم والتقارير' }
+  SuperAdmin:      { get ar() { return t('roleSuperAdmin')      || 'مسؤول النظام الكامل'; },   get desc() { return t('roleSuperAdminDesc')      || 'صلاحيات كاملة على جميع الصفحات والبيانات'; } },
+  Director:        { get ar() { return t('roleDirector')        || 'المدير التنفيذي'; },         get desc() { return t('roleDirectorDesc')        || 'صلاحيات تشغيلية كاملة مع حذف العمليات المالية'; } },
+  AccountManager:  { get ar() { return t('roleAccountManager')  || 'مسؤول الحسابات'; },          get desc() { return t('roleAccountManagerDesc')  || 'صلاحيات كاملة على الوحدات المالية'; } },
+  CaseManager:     { get ar() { return t('roleCaseManager')     || 'مسؤول الحالات'; },           get desc() { return t('roleCaseManagerDesc')     || 'صلاحيات كاملة على المستفيدين والمشاريع'; } },
+  DataEntry:       { get ar() { return t('roleDataEntry')       || 'موظف إدخال بيانات'; },       get desc() { return t('roleDataEntryDesc')       || 'إضافة وتعديل فقط — بدون حذف'; } },
+  InventoryManager:{ get ar() { return t('roleInventoryManager')|| 'مسؤول المخزون'; },           get desc() { return t('roleInventoryManagerDesc')|| 'صلاحيات كاملة على المخزون العيني'; } },
+  Viewer:          { get ar() { return t('roleViewer')          || 'مشاهد فقط'; },               get desc() { return t('roleViewerDesc')          || 'قراءة فقط على لوحة التحكم والتقارير'; } }
 };
 
 /* ── Init ───────────────────────────────────────────────── */
 initPageAuth({
-  pageName: 'Permissions',
+  pageName: '',
   onLoadLocal: (email, sid) => {
     _email = email; _sid = sid;
+    applyTranslations();
   },
   onReady: async (sid, email, token, perms) => {
-    _sid = sid; _email = email; _perms = perms;
+    _sid = sid; _email = email;
+    _perms = {
+      canView: true, canCreate: true, canEdit: true,
+      canDelete: true, canViewDeleted: true,
+      canViewSensitive: true, canExport: true
+    };
+    applyTranslations();
     await Promise.all([loadUsers(), loadRoles()]);
     populateRoleDropdowns();
+
+    const me = _users.find(u => u.Email?.toLowerCase() === email.toLowerCase());
+    if (me && (!me.LastLogin || me.LastLogin.trim() === '')) {
+      try {
+        await updateRow(sid, 'Users', me.RecordID,
+          { LastLogin: getCurrentTimestamp() }, email);
+      } catch { /* non-critical */ }
+    }
   }
 });
 
