@@ -112,7 +112,7 @@
       <div class="topbar-actions">
         <div class="saving-pill" id="savingPill">
           <div class="saving-dot"></div>
-          <span id="savingText">All changes saved</span>
+          <span id="savingText" data-t="allSaved">All changes saved</span>
         </div>
       </div>
     </header>
@@ -378,6 +378,7 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
+<script src="../assets/config.js"></script>
 <script src="../assets/utils.js"></script>
 <script src="../assets/auth.js"></script>
 <script>
@@ -397,15 +398,23 @@ let _currentRole   = null;
 let _pendingConfirm = null;
 
 /* ── Page groups for matrix display ─────────────────────── */
-const PAGE_GROUPS = {
-  'Main Pages': ['Dashboard','OwnerDashboard','Reports'],
-  'Financial Operations':  ['Transactions','Receipts','Installments','Recurring'],
-  'Records':          ['Donors','Beneficiaries','Inventory','Projects'],
-  'Settings':        ['Settings','Permissions'],
-  'Reference Data':  ['Categories','DonorTypes','IslamicClasses','NeedTypes',
-                       'PaymentMethods','AidFrequencies','ProjectStatuses',
-                       'ProjectCategories','Governorates','NotificationPrefs']
+// PAGE_GROUPS keys use translation keys — resolved at render time via t()
+const PAGE_GROUP_KEYS = {
+  'perm.groupMain':      ['Dashboard','OwnerDashboard','Reports'],
+  'perm.groupFinancial': ['Transactions','Receipts','Installments','Recurring'],
+  'perm.groupRecords':   ['Donors','Beneficiaries','Inventory','Projects'],
+  'perm.groupSettings':  ['Settings','Permissions'],
+  'perm.groupReference': ['Categories','DonorTypes','IslamicClasses','NeedTypes',
+                          'PaymentMethods','AidFrequencies','ProjectStatuses',
+                          'ProjectCategories','Governorates','NotificationPrefs']
 };
+function getPageGroups() {
+  const groups = {};
+  for (const [key, pages] of Object.entries(PAGE_GROUP_KEYS)) {
+    groups[t(key) || key] = pages;
+  }
+  return groups;
+}
 
 const PERM_COLS = [
   { key:'CanView',         label:'View',    en:'View' },
@@ -420,13 +429,13 @@ const PERM_COLS = [
 const BUILTIN_ROLES = ['SuperAdmin','Director','AccountManager','CaseManager','DataEntry','InventoryManager','Viewer'];
 
 const ROLE_LABELS = {
-  SuperAdmin:      { ar:'Super Admin',            desc:'Full access to all pages and data' },
-  Director:        { ar:'Executive Director',     desc:'Full operational access including financial deletions' },
-  AccountManager:  { ar:'Account Manager',        desc:'Full access to financial modules' },
-  CaseManager:     { ar:'Case Manager',           desc:'Full access to beneficiaries and projects' },
-  DataEntry:       { ar:'Data Entry',             desc:'Add and edit only — no deletion' },
-  InventoryManager:{ ar:'Inventory Manager',      desc:'Full access to in-kind inventory' },
-  Viewer:          { ar:'Viewer',                 desc:'Read-only access to dashboard and reports' }
+  SuperAdmin:      { label:'Super Admin',            desc:'Full access to all pages and data' },
+  Director:        { label:'Executive Director',     desc:'Full operational access including financial deletions' },
+  AccountManager:  { label:'Account Manager',        desc:'Full access to financial modules' },
+  CaseManager:     { label:'Case Manager',           desc:'Full access to beneficiaries and projects' },
+  DataEntry:       { label:'Data Entry',             desc:'Add and edit only — no deletion' },
+  InventoryManager:{ label:'Inventory Manager',      desc:'Full access to in-kind inventory' },
+  Viewer:          { label:'Viewer',                 desc:'Read-only access to dashboard and reports' }
 };
 
 /* ── Init ───────────────────────────────────────────────── */
@@ -484,7 +493,7 @@ function renderUsers(list) {
   body.innerHTML = data.map(u => {
     const isDeleted  = u.IsDeleted === 'TRUE';
     const initials   = (u.FullName || u.Email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
-    const roleLabel  = ROLE_LABELS[u.Role]?.ar || u.Role || '—';
+    const roleLabel  = t('role' + u.Role) || ROLE_LABELS[u.Role]?.label || u.Role || '—';
     const statusBadge = u.Status === 'Active'
       ? `<span class="badge status-active badge-dot">Active</span>`
       : `<span class="badge status-inactive badge-dot">Inactive</span>`;
@@ -513,7 +522,7 @@ function renderUsers(list) {
       </div>
     </div>
   </td>
-  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? '<span class="badge badge-deleted" style="margin-left:4px;">Deleted</span>' : ''}</td>
+  <td><span class="badge badge-blue">${escapeHTML(roleLabel)}</span>${isDeleted ? '<span class="badge badge-deleted" style="margin-inline-start:4px;">Deleted</span>' : ''}</td>
   <td>${isDeleted ? '—' : statusBadge}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDateTime(u.LastLogin) || '—'}</td>
   <td style="font-size:0.8rem;color:var(--text-muted);">${formatDisplayDate(u.CreatedAt)}</td>
@@ -550,13 +559,13 @@ function openUserModal(recordID = null) {
   document.getElementById('uStatus').value   = 'Active';
   document.getElementById('uNotes').value    = '';
   document.getElementById('uEmail').disabled = false;
-  document.getElementById('userModalTitle').textContent = 'Add New User';
+  document.getElementById('userModalTitle').textContent = t('perm.modalAddUser') || 'Add New User';
 
   if (recordID) {
     const u = _users.find(x => x.RecordID === recordID);
     if (!u) return;
     _editingUser = u;
-    document.getElementById('userModalTitle').textContent = 'Edit User';
+    document.getElementById('userModalTitle').textContent = t('perm.modalEditUser') || 'Edit User';
     document.getElementById('uRecordID').value = u.RecordID;
     document.getElementById('uFullName').value = u.FullName  || '';
     document.getElementById('uEmail').value    = u.Email     || '';
@@ -580,23 +589,23 @@ async function saveUser() {
     ['uFullName','uEmail','uRole'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast('Please fill in all required fields', 'error');
+    showToast(t('requiredFields') || 'Please fill in all required fields', 'error');
     return;
   }
 
   const btn = document.getElementById('saveUserBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = t('saving') || 'Saving…';
 
   try {
     if (_editingUser) {
       await updateRow(_sid, 'Users', _editingUser.RecordID,
         { FullName: name, Role: role, Status: status, Notes: notes }, _email);
-      showToast('User updated successfully', 'success');
+      showToast(t('perm.userUpdated') || 'User updated successfully', 'success');
     } else {
       const existing = _users.map(u => u.Email?.toLowerCase());
       if (existing.includes(email)) {
-        showToast('This email is already registered', 'error');
-        btn.disabled = false; btn.textContent = 'Save User';
+        showToast(t('perm.emailExists') || 'This email is already registered', 'error');
+        btn.disabled = false; btn.textContent = t('perm.saveUser') || 'Save User';
         return;
       }
       const domainIDs = _users.map(u => u.Email).filter(Boolean);
@@ -604,23 +613,23 @@ async function saveUser() {
         Email: email, FullName: name, Role: role,
         Status: status, LastLogin: '', Notes: notes
       }, _email);
-      showToast(`${name} added successfully`, 'success');
+      showToast(t('perm.userAdded').replace('{name}', name) || `${name} added successfully`, 'success');
     }
     closeModal('userModal');
     await loadUsers();
     populateRoleDropdowns();
   } catch (e) {
-    showToast('Failed to save: ' + e.message, 'error');
+    showToast((t('errSaveFailed') || 'Failed to save') + ': ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Save User';
+    btn.disabled = false; btn.textContent = t('perm.saveUser') || 'Save User';
   }
 }
 
 function confirmDeleteUser(recordID) {
   const u = _users.find(x => x.RecordID === recordID);
   if (!u) return;
-  document.getElementById('confirmTitle').textContent = 'Delete User';
-  document.getElementById('confirmMsg').textContent   = `Are you sure you want to delete "${u.FullName || u.Email}"? Their access will be disabled.`;
+  document.getElementById('confirmTitle').textContent = t('perm.deleteUserTitle') || 'Delete User';
+  document.getElementById('confirmMsg').textContent   = (t('perm.deleteUserMsg') || 'Are you sure you want to delete "{name}"? Their access will be disabled.').replace('{name}', u.FullName || u.Email);
   _pendingConfirm = () => deleteUser(recordID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); _pendingConfirm?.(); };
   openModal('confirmModal');
@@ -631,7 +640,7 @@ async function deleteUser(recordID) {
     await softDelete(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast('Failed to delete: ' + e.message, 'error');
+    showToast((t('errDeleteFailed') || 'Failed to delete') + ': ' + e.message, 'error');
   }
 }
 
@@ -640,7 +649,7 @@ async function restoreUser(recordID) {
     await restoreRecord(_sid, 'Users', recordID, _email);
     await loadUsers();
   } catch (e) {
-    showToast('Failed to restore: ' + e.message, 'error');
+    showToast((t('errRestoreFailed') || 'Failed to restore') + ': ' + e.message, 'error');
   }
 }
 
@@ -664,7 +673,7 @@ function renderRoles() {
   return {
     ...(existing || {}),
     RoleID:      rid,
-    RoleName:    ROLE_LABELS[rid]?.ar    || existing?.RoleName    || rid,
+    RoleName:    t('role' + rid) || ROLE_LABELS[rid]?.label || existing?.RoleName || rid,
     Description: ROLE_LABELS[rid]?.desc  || existing?.Description || ''
   };
 });
@@ -720,13 +729,13 @@ function openRoleModal(roleID = null) {
   document.getElementById('rRoleID').value   = '';
   document.getElementById('rDesc').value     = '';
   document.getElementById('rRoleID').disabled = false;
-  document.getElementById('roleModalTitle').textContent = 'Add Custom Role';
+  document.getElementById('roleModalTitle').textContent = t('perm.modalAddRole') || 'Add Custom Role';
 
   if (roleID) {
     const r = _roles.find(x => x.RoleID === roleID);
     if (!r) return;
     _editingRole = r;
-    document.getElementById('roleModalTitle').textContent = 'Edit Role';
+    document.getElementById('roleModalTitle').textContent = t('perm.modalEditRole') || 'Edit Role';
     document.getElementById('rRecordID').value = r.RecordID || '';
     document.getElementById('rRoleID').value   = r.RoleID   || '';
     document.getElementById('rDesc').value     = r.Description || '';
@@ -744,22 +753,22 @@ async function saveRole() {
     ['rRoleID','rDesc'].forEach(id => {
       document.getElementById(id).classList.toggle('error', !document.getElementById(id).value.trim());
     });
-    showToast('Please fill in all required fields', 'error');
+    showToast(t('requiredFields') || 'Please fill in all required fields', 'error');
     return;
   }
 
   const btn = document.getElementById('saveRoleBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = t('saving') || 'Saving…';
 
   try {
     if (_editingRole) {
       await updateRow(_sid, 'Roles', _editingRole.RecordID,
         { Description: desc }, _email);
-      showToast('Role updated successfully', 'success');
+      showToast(t('perm.roleUpdated') || 'Role updated successfully', 'success');
     } else {
       if (_roles.find(r => r.RoleID === roleID)) {
-        showToast('This role already exists', 'error');
-        btn.disabled = false; btn.textContent = 'Save Role';
+        showToast(t('perm.roleExists') || 'This role already exists', 'error');
+        btn.disabled = false; btn.textContent = t('perm.saveRole') || 'Save Role';
         return;
       }
       await appendRow(_sid, 'Roles', { RoleID: roleID, RoleName: roleID, Description: desc }, _email);
@@ -775,7 +784,7 @@ async function saveRole() {
         await appendRow(_sid, 'Permissions', row, _email);
       }
 
-      showToast(`Role "${roleID}" added successfully`, 'success');
+      showToast(t('perm.roleAdded').replace('{roleID}', roleID) || `Role "${roleID}" added successfully`, 'success');
     }
 
     closeModal('roleModal');
@@ -784,15 +793,15 @@ async function saveRole() {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast('Failed to save: ' + e.message, 'error');
+    showToast((t('errSaveFailed') || 'Failed to save') + ': ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Save Role';
+    btn.disabled = false; btn.textContent = t('perm.saveRole') || 'Save Role';
   }
 }
 
 function confirmDeleteRole(roleID) {
-  document.getElementById('confirmTitle').textContent = 'Delete Role';
-  document.getElementById('confirmMsg').textContent   = `Are you sure you want to delete role "${roleID}"? Roles assigned to users cannot be deleted.`;
+  document.getElementById('confirmTitle').textContent = t('perm.deleteRoleTitle') || 'Delete Role';
+  document.getElementById('confirmMsg').textContent   = (t('perm.deleteRoleMsg') || 'Are you sure you want to delete role "{roleID}"? Roles assigned to users cannot be deleted.').replace('{roleID}', roleID);
   document.getElementById('confirmOk').onclick = () => { closeModal('confirmModal'); deleteRole(roleID); };
   openModal('confirmModal');
 }
@@ -807,7 +816,7 @@ async function deleteRole(roleID) {
     populateRoleDropdowns();
     populateMatrixRoleSelect();
   } catch (e) {
-    showToast('Failed to delete: ' + e.message, 'error');
+    showToast((t('errDeleteFailed') || 'Failed to delete') + ': ' + e.message, 'error');
   }
 }
 
@@ -820,7 +829,7 @@ function populateRoleDropdowns() {
 
   const builtins = BUILTIN_ROLES.map(rid => ({
     RoleID: rid,
-    label: ROLE_LABELS[rid]?.ar || rid
+    label: t('role' + rid) || ROLE_LABELS[rid]?.label || rid
   }));
 
   const customs = _roles
@@ -844,7 +853,7 @@ function populateMatrixRoleSelect() {
   const current = sel.value;
   sel.innerHTML = '<option value="">Select a role…</option>';
 
-  const builtins = BUILTIN_ROLES.map(rid => ({ RoleID: rid, label: ROLE_LABELS[rid]?.ar || rid }));
+  const builtins = BUILTIN_ROLES.map(rid => ({ RoleID: rid, label: t('role' + rid) || ROLE_LABELS[rid]?.label || rid }));
   const customs  = _roles.filter(r => !BUILTIN_ROLES.includes(r.RoleID) && r.IsDeleted !== 'TRUE')
     .map(r => ({ RoleID: r.RoleID, label: r.Description || r.RoleID }));
 
@@ -865,7 +874,7 @@ async function loadMatrix(roleID) {
   }
 
   _currentRole = roleID;
-  const desc = ROLE_LABELS[roleID]?.desc || _roles.find(r => r.RoleID === roleID)?.Description || '';
+  const desc = t('role' + roleID + 'Desc') || ROLE_LABELS[roleID]?.desc || _roles.find(r => r.RoleID === roleID)?.Description || '';
   document.getElementById('matrixRoleDesc').textContent = desc;
 
   document.getElementById('matrixWrapper').style.display = 'block';
@@ -879,7 +888,7 @@ try {
     _matrix = await readSheet(_sid, 'Permissions', { includeDeleted: false });
     renderMatrix(roleID);
   } catch (e) {
-    showToast('Failed to load permissions: ' + e.message, 'error');
+    showToast((t('perm.failedLoadPerms') || 'Failed to load permissions') + ': ' + e.message, 'error');
   }
 }
 function renderMatrix(roleID) {
@@ -888,7 +897,7 @@ function renderMatrix(roleID) {
   _matrix.filter(r => r.RoleID === roleID).forEach(r => { rolePerms[r.PageName] = r; });
 
   let html = '';
-  for (const [groupLabel, pages] of Object.entries(PAGE_GROUPS)) {
+  for (const [groupLabel, pages] of Object.entries(getPageGroups())) {
     html += `<tr class="page-group-row"><td colspan="8">${groupLabel}</td></tr>`;
     pages.forEach(page => {
       const p = rolePerms[page] || {};
@@ -914,7 +923,7 @@ function renderMatrix(roleID) {
   body.innerHTML = html;
 
   if (roleID === 'SuperAdmin') {
-    document.getElementById('matrixRoleDesc').textContent = 'Super Admin — permissions cannot be modified';
+    document.getElementById('matrixRoleDesc').textContent = t('perm.superAdminNote') || 'Super Admin — permissions cannot be modified';
   }
 }
 
@@ -943,7 +952,7 @@ async function savePerm(roleID, pageName, permKey, value, recordID) {
     }
     setSavingState('saved');
   } catch (e) {
-    showToast('Failed to save permission: ' + e.message, 'error');
+    showToast((t('perm.failedSavePerm') || 'Failed to save permission') + ': ' + e.message, 'error');
     setSavingState('error');
   }
 }
@@ -954,7 +963,7 @@ function setSavingState(state) {
   if (!pill) return;
   pill.style.display = 'inline-flex';
   pill.className = `saving-pill ${state === 'saving' ? 'saving' : state === 'saved' ? 'saved' : ''}`;
-  text.textContent = state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : 'Failed to save';
+  text.textContent = state === 'saving' ? (t('saving') || 'Saving…') : state === 'saved' ? (t('saved') || 'Saved') : (t('errSaveFailed') || 'Failed to save');
   if (state === 'saved') {
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(() => { pill.style.display = 'none'; }, 2500);
@@ -963,20 +972,22 @@ function setSavingState(state) {
 
 /* ── Page label helper ──────────────────────────────────── */
 function getPageLabel(page) {
-  const labels = {
-    Dashboard: 'Dashboard', OwnerDashboard: 'Owner Dashboard', Reports: 'Reports',
-    Transactions: 'Financial Operations', Receipts: 'Receipts',
-    Installments: 'Installments', Recurring: 'Recurring Expenses',
-    Donors: 'Donors', Beneficiaries: 'Beneficiaries',
-    Inventory: 'Inventory', Projects: 'Projects',
-    Settings: 'Settings', Permissions: 'Permissions',
-    Categories: 'Categories', DonorTypes: 'Donor Types',
-    IslamicClasses: 'Islamic Classifications', NeedTypes: 'Need Types',
-    PaymentMethods: 'Payment Methods', AidFrequencies: 'Aid Frequencies',
-    ProjectStatuses: 'Project Statuses', ProjectCategories: 'Project Categories',
-    Governorates: 'Governorates', NotificationPrefs: 'Notification Preferences'
+  // Map page key to translation key, fall back to page name
+  const keyMap = {
+    Dashboard: 'dashboard', OwnerDashboard: 'perm.pageOwnerDashboard',
+    Reports: 'reports', Transactions: 'transactions', Receipts: 'receipts',
+    Installments: 'installments', Recurring: 'recurring',
+    Donors: 'donors', Beneficiaries: 'beneficiaries',
+    Inventory: 'inventory', Projects: 'projects',
+    Settings: 'settings', Permissions: 'permissions',
+    Categories: 'perm.pageCategories', DonorTypes: 'perm.pageDonorTypes',
+    IslamicClasses: 'perm.pageIslamicClasses', NeedTypes: 'perm.pageNeedTypes',
+    PaymentMethods: 'perm.pagePaymentMethods', AidFrequencies: 'perm.pageAidFrequencies',
+    ProjectStatuses: 'perm.pageProjectStatuses', ProjectCategories: 'perm.pageProjectCategories',
+    Governorates: 'perm.pageGovernorates', NotificationPrefs: 'perm.pageNotifPrefs'
   };
-  return labels[page] || page;
+  const key = keyMap[page];
+  return key ? (t(key) || page) : page;
 }
 
 /* ── Modal helpers ──────────────────────────────────────── */
