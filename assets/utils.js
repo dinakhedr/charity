@@ -928,6 +928,107 @@ function clearAccessToken() {
 }
 
 /* ══════════════════════════════════════════════════════════
+   SPREADSHEET PERMISSIONS - FOR REGULAR GMAIL USERS
+══════════════════════════════════════════════════════════ */
+
+/**
+ * setSpreadsheetPublicRead(spreadsheetId, accessToken)
+ * Sets the spreadsheet to be readable by anyone with the link.
+ * This allows any authenticated Gmail user to read the spreadsheet
+ * without needing to be manually shared.
+ */
+async function setSpreadsheetPublicRead(spreadsheetId, accessToken) {
+  try {
+    console.log('🔐 Setting public read permission for spreadsheet:', spreadsheetId);
+    
+    // First, remove any existing "anyone" permissions to avoid duplicates
+    const listResponse = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    
+    if (listResponse.ok) {
+      const permissions = await listResponse.json();
+      for (const perm of permissions.permissions || []) {
+        if (perm.type === 'anyone') {
+          console.log('Removing existing anyone permission:', perm.id);
+          await fetch(
+            `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions/${perm.id}`,
+            { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+        }
+      }
+    }
+    
+    // Add "Anyone with the link can view" permission
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+      {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${accessToken}`, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          type: 'anyone',
+          role: 'reader',
+          allowFileDiscovery: false  // Won't appear in search, only accessible via link
+        })
+      }
+    );
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.warn('Could not set public read permission:', error);
+      return false;
+    }
+    
+    console.log('✅ Spreadsheet set to "Anyone with link can view"');
+    return true;
+    
+  } catch (e) {
+    console.warn('Error setting spreadsheet permissions:', e);
+    return false;
+  }
+}
+
+/**
+ * shareSpreadsheetWithUser(spreadsheetId, userEmail, accessToken)
+ * Shares the spreadsheet with a specific user as a reader.
+ * This is a fallback for when you need individual sharing.
+ */
+async function shareSpreadsheetWithUser(spreadsheetId, userEmail, accessToken) {
+  try {
+    console.log(`🔐 Sharing spreadsheet with user: ${userEmail}`);
+    
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'user',
+        role: 'reader',
+        emailAddress: userEmail
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.warn(`Could not share with ${userEmail}:`, error);
+      return false;
+    }
+    
+    console.log(`✅ Spreadsheet shared with ${userEmail}`);
+    return true;
+    
+  } catch (e) {
+    console.warn(`Error sharing with ${userEmail}:`, e);
+    return false;
+  }
+}
+/* ══════════════════════════════════════════════════════════
    INITIALIZE ON PAGE LOAD
 ══════════════════════════════════════════════════════════ */
 
