@@ -155,53 +155,169 @@ let _translationsCache = null; // { key: { ar, en } }
    Keep this minimal: just what auth.js needs before the
    sheet fetch completes.
 ──────────────────────────────────────────────────────────── */
+/* ── FALLBACK_TRANSLATIONS ────────────────────────────────────
+   TWO-TIER STATIC FALLBACK — never fetched from the sheet.
+
+   TIER 1 — auth.js critical keys (used before any page loads):
+     Error messages, auth toasts, sidebar labels.
+     These are safety nets for when loadTranslations() fails.
+     They are ALSO in the Translations sheet — sheet wins when loaded.
+
+   TIER 2 — home.* keys (Home.html pre-auth static strings):
+     Home.html runs before OAuth, so loadTranslations() cannot
+     be called. These strings NEVER go in the Translations sheet.
+     If you need to update them, edit this file.
+
+   RULE: Every key NOT prefixed with home.* must also exist
+   in the Translations sheet. home.* keys are static only.
+──────────────────────────────────────────────────────────── */
 const FALLBACK_TRANSLATIONS = {
-  loading:         { ar: 'جارٍ التحميل...', en: 'Loading...' },
-  save:            { ar: 'حفظ',             en: 'Save' },
-  cancel:          { ar: 'إلغاء',           en: 'Cancel' },
-  delete:          { ar: 'حذف',             en: 'Delete' },
-  edit:            { ar: 'تعديل',           en: 'Edit' },
-  add:             { ar: 'إضافة',           en: 'Add' },
-  confirm:         { ar: 'تأكيد',           en: 'Confirm' },
-  close:           { ar: 'إغلاق',           en: 'Close' },
-  signOut:         { ar: 'تسجيل الخروج',   en: 'Sign Out' },
+
+  /* ── TIER 1: auth / sidebar critical keys ─────────────────
+     Safety nets — also exist in the Translations sheet.
+  ─────────────────────────────────────────────────────────── */
+  loading:         { ar: 'جارٍ التحميل...',  en: 'Loading...' },
+  save:            { ar: 'حفظ',              en: 'Save' },
+  cancel:          { ar: 'إلغاء',            en: 'Cancel' },
+  delete:          { ar: 'حذف',              en: 'Delete' },
+  edit:            { ar: 'تعديل',            en: 'Edit' },
+  add:             { ar: 'إضافة',            en: 'Add' },
+  confirm:         { ar: 'تأكيد',            en: 'Confirm' },
+  close:           { ar: 'إغلاق',            en: 'Close' },
+  signOut:         { ar: 'تسجيل الخروج',    en: 'Sign Out' },
   signedOut:       { ar: 'تم تسجيل الخروج بنجاح', en: 'Signed out successfully' },
   errSignIn:       { ar: 'يرجى تسجيل الدخول أولاً', en: 'Please sign in first' },
   errSetup:        { ar: 'لم يتم إعداد النظام — يرجى إكمال الإعداد الأولي', en: 'System not set up — please complete initial setup' },
   errSession:      { ar: 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مرة أخرى', en: 'Session expired — please sign in again' },
   errNoPermission: { ar: 'ليس لديك صلاحية للوصول إلى هذه الصفحة', en: 'You do not have permission to access this page' },
   errLoadFailed:   { ar: 'حدث خطأ أثناء تحميل الصفحة', en: 'An error occurred while loading the page' },
+  errSaveFailed:   { ar: 'فشل الحفظ',        en: 'Failed to save' },
+  errDeleteFailed: { ar: 'فشل الحذف',        en: 'Failed to delete' },
+  errRestoreFailed:{ ar: 'فشل الاستعادة',    en: 'Failed to restore' },
   successUpdated:  { ar: 'تم التحديث بنجاح', en: 'Updated successfully' },
-  dashboard:       { ar: 'لوحة التحكم',    en: 'Dashboard' },
-  transactions:    { ar: 'المعاملات',       en: 'Transactions' },
-  donors:          { ar: 'المتبرعون',       en: 'Donors' },
-  beneficiaries:   { ar: 'المستفيدون',      en: 'Beneficiaries' },
-  inventory:       { ar: 'المخزون',         en: 'Inventory' },
-  projects:        { ar: 'المشاريع',        en: 'Projects' },
-  receipts:        { ar: 'الإيصالات',       en: 'Receipts' },
-  installments:    { ar: 'الأقساط',         en: 'Installments' },
-  recurring:       { ar: 'المعاملات الدورية', en: 'Recurring' },
-  reports:         { ar: 'التقارير',        en: 'Reports' },
-  settings:        { ar: 'الإعدادات',       en: 'Settings' },
-  permissions:     { ar: 'الصلاحيات',       en: 'Permissions' },
-  system:          { ar: 'النظام',          en: 'SYSTEM' },
-  mainMenu:        { ar: 'القائمة الرئيسية', en: 'MAIN MENU' },
-  charityManagement: { ar: 'إدارة الجمعية الخيرية', en: 'Charity Management' },
-  roleSuperAdmin:  { ar: 'مسؤول النظام الكامل', en: 'Super Administrator' },
-  roleDirector:    { ar: 'المدير التنفيذي',  en: 'Executive Director' },
-  roleAccountManager: { ar: 'مسؤول الحسابات', en: 'Account Manager' },
-  roleCaseManager: { ar: 'مسؤول الحالات',   en: 'Case Manager' },
-  roleDataEntry:   { ar: 'موظف إدخال بيانات', en: 'Data Entry Clerk' },
-  roleInventoryManager: { ar: 'مسؤول المخزون', en: 'Inventory Manager' },
-  roleViewer:      { ar: 'مشاهد فقط',       en: 'Viewer Only' },
-  // iOS tap screen
-  welcomeBack:     { ar: 'مرحباً بعودتك',   en: 'Welcome back' },
-  tapToContinue:   { ar: 'اضغط للمتابعة',   en: 'Tap to continue' },
-  continue:        { ar: 'متابعة',           en: 'Continue' },
-  // Sync indicator (used before sheet loads)
+  requiredFields:  { ar: 'الرجاء تعبئة جميع الحقول المطلوبة', en: 'Please fill in all required fields' },
+  saving:          { ar: 'جارٍ الحفظ...',    en: 'Saving...' },
+  saved:           { ar: 'تم الحفظ',         en: 'Saved' },
   syncing:         { ar: 'جارٍ المزامنة...', en: 'Syncing...' },
   allSaved:        { ar: 'تم حفظ جميع التغييرات', en: 'All changes saved' },
-  errSaveFailed:   { ar: 'فشل الحفظ',        en: 'Sync failed' },
+  // iOS tap screen (auth.js)
+  welcomeBack:     { ar: 'مرحباً بعودتك',    en: 'Welcome back' },
+  tapToContinue:   { ar: 'اضغط للمتابعة',    en: 'Tap to continue' },
+  continue:        { ar: 'متابعة',            en: 'Continue' },
+  // Sidebar nav labels
+  dashboard:       { ar: 'لوحة التحكم',     en: 'Dashboard' },
+  transactions:    { ar: 'المعاملات',        en: 'Transactions' },
+  donors:          { ar: 'المتبرعون',        en: 'Donors' },
+  beneficiaries:   { ar: 'المستفيدون',       en: 'Beneficiaries' },
+  inventory:       { ar: 'المخزون',          en: 'Inventory' },
+  projects:        { ar: 'المشاريع',         en: 'Projects' },
+  receipts:        { ar: 'الإيصالات',        en: 'Receipts' },
+  installments:    { ar: 'الأقساط',          en: 'Installments' },
+  recurring:       { ar: 'المعاملات الدورية', en: 'Recurring' },
+  reports:         { ar: 'التقارير',         en: 'Reports' },
+  settings:        { ar: 'الإعدادات',        en: 'Settings' },
+  permissions:     { ar: 'الصلاحيات',        en: 'Permissions' },
+  system:          { ar: 'النظام',           en: 'SYSTEM' },
+  mainMenu:        { ar: 'القائمة الرئيسية', en: 'MAIN MENU' },
+  charityManagement: { ar: 'إدارة الجمعية الخيرية', en: 'Charity Management' },
+  // Role labels (sidebar footer)
+  roleSuperAdmin:       { ar: 'مسؤول النظام الكامل', en: 'Super Administrator' },
+  roleDirector:         { ar: 'المدير التنفيذي',      en: 'Executive Director' },
+  roleAccountManager:   { ar: 'مسؤول الحسابات',       en: 'Account Manager' },
+  roleCaseManager:      { ar: 'مسؤول الحالات',        en: 'Case Manager' },
+  roleDataEntry:        { ar: 'موظف إدخال بيانات',    en: 'Data Entry Clerk' },
+  roleInventoryManager: { ar: 'مسؤول المخزون',        en: 'Inventory Manager' },
+  roleViewer:           { ar: 'مشاهد فقط',            en: 'Viewer Only' },
+
+  /* ── TIER 2: Home.html pre-auth static strings ─────────────
+     Home.html runs before OAuth — the sheet cannot be fetched.
+     Edit here if you need to change sign-in / wizard text.
+     DO NOT add these keys to the Translations sheet.
+  ─────────────────────────────────────────────────────────── */
+  // Loading screen
+  'home.appName':         { ar: 'نظام إدارة الجمعية الخيرية', en: 'Charity Management System' },
+  'home.stepInit':        { ar: 'جارٍ التهيئة…',                     en: 'Initializing…' },
+  'home.stepSession':     { ar: 'جارٍ التحقق من الجلسة…',            en: 'Verifying session…' },
+  'home.stepRedirect':    { ar: 'جارٍ معالجة تسجيل الدخول…',         en: 'Processing sign-in…' },
+  'home.stepAccount':     { ar: 'جارٍ التحقق من بيانات الحساب…',     en: 'Fetching account details…' },
+  'home.stepAccess':      { ar: 'جارٍ التحقق من الصلاحيات…',         en: 'Checking permissions…' },
+  'home.stepUser':        { ar: 'جارٍ التحقق من حساب المستخدم…',     en: 'Verifying user account…' },
+  'home.stepRedirecting': { ar: 'جارٍ التوجيه إلى Google…',          en: 'Redirecting to Google…' },
+  'home.stepCreating':    { ar: 'جارٍ الإنشاء…',                     en: 'Creating…' },
+  'home.stepSaving':      { ar: 'جارٍ الحفظ…',                       en: 'Saving…' },
+  'home.stepSettingUp':   { ar: 'جارٍ إعداد نظامك، يرجى الانتظار…', en: 'Setting up your system, please wait…' },
+  // Sign-in screen
+  'home.signInSubtitle':  { ar: 'سجّل دخولك للمتابعة إلى النظام',   en: 'Sign in to continue to the system' },
+  'home.signInBtn':       { ar: 'تسجيل الدخول بحساب Google',          en: 'Sign in with Google' },
+  'home.authorizedOnly':  { ar: 'هذا النظام مخصص للمستخدمين المصرّح لهم فقط', en: 'This system is for authorized users only' },
+  // Access pending screen
+  'home.pendingTitle':    { ar: 'في انتظار تفعيل الحساب',            en: 'Account Pending Activation' },
+  'home.pendingDesc':     { ar: 'تم التحقق من حسابك، لكن لم يتم تفعيل وصولك بعد. تواصل مع المسؤول لمنحك الصلاحية.', en: 'Your account was verified, but access has not been activated yet. Contact the administrator to grant you permission.' },
+  'home.retryBtn':        { ar: 'إعادة المحاولة',                    en: 'Try Again' },
+  'home.switchAccount':   { ar: 'تسجيل الدخول بحساب آخر',            en: 'Sign in with a different account' },
+  // Error toasts (Home.html only)
+  'home.errNoToken':      { ar: 'لم يتم استلام التوكن — حاول مرة أخرى', en: 'No token received — please try again' },
+  'home.errUserInfo':     { ar: 'تعذّر الحصول على بيانات الحساب',       en: 'Could not fetch account details' },
+  'home.errCheck':        { ar: 'خطأ أثناء التحقق',                     en: 'Error during verification' },
+  'home.errSetup':        { ar: 'فشل الإعداد',                          en: 'Setup failed' },
+  'home.errSave':         { ar: 'فشل الحفظ',                            en: 'Failed to save' },
+  'home.welcomeUser':     { ar: 'مرحباً',                               en: 'Welcome' },
+  'home.registered':      { ar: 'تم التسجيل بنجاح — أخبر المسؤول بفتح التطبيق', en: 'Registered successfully — ask the admin to open the app' },
+  'home.requiredFields':  { ar: 'يرجى ملء جميع الحقول المطلوبة',        en: 'Please fill in all required fields' },
+  'home.retrySetup':      { ar: 'إعادة المحاولة',                       en: 'Retry' },
+  // Setup wizard
+  'home.wizStep1Title':   { ar: 'مرحباً بك',                           en: 'Welcome' },
+  'home.wizStep1Desc':    { ar: 'لقد تم تعيينك مسؤولاً رئيسياً عن {org}. سنعدّ نظامك الآن.', en: 'You have been assigned as the primary administrator of {org}. We will set up your system now.' },
+  'home.wizBullet1':      { ar: 'إنشاء مجلد خاص بجمعيتك على Google Drive', en: 'Create a dedicated folder for your charity on Google Drive' },
+  'home.wizBullet2':      { ar: 'إنشاء جداول البيانات وتهيئة النظام كاملاً', en: 'Create spreadsheets and fully configure the system' },
+  'home.wizBullet3':      { ar: 'تسجيل حسابك كمسؤول رئيسي',             en: 'Register your account as primary administrator' },
+  'home.wizStartBtn':     { ar: 'ابدأ الإعداد',                         en: 'Start Setup' },
+  'home.wizStep2Title':   { ar: 'تفاصيل الجمعية',                       en: 'Organisation Details' },
+  'home.wizStep2Desc':    { ar: 'راجع وأكمل بيانات جمعيتك',            en: 'Review and complete your organisation details' },
+  'home.wizBackBtn':      { ar: 'رجوع',                                  en: 'Back' },
+  'home.wizConfirmBtn':   { ar: 'تأكيد والمتابعة',                      en: 'Confirm & Continue' },
+  'home.wizStep3Title':   { ar: 'إنشاء النظام',                         en: 'Creating the System' },
+  'home.wizStep3Desc':    { ar: 'اضغط أدناه لإنشاء نظامك على Google Drive', en: 'Click below to create your system on Google Drive' },
+  'home.wizCheck0':       { ar: 'إنشاء مجلد الجمعية على Drive',         en: 'Create charity folder on Drive' },
+  'home.wizCheck1':       { ar: 'إنشاء ملف البيانات الرئيسي',           en: 'Create main data spreadsheet' },
+  'home.wizCheck2':       { ar: 'إعداد جداول البيانات (22 جدول)',       en: 'Set up data sheets (22 sheets)' },
+  'home.wizCheck3':       { ar: 'تهيئة بيانات الفئات والتصنيفات',      en: 'Seed categories and classifications' },
+  'home.wizCheck4':       { ar: 'تسجيل حساب المسؤول الرئيسي',          en: 'Register primary admin account' },
+  'home.wizCheck5':       { ar: 'إعداد صلاحيات المستخدمين',            en: 'Set up user permissions' },
+  'home.wizCreateBtn':    { ar: 'إنشاء النظام الآن',                   en: 'Create System Now' },
+  'home.wizDoneTitle':    { ar: 'النظام جاهز!',                         en: 'System Ready!' },
+  'home.wizDoneDesc':     { ar: 'تم إعداد نظامك بنجاح. يمكنك الآن البدء.', en: 'Your system has been set up successfully. You can now get started.' },
+  'home.wizManageUsers':  { ar: 'إدارة المستخدمين',                     en: 'Manage Users' },
+  'home.wizDashboard':    { ar: 'لوحة التحكم',                          en: 'Dashboard' },
+  // SysAdmin panel (also pre-auth — only you see this)
+  'home.saTitle':         { ar: 'لوحة مسؤول النظام',                   en: 'System Admin Panel' },
+  'home.saOrgsTitle':     { ar: 'المنظمات المُفعَّلة',                 en: 'Registered Organisations' },
+  'home.saOrgsSubtitle':  { ar: 'إدارة الجمعيات المسجلة في النظام',   en: 'Manage charities registered in the system' },
+  'home.saAddBtn':        { ar: 'تسجيل جمعية جديدة',                   en: 'Register New Charity' },
+  'home.saTotal':         { ar: 'إجمالي الجمعيات',                     en: 'Total Charities' },
+  'home.saActive':        { ar: 'مفعَّلة',                             en: 'Active' },
+  'home.saPending':       { ar: 'في انتظار الإعداد',                   en: 'Pending Setup' },
+  'home.saSearch':        { ar: 'بحث…',                                 en: 'Search…' },
+  'home.saRefresh':       { ar: 'تحديث',                                en: 'Refresh' },
+  'home.saColOrg':        { ar: 'الجمعية',                              en: 'Organisation' },
+  'home.saColAdmin':      { ar: 'المسؤول',                              en: 'Admin' },
+  'home.saColGov':        { ar: 'المحافظة',                             en: 'Governorate' },
+  'home.saColStatus':     { ar: 'الحالة',                               en: 'Status' },
+  'home.saColDate':       { ar: 'تاريخ التسجيل',                        en: 'Registered' },
+  'home.saColSheet':      { ar: 'الملف',                                en: 'Sheet' },
+  'home.saLoading':       { ar: 'جارٍ التحميل…',                       en: 'Loading…' },
+  'home.saEmpty':         { ar: 'لا توجد جمعيات مسجلة',                en: 'No charities registered' },
+  'home.saEmptyDesc':     { ar: 'اضغط على "تسجيل جمعية جديدة" للبدء',  en: 'Click "Register New Charity" to get started' },
+  'home.saFailedLoad':    { ar: 'فشل التحميل',                          en: 'Failed to load' },
+  'home.saStatusPending': { ar: 'في الانتظار',                          en: 'Pending' },
+  'home.saStatusDone':    { ar: 'مفعَّل',                              en: 'Active' },
+  'home.saOpenSheet':     { ar: 'فتح',                                   en: 'Open' },
+  'home.saRemind':        { ar: 'تذكير',                                 en: 'Remind' },
+  'home.saExit':          { ar: 'خروج',                                  en: 'Sign Out' },
+  // Onboard modal
+  'home.onboardTitle':    { ar: 'تسجيل جمعية جديدة',                   en: 'Register New Charity' },
+  'home.onboardSubmit':   { ar: 'تسجيل الجمعية',                        en: 'Register Charity' },
+  'home.selectGov':       { ar: 'اختر المحافظة…',                       en: 'Select governorate…' },
 };
 
 /* ── t(key) ───────────────────────────────────────────────
