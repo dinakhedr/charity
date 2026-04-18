@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام إدارة الجمعية الخيرية</title>
+  <title data-t="home.appName">نظام إدارة الجمعية الخيرية</title>
   <link rel="manifest" href="/charity/manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23185FA5'/><path d='M50 20C38 20 28 30 28 42c0 8 4 15 11 19l-3 19h28l-3-19c7-4 11-11 11-19 0-12-10-22-22-22z' fill='%231D9E75'/></svg>">
   <link rel="stylesheet" href="../assets/styles.css">
@@ -136,10 +136,10 @@
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
     </div>
-    <span style="font-size:1.1rem;font-weight:600;color:var(--text-primary);">الجمعية الخيرية</span>
+    <span style="font-size:1.1rem;font-weight:600;color:var(--text-primary);" data-t="home.appName">نظام إدارة الجمعية الخيرية</span>
   </div>
   <div class="spinner"></div>
-  <div class="loading-step" id="loadingStep">جارٍ التهيئة…</div>
+  <div class="loading-step" id="loadingStep" data-t="home.stepInit">جارٍ التهيئة…</div>
 </div>
 
 <!-- Sign In -->
@@ -150,8 +150,8 @@
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
     </div>
-    <h1 style="font-size:1.4rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">نظام إدارة الجمعية الخيرية</h1>
-    <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:36px;line-height:1.6;">سجّل دخولك للمتابعة إلى النظام</p>
+    <h1 style="font-size:1.4rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;" data-t="home.appName">نظام إدارة الجمعية الخيرية</h1>
+    <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:36px;line-height:1.6;" data-t="home.signInSubtitle">سجّل دخولك للمتابعة إلى النظام</p>
     <button class="google-btn" id="signInBtn" onclick="startSignIn()">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -159,9 +159,9 @@
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      تسجيل الدخول بحساب Google
+      <span data-t="home.signInBtn">تسجيل الدخول بحساب Google</span>
     </button>
-    <p style="margin-top:24px;font-size:0.75rem;color:var(--text-muted);line-height:1.6;">
+    <p style="margin-top:24px;font-size:0.75rem;color:var(--text-muted);line-height:1.6;" data-t="home.authorizedOnly">
       هذا النظام مخصص للمستخدمين المصرّح لهم فقط
     </p>
   </div>
@@ -177,15 +177,15 @@
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
     </div>
-    <h2 style="font-size:1.15rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;">في انتظار تفعيل الحساب</h2>
-    <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">
+    <h2 style="font-size:1.15rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;" data-t="home.pendingTitle">في انتظار تفعيل الحساب</h2>
+    <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;" data-t="home.pendingDesc">
       تم التحقق من حسابك، لكن لم يتم تفعيل وصولك بعد.<br>
       تواصل مع المسؤول لمنحك الصلاحية.
     </p>
     <div id="pendingEmail" style="background:var(--bg-page);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:24px;font-size:0.8rem;color:var(--text-muted);word-break:break-all;"></div>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <button class="btn btn-primary w-full" onclick="retryCheck()">إعادة المحاولة</button>
-      <button class="btn btn-ghost w-full" onclick="resetSession()">تسجيل الدخول بحساب آخر</button>
+      <button class="btn btn-primary w-full" onclick="retryCheck()" data-t="home.retryBtn">إعادة المحاولة</button>
+      <button class="btn btn-ghost w-full" onclick="resetSession()" data-t="home.switchAccount">تسجيل الدخول بحساب آخر</button>
     </div>
   </div>
 </div>
@@ -198,57 +198,57 @@
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
     </div>
-    <span style="font-size:0.9rem;font-weight:600;color:#fff;">لوحة مسؤول النظام</span>
+    <span style="font-size:0.9rem;font-weight:600;color:#fff;" data-t="home.saTitle">لوحة مسؤول النظام</span>
     <span class="sa-badge">SYSADMIN</span>
     <div style="margin-right:auto;display:flex;align-items:center;gap:10px;">
       <span style="font-size:0.78rem;color:rgba(255,255,255,0.6);" id="saEmailLabel"></span>
-      <button class="btn btn-ghost btn-sm" onclick="resetSession()" style="color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2);">خروج</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetSession()" style="color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2);" data-t="home.saExit">خروج</button>
     </div>
   </div>
   <div class="sa-body">
     <div class="page-header">
       <div class="page-header-left">
-        <h1 class="page-title">المنظمات المُفعَّلة</h1>
-        <p class="page-subtitle">إدارة الجمعيات المسجلة في النظام</p>
+        <h1 class="page-title" data-t="home.saOrgsTitle">المنظمات المُفعَّلة</h1>
+        <p class="page-subtitle" data-t="home.saOrgsSubtitle">إدارة الجمعيات المسجلة في النظام</p>
       </div>
       <button class="btn btn-primary" onclick="openOnboardModal()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        تسجيل جمعية جديدة
+        <span data-t="home.saAddBtn">تسجيل جمعية جديدة</span>
       </button>
     </div>
     <div class="kpi-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">
-      <div class="kpi-card blue"><div class="kpi-label">إجمالي الجمعيات</div><div class="kpi-value" id="stTotal">—</div></div>
-      <div class="kpi-card in">  <div class="kpi-label">مفعَّلة</div>           <div class="kpi-value" id="stDone">—</div></div>
-      <div class="kpi-card warn"><div class="kpi-label">في انتظار الإعداد</div><div class="kpi-value" id="stPend">—</div></div>
+      <div class="kpi-card blue"><div class="kpi-label" data-t="home.saTotal">إجمالي الجمعيات</div><div class="kpi-value" id="stTotal">—</div></div>
+      <div class="kpi-card in">  <div class="kpi-label" data-t="home.saActive">مفعَّلة</div>           <div class="kpi-value" id="stDone">—</div></div>
+      <div class="kpi-card warn"><div class="kpi-label" data-t="home.saPending">في انتظار الإعداد</div><div class="kpi-value" id="stPend">—</div></div>
     </div>
     <div class="table-wrapper">
       <div class="table-toolbar">
         <div class="table-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="بحث…" oninput="filterOrgs(this.value)">
+          <input type="text" data-t-placeholder="home.saSearch" placeholder="بحث…" oninput="filterOrgs(this.value)">
         </div>
         <div class="table-actions">
-          <button class="btn btn-secondary btn-sm" onclick="loadOrgs()">تحديث</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadOrgs()" data-t="home.saRefresh">تحديث</button>
         </div>
       </div>
       <table class="data-table" style="direction:rtl;">
         <thead>
           <tr>
-            <th style="text-align:right;">الجمعية</th>
-            <th style="text-align:right;">المسؤول</th>
-            <th style="text-align:right;">المحافظة</th>
-            <th style="text-align:right;">الحالة</th>
-            <th style="text-align:right;">تاريخ التسجيل</th>
-            <th style="text-align:right;">الملف</th>
+            <th style="text-align:right;" data-t="home.saColOrg">الجمعية</th>
+            <th style="text-align:right;" data-t="home.saColAdmin">المسؤول</th>
+            <th style="text-align:right;" data-t="home.saColGov">المحافظة</th>
+            <th style="text-align:right;" data-t="home.saColStatus">الحالة</th>
+            <th style="text-align:right;" data-t="home.saColDate">تاريخ التسجيل</th>
+            <th style="text-align:right;" data-t="home.saColSheet">الملف</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="orgsBody">
           <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
-            <div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…
+            <div class="spinner" style="margin:0 auto 12px;"></div><span data-t="home.saLoading">جارٍ التحميل…</span>
           </td></tr>
         </tbody>
-       </table>
+      </table>
     </div>
   </div>
 </div>
@@ -271,71 +271,74 @@
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
         </div>
-        <h2 class="wiz-title" id="wTitle">مرحباً بك</h2>
-        <p class="wiz-desc" id="wDesc">لقد تم تعيينك مسؤولاً رئيسياً. سنعدّ نظامك الآن.</p>
+        <h2 class="wiz-title" id="wTitle" data-t="home.wizStep1Title">مرحباً بك</h2>
+        <p class="wiz-desc" id="wDesc" data-t="home.wizStep1Desc">لقد تم تعيينك مسؤولاً رئيسياً. سنعدّ نظامك الآن.</p>
         <div style="background:var(--bg-page);border-radius:var(--radius-md);padding:16px 18px;text-align:right;font-size:0.85rem;color:var(--text-secondary);line-height:2;">
-          <div>📁 إنشاء مجلد خاص بجمعيتك على Google Drive</div>
-          <div>📊 إنشاء جداول البيانات وتهيئة النظام كاملاً</div>
-          <div>👤 تسجيل حسابك كمسؤول رئيسي</div>
+          <div data-t="home.wizBullet1">📁 إنشاء مجلد خاص بجمعيتك على Google Drive</div>
+          <div data-t="home.wizBullet2">📊 إنشاء جداول البيانات وتهيئة النظام كاملاً</div>
+          <div data-t="home.wizBullet3">👤 تسجيل حسابك كمسؤول رئيسي</div>
         </div>
       </div>
       <div class="wiz-footer">
         <span style="font-size:0.78rem;color:var(--text-muted);" id="wEmail"></span>
-        <button class="btn btn-primary" onclick="goStep(2)">ابدأ الإعداد <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn btn-primary" onclick="goStep(2)">
+          <span data-t="home.wizStartBtn">ابدأ الإعداد</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
       </div>
     </div>
 
     <!-- Step 2 -->
     <div id="s2" style="display:none;">
       <div class="wiz-body">
-        <h2 class="wiz-title">تفاصيل الجمعية</h2>
-        <p class="wiz-desc">راجع وأكمل بيانات جمعيتك</p>
+        <h2 class="wiz-title" data-t="home.wizStep2Title">تفاصيل الجمعية</h2>
+        <p class="wiz-desc" data-t="home.wizStep2Desc">راجع وأكمل بيانات جمعيتك</p>
         <div class="form-grid" style="gap:14px;">
           <div class="form-group">
-            <label class="form-label">اسم الجمعية بالعربي <span class="required">*</span></label>
-            <input type="text" class="form-input" id="wOrgAR" placeholder="الجمعية الخيرية">
+            <label class="form-label" data-t="home.orgNameAr">اسم الجمعية بالعربي <span class="required">*</span></label>
+            <input type="text" class="form-input" id="wOrgAR" data-t-placeholder="home.orgNameArPlaceholder" placeholder="الجمعية الخيرية">
           </div>
           <div class="form-group">
-            <label class="form-label">اسم الجمعية بالإنجليزي <span class="required">*</span></label>
-            <input type="text" class="form-input" id="wOrgEN" placeholder="Charity Org" dir="ltr">
+            <label class="form-label" data-t="home.orgNameEn">اسم الجمعية بالإنجليزي <span class="required">*</span></label>
+            <input type="text" class="form-input" id="wOrgEN" dir="ltr" data-t-placeholder="home.orgNameEnPlaceholder" placeholder="Charity Org">
           </div>
           <div class="form-group">
-            <label class="form-label">المحافظة <span class="required">*</span></label>
-            <select class="form-select" id="wGov"><option value="">اختر…</option></select>
+            <label class="form-label" data-t="home.governorate">المحافظة <span class="required">*</span></label>
+            <select class="form-select" id="wGov"><option value="" data-t="home.selectGov">اختر…</option></select>
           </div>
           <div class="form-group">
-            <label class="form-label">بريد التواصل</label>
-            <input type="email" class="form-input" id="wContact" dir="ltr">
+            <label class="form-label" data-t="home.contactEmail">بريد التواصل</label>
+            <input type="email" class="form-input" id="wContact" dir="ltr" data-t-placeholder="home.contactEmailPlaceholder" placeholder="contact@example.com">
           </div>
           <div class="form-group span-full">
-            <label class="form-label">الاسم الظاهر للمسؤول <span class="required">*</span></label>
-            <input type="text" class="form-input" id="wAdminName">
+            <label class="form-label" data-t="home.adminDisplayName">الاسم الظاهر للمسؤول <span class="required">*</span></label>
+            <input type="text" class="form-input" id="wAdminName" data-t-placeholder="home.adminDisplayNamePlaceholder" placeholder="أحمد محمد">
           </div>
         </div>
       </div>
       <div class="wiz-footer">
-        <button class="btn btn-ghost" onclick="goStep(1)">رجوع</button>
-        <button class="btn btn-primary" onclick="step2Next()">تأكيد والمتابعة</button>
+        <button class="btn btn-ghost" onclick="goStep(1)" data-t="home.wizBackBtn">رجوع</button>
+        <button class="btn btn-primary" onclick="step2Next()" data-t="home.wizConfirmBtn">تأكيد والمتابعة</button>
       </div>
     </div>
 
     <!-- Step 3 -->
     <div id="s3" style="display:none;">
       <div class="wiz-body">
-        <h2 class="wiz-title">إنشاء النظام</h2>
-        <p class="wiz-desc" id="s3desc">اضغط أدناه لإنشاء نظامك على Google Drive</p>
+        <h2 class="wiz-title" data-t="home.wizStep3Title">إنشاء النظام</h2>
+        <p class="wiz-desc" id="s3desc" data-t="home.wizStep3Desc">اضغط أدناه لإنشاء نظامك على Google Drive</p>
         <ul class="checklist">
-          <li class="ci" id="c0"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>إنشاء مجلد الجمعية على Drive</span></li>
-          <li class="ci" id="c1"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>إنشاء ملف البيانات الرئيسي</span></li>
-          <li class="ci" id="c2"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>إعداد جداول البيانات (22 جدول)</span></li>
-          <li class="ci" id="c3"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>تهيئة بيانات الفئات والتصنيفات</span></li>
-          <li class="ci" id="c4"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>تسجيل حساب المسؤول الرئيسي</span></li>
-          <li class="ci" id="c5"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>إعداد صلاحيات المستخدمين</span></li>
+          <li class="ci" id="c0"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck0">إنشاء مجلد الجمعية على Drive</span></li>
+          <li class="ci" id="c1"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck1">إنشاء ملف البيانات الرئيسي</span></li>
+          <li class="ci" id="c2"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck2">إعداد جداول البيانات (22 جدول)</span></li>
+          <li class="ci" id="c3"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck3">تهيئة بيانات الفئات والتصنيفات</span></li>
+          <li class="ci" id="c4"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck4">تسجيل حساب المسؤول الرئيسي</span></li>
+          <li class="ci" id="c5"><div class="ci-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span data-t="home.wizCheck5">إعداد صلاحيات المستخدمين</span></li>
         </ul>
       </div>
       <div class="wiz-footer">
         <span></span>
-        <button class="btn btn-primary" id="createBtn" onclick="runSetup()">إنشاء النظام الآن</button>
+        <button class="btn btn-primary" id="createBtn" onclick="runSetup()" data-t="home.wizCreateBtn">إنشاء النظام الآن</button>
       </div>
     </div>
 
@@ -345,12 +348,12 @@
         <div class="success-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h2 class="wiz-title">النظام جاهز!</h2>
-        <p class="wiz-desc">تم إعداد نظامك بنجاح. يمكنك الآن البدء.</p>
+        <h2 class="wiz-title" data-t="home.wizDoneTitle">النظام جاهز!</h2>
+        <p class="wiz-desc" data-t="home.wizDoneDesc">تم إعداد نظامك بنجاح. يمكنك الآن البدء.</p>
       </div>
       <div class="wiz-footer" style="gap:10px;">
-        <button class="btn btn-secondary w-full" onclick="window.location.href='Permissions.html'">إدارة المستخدمين</button>
-        <button class="btn btn-primary w-full" onclick="window.location.href='Dashboard.html'">لوحة التحكم</button>
+        <button class="btn btn-secondary w-full" onclick="window.location.href='Permissions.html'" data-t="home.wizManageUsers">إدارة المستخدمين</button>
+        <button class="btn btn-primary w-full" onclick="window.location.href='Dashboard.html'" data-t="home.wizDashboard">لوحة التحكم</button>
       </div>
     </div>
   </div>
@@ -360,25 +363,25 @@
 <div class="modal-overlay" id="onboardModal">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 class="modal-title">تسجيل جمعية جديدة</h3>
+      <h3 class="modal-title" data-t="home.onboardTitle">تسجيل جمعية جديدة</h3>
       <button class="modal-close" onclick="closeModal('onboardModal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="modal-body">
       <div class="form-grid" style="gap:14px;">
-        <div class="form-group"><label class="form-label">اسم الجمعية بالعربي <span class="required">*</span></label><input type="text" class="form-input" id="mOrgAR"></div>
-        <div class="form-group"><label class="form-label">اسم الجمعية بالإنجليزي <span class="required">*</span></label><input type="text" class="form-input" id="mOrgEN" dir="ltr"></div>
-        <div class="form-group"><label class="form-label">المحافظة <span class="required">*</span></label><select class="form-select" id="mGov"><option value="">اختر…</option></select></div>
-        <div class="form-group"><label class="form-label">بريد التواصل</label><input type="email" class="form-input" id="mContact" dir="ltr"></div>
-        <div class="form-group"><label class="form-label">إيميل المسؤول <span class="required">*</span></label><input type="email" class="form-input" id="mAdminEmail" dir="ltr"></div>
-        <div class="form-group"><label class="form-label">اسم المسؤول <span class="required">*</span></label><input type="text" class="form-input" id="mAdminName"></div>
-        <div class="form-group span-full"><label class="form-label">ملاحظات</label><textarea class="form-textarea" id="mNotes" rows="2"></textarea></div>
+        <div class="form-group"><label class="form-label" data-t="home.orgNameAr">اسم الجمعية بالعربي <span class="required">*</span></label><input type="text" class="form-input" id="mOrgAR" data-t-placeholder="home.orgNameArPlaceholder" placeholder="الجمعية الخيرية"></div>
+        <div class="form-group"><label class="form-label" data-t="home.orgNameEn">اسم الجمعية بالإنجليزي <span class="required">*</span></label><input type="text" class="form-input" id="mOrgEN" dir="ltr" data-t-placeholder="home.orgNameEnPlaceholder" placeholder="Charity Org"></div>
+        <div class="form-group"><label class="form-label" data-t="home.governorate">المحافظة <span class="required">*</span></label><select class="form-select" id="mGov"><option value="" data-t="home.selectGov">اختر…</option></select></div>
+        <div class="form-group"><label class="form-label" data-t="home.contactEmail">بريد التواصل</label><input type="email" class="form-input" id="mContact" dir="ltr" data-t-placeholder="home.contactEmailPlaceholder" placeholder="contact@example.com"></div>
+        <div class="form-group"><label class="form-label" data-t="home.adminEmail">إيميل المسؤول <span class="required">*</span></label><input type="email" class="form-input" id="mAdminEmail" dir="ltr" data-t-placeholder="home.adminEmailPlaceholder" placeholder="admin@example.com"></div>
+        <div class="form-group"><label class="form-label" data-t="home.adminName">اسم المسؤول <span class="required">*</span></label><input type="text" class="form-input" id="mAdminName" data-t-placeholder="home.adminNamePlaceholder" placeholder="أحمد محمد"></div>
+        <div class="form-group span-full"><label class="form-label" data-t="home.notes">ملاحظات</label><textarea class="form-textarea" id="mNotes" rows="2" data-t-placeholder="home.notesPlaceholder" placeholder="أي ملاحظات إضافية..."></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('onboardModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="submitOnboard()" id="onboardBtn">تسجيل الجمعية</button>
+      <button class="btn btn-secondary" onclick="closeModal('onboardModal')" data-t="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="submitOnboard()" id="onboardBtn" data-t="home.onboardSubmit">تسجيل الجمعية</button>
     </div>
   </div>
 </div>
@@ -408,7 +411,7 @@ let _orgData = null, _allOrgs = [], _wizOrg = {};
 window.addEventListener('load', boot);
 
 async function boot() {
-  setStep('جارٍ التهيئة…');
+  setStep(t('home.stepInit'));
 
   if (window.location.hash.includes('access_token')) {
     await handleRedirect();
@@ -419,7 +422,7 @@ async function boot() {
   const user = _loadUser();
   if (tok && user) {
     _token = tok; _email = user.email; _name = user.name;
-    setStep('جارٍ التحقق من الجلسة…');
+    setStep(t('home.stepSession'));
     await branchCheck();
     return;
   }
@@ -431,7 +434,7 @@ async function boot() {
 function startSignIn() {
   const btn = document.getElementById('signInBtn');
   btn.disabled = true;
-  btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> جارٍ التوجيه إلى Google…`;
+  btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> ${t('home.stepRedirect')}`;
 
   const p = new URLSearchParams({
     client_id:              CLIENT_ID,
@@ -447,14 +450,14 @@ function startSignIn() {
 
 async function handleRedirect() {
   show('screenLoading');
-  setStep('جارٍ معالجة تسجيل الدخول…');
+  setStep(t('home.stepRedirect'));
 
   const params = new URLSearchParams(window.location.hash.substring(1));
   const token  = params.get('access_token');
   history.replaceState(null, '', window.location.pathname);
 
   if (!token) {
-    showToast('لم يتم استلام التوكن — حاول مرة أخرى', 'error');
+    showToast(t('home.errNoToken'), 'error');
     show('screenSignIn');
     return;
   }
@@ -463,7 +466,7 @@ async function handleRedirect() {
   saveAccessToken(token);
 
   try {
-    setStep('جارٍ التحقق من بيانات الحساب…');
+    setStep(t('home.stepAccount'));
     const res  = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
       { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`userinfo ${res.status}`);
@@ -474,7 +477,7 @@ async function handleRedirect() {
     await branchCheck();
   } catch (e) {
     console.error(e);
-    showToast('تعذّر الحصول على بيانات الحساب: ' + e.message, 'error');
+    showToast(t('home.errUserInfo') + ': ' + e.message, 'error');
     show('screenSignIn');
   }
 }
@@ -482,7 +485,7 @@ async function handleRedirect() {
 /* ── Branch Check ─────────────────────────────────────── */
 async function branchCheck() {
   show('screenLoading');
-  setStep('جارٍ التحقق من الصلاحيات…');
+  setStep(t('home.stepAccess'));
 
   if (_email === SYSADMIN_EMAIL) {
     document.getElementById('saEmailLabel').textContent = _email;
@@ -505,7 +508,7 @@ async function branchCheck() {
 
     if (match?.SetupStatus === 'Completed' && match.SpreadsheetId) {
       localStorage.setItem(SPREADSHEET_ID_KEY(_email), match.SpreadsheetId);
-      setStep('جارٍ التحقق من حساب المستخدم…');
+      setStep(t('home.stepUser'));
       if (await isActiveUser(match.SpreadsheetId)) return;
     }
 
@@ -525,7 +528,7 @@ async function branchCheck() {
     show('screenPending');
   } catch (e) {
     console.error(e);
-    showToast('خطأ أثناء التحقق: ' + e.message, 'error');
+    showToast(t('home.errCheck') + ': ' + e.message, 'error');
     show('screenSignIn');
   }
 }
@@ -538,7 +541,7 @@ async function isActiveUser(sid) {
       u.Email?.trim().toLowerCase() === _email.trim().toLowerCase() && u.Status === 'Active'
     );
     if (u) {
-      showToast(`مرحباً، ${u.FullName || _email}`, 'success');
+      showToast(t('home.welcomeUser') + '، ' + (u.FullName || _email), 'success');
       setTimeout(() => { window.location.href = 'Dashboard.html'; }, 900);
       return true;
     }
@@ -614,7 +617,7 @@ async function updateConfigRow(rowNum, updates) {
 /* ── SysAdmin Panel ───────────────────────────────────── */
 async function loadOrgs() {
   const body = document.getElementById('orgsBody');
-  body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner" style="margin:0 auto 12px;"></div>جارٍ التحميل…</td></tr>`;
+  body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner" style="margin:0 auto 12px;"></div>${t('home.saLoading')}</td></tr>`;
   try {
     _allOrgs = await readConfigSheet();
     renderOrgs(_allOrgs);
@@ -623,21 +626,22 @@ async function loadOrgs() {
     document.getElementById('stPend').textContent  = _allOrgs.filter(o => o.SetupStatus === 'Pending').length;
     fillGov('mGov');
   } catch (e) {
-    body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-out);">فشل التحميل — ${escapeHTML(e.message)}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-out);">${t('home.saFailedLoad')} — ${escapeHTML(e.message)}</td></tr>`;
   }
 }
 
 function renderOrgs(list) {
   const body = document.getElementById('orgsBody');
   if (!list.length) {
-    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-title">لا توجد جمعيات مسجلة</div><div class="empty-state-text">اضغط على "تسجيل جمعية جديدة" للبدء</div></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-title" data-t="home.saEmpty">لا توجد جمعيات مسجلة</div><div class="empty-state-text" data-t="home.saEmptyDesc">اضغط على "تسجيل جمعية جديدة" للبدء</div></div></td></tr>`;
+    applyTranslations();
     return;
   }
   body.innerHTML = list.map((o, i) => {
     const pend  = o.SetupStatus !== 'Completed';
-    const badge = pend ? `<span class="badge badge-pending">في الانتظار</span>` : `<span class="badge badge-completed">مفعَّل</span>`;
+    const badge = pend ? `<span class="badge badge-pending" data-t="home.saStatusPending">في الانتظار</span>` : `<span class="badge badge-completed" data-t="home.saStatusDone">مفعَّل</span>`;
     const link  = o.SpreadsheetId
-      ? `<a href="https://docs.google.com/spreadsheets/d/${o.SpreadsheetId}" target="_blank" style="font-size:0.75rem;color:var(--blue-600);">فتح</a>` : '—';
+      ? `<a href="https://docs.google.com/spreadsheets/d/${o.SpreadsheetId}" target="_blank" style="font-size:0.75rem;color:var(--blue-600);" data-t="home.saOpenSheet">فتح</a>` : '—';
     return `<tr>
       <td><div style="font-weight:500;">${escapeHTML(o.OrgNameAR||'—')}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHTML(o.OrgNameEN||'')}</div></td>
       <td><div>${escapeHTML(o.SuperAdminName||'—')}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHTML(o.SuperAdminEmail||'')}</div></td>
@@ -645,9 +649,10 @@ function renderOrgs(list) {
       <td>${badge}</td>
       <td style="font-size:0.8rem;">${formatDisplayDate(o.CreatedAt)}</td>
       <td>${link}</td>
-      <td>${pend ? `<button class="btn btn-sm btn-secondary" onclick="resendTip(${i})">تذكير</button>` : ''}</td>
+      <td>${pend ? `<button class="btn btn-sm btn-secondary" onclick="resendTip(${i})" data-t="home.saRemind">تذكير</button>` : ''}</td>
     </tr>`;
   }).join('');
+  applyTranslations();
 }
 
 function filterOrgs(q) {
@@ -660,7 +665,7 @@ function filterOrgs(q) {
 }
 
 function resendTip(i) {
-  showToast(`أخبر ${_allOrgs[i].SuperAdminEmail} بفتح التطبيق وتسجيل الدخول`, 'info', 5000);
+  showToast(`${t('home.saRemind')}: ${_allOrgs[i].SuperAdminEmail} ${t('home.registered')}`, 'info', 5000);
 }
 
 function openOnboardModal() {
@@ -679,10 +684,10 @@ async function submitOnboard() {
     document.getElementById(id).classList.toggle('error', e);
     if (e) ok = false;
   });
-  if (!ok) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+  if (!ok) { showToast(t('home.requiredFields'), 'error'); return; }
 
   const btn = document.getElementById('onboardBtn');
-  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  btn.disabled = true; btn.textContent = t('home.stepSaving');
   try {
     await appendConfigRow({
       OrgID: generateRecordID(), OrgNameAR: document.getElementById('mOrgAR').value.trim(),
@@ -694,19 +699,21 @@ async function submitOnboard() {
       CreatedAt: getCurrentTimestamp(), CompletedAt: '', Notes: document.getElementById('mNotes').value.trim()
     });
     closeModal('onboardModal');
-    showToast('تم التسجيل بنجاح — أخبر المسؤول بفتح التطبيق', 'success', 5000);
+    showToast(t('home.registered'), 'success', 5000);
     await loadOrgs();
   } catch (e) {
-    showToast('فشل الحفظ: ' + e.message, 'error');
+    showToast(t('home.errSave') + ': ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'تسجيل الجمعية';
+    btn.disabled = false; btn.textContent = t('home.onboardSubmit');
   }
 }
 
 /* ── Setup Wizard ─────────────────────────────────────── */
 function initWizard() {
-  document.getElementById('wTitle').textContent = `مرحباً، ${_orgData.SuperAdminName || _email}`;
-  document.getElementById('wDesc').textContent  = `تم تعيينك مسؤولاً رئيسياً عن ${_orgData.OrgNameAR}. سنعدّ نظامك الآن.`;
+  const welcomeMsg = t('home.welcomeUser') + '، ' + (_orgData.SuperAdminName || _email);
+  document.getElementById('wTitle').textContent = welcomeMsg;
+  const descMsg = t('home.wizStep1Desc').replace('{org}', _orgData.OrgNameAR || t('home.appName'));
+  document.getElementById('wDesc').textContent = descMsg;
   document.getElementById('wEmail').textContent = _email;
   document.getElementById('wOrgAR').value   = _orgData.OrgNameAR    || '';
   document.getElementById('wOrgEN').value   = _orgData.OrgNameEN    || '';
@@ -731,7 +738,7 @@ function step2Next() {
                   ['wAdminName', document.getElementById('wAdminName').value.trim()]];
   let ok = true;
   checks.forEach(([id, v]) => { document.getElementById(id).classList.toggle('error', !v); if (!v) ok = false; });
-  if (!ok) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+  if (!ok) { showToast(t('requiredFields'), 'error'); return; }
   _wizOrg = { ..._wizOrg,
     OrgNameAR: checks[0][1], OrgNameEN: checks[1][1], Governorate: checks[2][1],
     ContactEmail: document.getElementById('wContact').value.trim(),
@@ -743,8 +750,8 @@ function step2Next() {
 async function runSetup() {
   const btn = document.getElementById('createBtn');
   btn.disabled = true;
-  btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> جارٍ الإنشاء…`;
-  document.getElementById('s3desc').textContent = 'جارٍ إعداد نظامك، يرجى الانتظار…';
+  btn.innerHTML = `<div class="spinner spinner-sm" style="margin:0;"></div> ${t('home.stepCreating')}`;
+  document.getElementById('s3desc').textContent = t('home.stepSettingUp');
 
   const active = (id) => {
     const el = document.getElementById(id); el.classList.add('active');
@@ -756,7 +763,7 @@ async function runSetup() {
   };
 
   try {
-    const orgName = _wizOrg.OrgNameAR || 'Charity';
+    const orgName = _wizOrg.OrgNameAR || t('home.appName');
 
     active('c0');
     const fr = await fetch('https://www.googleapis.com/drive/v3/files', {
@@ -764,7 +771,7 @@ async function runSetup() {
       headers: { Authorization: `Bearer ${_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: `${orgName} — Charity Management`, mimeType: 'application/vnd.google-apps.folder' })
     });
-    if (!fr.ok) throw new Error(`فشل إنشاء المجلد (${fr.status})`);
+    if (!fr.ok) throw new Error(`${t('home.errSetup')}: ${fr.status}`);
     const folder = await fr.json();
     done('c0');
 
@@ -774,7 +781,7 @@ async function runSetup() {
       headers: { Authorization: `Bearer ${_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ properties: { title: `${orgName} — COMS Data` } })
     });
-    if (!sr.ok) throw new Error(`فشل إنشاء الملف (${sr.status})`);
+    if (!sr.ok) throw new Error(`${t('home.errSetup')}: ${sr.status}`);
     const ss  = await sr.json();
     const sid = ss.spreadsheetId;
 
@@ -802,8 +809,8 @@ async function runSetup() {
 
   } catch (e) {
     console.error(e);
-    showToast('فشل الإعداد: ' + e.message, 'error');
-    btn.disabled = false; btn.textContent = 'إعادة المحاولة';
+    showToast(t('home.errSetup') + ': ' + e.message, 'error');
+    btn.disabled = false; btn.innerHTML = t('home.retrySetup');
   }
 }
 
@@ -821,9 +828,8 @@ function setStep(msg) {
 function fillGov(selId, selected = '') {
   const sel = document.getElementById(selId);
   if (!sel) return;
-  sel.innerHTML = '<option value="">اختر المحافظة…</option>';
+  sel.innerHTML = `<option value="">${t('home.selectGov')}</option>`;
   const trimmed = (selected || '').trim();
-  // Use LOOKUP_SEED_DATA.Governorates from utils.js
   if (window.LOOKUP_SEED_DATA && window.LOOKUP_SEED_DATA.Governorates) {
     window.LOOKUP_SEED_DATA.Governorates.forEach(r => {
       const name = r[0] || '';
@@ -841,6 +847,11 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 function _saveUser(u) { try { localStorage.setItem('coms_user', JSON.stringify(u)); } catch {} }
 function _loadUser()  { try { return JSON.parse(localStorage.getItem('coms_user')); } catch { return null; } }
+
+// Apply translations on load
+document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
+});
 </script>
 </body>
 </html>
