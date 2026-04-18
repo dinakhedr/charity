@@ -280,9 +280,64 @@ function _loadUser() {
 ══════════════════════════════════════════════════════════ */
 
 /**
+ * setSpreadsheetPublicRead(spreadsheetId, accessToken)
+ * Sets the spreadsheet to be readable by anyone with the link.
+ * This allows any authenticated Gmail user to read the spreadsheet.
+ */
+async function setSpreadsheetPublicRead(spreadsheetId, accessToken) {
+  try {
+    console.log('🔐 Setting public read permission for spreadsheet:', spreadsheetId);
+    
+    // Remove any existing "anyone" permissions to avoid duplicates
+    const listResponse = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    
+    if (listResponse.ok) {
+      const permissions = await listResponse.json();
+      for (const perm of permissions.permissions || []) {
+        if (perm.type === 'anyone') {
+          await fetch(
+            `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions/${perm.id}`,
+            { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+        }
+      }
+    }
+    
+    // Add "Anyone with the link can view" permission
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+      {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${accessToken}`, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          type: 'anyone',
+          role: 'reader',
+          allowFileDiscovery: false
+        })
+      }
+    );
+    
+    if (response.ok) {
+      console.log('✅ Spreadsheet set to "Anyone with link can view"');
+    } else {
+      console.warn('Could not set public read permission');
+    }
+  } catch (e) {
+    console.warn('Error setting spreadsheet permissions:', e);
+  }
+}
+
+/**
  * setupSpreadsheet(spreadsheetId, accessToken, adminEmail)
  * Seeds all sheets with headers and initial data.
  * Called once during the Setup Wizard in Home.html.
+ * Now also makes the spreadsheet publicly readable so normal users can access it.
  */
 async function setupSpreadsheet(spreadsheetId, accessToken, adminEmail) {
   const now = getCurrentTimestamp();
@@ -330,15 +385,15 @@ async function setupSpreadsheet(spreadsheetId, accessToken, adminEmail) {
   valueData.push({ range: 'Roles!A2', values: rolesRows });
 
   /* Admin user — LastLogin intentionally empty so first login redirects to Permissions */
-const stored = _loadUser();
-const adminName = (stored?.name && stored.name !== stored.email)
-  ? stored.name
-  : adminEmail;
+  const stored = _loadUser();
+  const adminName = (stored?.name && stored.name !== stored.email)
+    ? stored.name
+    : adminEmail;
 
-const adminUserRow = [
-  adminEmail,
-  adminName,
-  'SuperAdmin',
+  const adminUserRow = [
+    adminEmail,
+    adminName,
+    'SuperAdmin',
     'Active',
     '',
     'First admin user',
@@ -358,6 +413,9 @@ const adminUserRow = [
       body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data: valueData })
     }
   );
+
+  /* ── ★ CRITICAL: Make spreadsheet readable by all users ── */
+  await setSpreadsheetPublicRead(spreadsheetId, accessToken);
 }
 
 /**
@@ -450,124 +508,6 @@ async function initGapiClient() {
       'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
     ]
   }).catch(() => {});
-}
-
-/* ══════════════════════════════════════════════════════════
-   SPREADSHEET PERMISSIONS & SETUP
-══════════════════════════════════════════════════════════ */
-
-async function setSpreadsheetPublicRead(spreadsheetId, accessToken) {
-  try {
-    console.log('🔐 Setting public read permission for spreadsheet:', spreadsheetId);
-    
-    const listResponse = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    
-    if (listResponse.ok) {
-      const permissions = await listResponse.json();
-      for (const perm of permissions.permissions || []) {
-        if (perm.type === 'anyone') {
-          await fetch(
-            `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions/${perm.id}`,
-            { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
-          );
-        }
-      }
-    }
-    
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
-      {
-        method: 'POST',
-        headers: { 
-          Authorization: `Bearer ${accessToken}`, 
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-          type: 'anyone',
-          role: 'reader',
-          allowFileDiscovery: false
-        })
-      }
-    );
-    
-    if (response.ok) {
-      console.log('✅ Spreadsheet set to "Anyone with link can view"');
-    } else {
-      console.warn('Could not set public read permission');
-    }
-  } catch (e) {
-    console.warn('Error setting spreadsheet permissions:', e);
-  }
-}
-
-// This function should already exist in your original auth.js
-// If not, add it here
-async function setupSpreadsheet(spreadsheetId, accessToken, adminEmail) {
-  const now = getCurrentTimestamp();
-
-  const sheetNames = Object.keys(SHEET_DEFINITIONS);
-  const requests = sheetNames.map((name, idx) =>
-    idx === 0
-      ? { updateSheetProperties: { properties: { sheetId: 0, title: name }, fields: 'title' } }
-      : { addSheet: { properties: { title: name } } }
-  );
-
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requests })
-  });
-
-  const valueData = [];
-
-  for (const [sheetName, headers] of Object.entries(SHEET_DEFINITIONS)) {
-    valueData.push({ range: `${sheetName}!A1`, values: [headers] });
-  }
-
-  for (const [sheetName, rows] of Object.entries(LOOKUP_SEED_DATA)) {
-    const headers = SHEET_DEFINITIONS[sheetName];
-    const ridIdx = headers.indexOf('RecordID');
-    const seeded = rows.map(row => {
-      const full = [...row];
-      while (full.length < ridIdx) full.push('');
-      full.push(generateRecordID(), now, adminEmail, '', '', 'FALSE', '', '');
-      return full;
-    });
-    valueData.push({ range: `${sheetName}!A2`, values: seeded });
-  }
-
-  const rolesRows = DEFAULT_ROLES.map(([roleID, name, desc]) => [
-    roleID, name, desc,
-    generateRecordID(), now, adminEmail, '', '', 'FALSE', '', ''
-  ]);
-  valueData.push({ range: 'Roles!A2', values: rolesRows });
-
-  const stored = _loadUser();
-  const adminName = (stored?.name && stored.name !== stored.email) ? stored.name : adminEmail;
-
-  const adminUserRow = [
-    adminEmail, adminName, 'SuperAdmin', 'Active', '', 'First admin user',
-    generateRecordID(), now, adminEmail, '', '', 'FALSE', '', ''
-  ];
-  valueData.push({ range: 'Users!A2', values: [adminUserRow] });
-
-  const permRows = _buildDefaultPermissions(now, adminEmail);
-  valueData.push({ range: 'Permissions!A2', values: permRows });
-
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`,
-    {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data: valueData })
-    }
-  );
-
-  // ★ THIS IS THE KEY FIX - makes spreadsheet readable by all users
-  await setSpreadsheetPublicRead(spreadsheetId, accessToken);
 }
 
 /* ══════════════════════════════════════════════════════════
