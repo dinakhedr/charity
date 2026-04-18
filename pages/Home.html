@@ -489,7 +489,9 @@ async function branchCheck() {
   show('screenLoading');
   setStep(t('home.stepAccess'));
 
-  // 1. SysAdmin check
+  // ============================================================
+  // TYPE 1: SysAdmin (System Owner)
+  // ============================================================
   if (_email === SYSADMIN_EMAIL) {
     document.getElementById('saEmailLabel').textContent = _email;
     show('screenSysAdmin');
@@ -499,8 +501,39 @@ async function branchCheck() {
 
   try {
     const orgs = await readConfigSheet();
+    const completedOrgs = orgs.filter(o => 
+      o.SetupStatus === 'Completed' && o.SpreadsheetId
+    );
     
-    // 2. Check if user is SuperAdmin of a PENDING charity
+    // ============================================================
+    // TYPE 3: Normal User (Staff, Viewer, etc.)
+    // Check FIRST - they are NOT in Organizations sheet as SuperAdmin
+    // ============================================================
+    console.log(`🔍 Checking ${completedOrgs.length} charities for NORMAL user ${_email}`);
+    
+    for (const org of completedOrgs) {
+      // Check if user exists in this charity's Users sheet with Active status
+      const userInfo = await getUserFromCharity(org.SpreadsheetId, _email);
+      
+      if (userInfo && userInfo.Status === 'Active') {
+        console.log(`✅ NORMAL USER found in ${org.OrgNameAR} with role: ${userInfo.Role}`);
+        localStorage.setItem(SPREADSHEET_ID_KEY(_email), org.SpreadsheetId);
+        showToast(`${t('home.welcomeUser')}، ${userInfo.FullName || _email}`, 'success');
+        setTimeout(() => { window.location.href = 'Dashboard.html'; }, 900);
+        return;
+      }
+      
+      if (userInfo && userInfo.Status !== 'Active') {
+        console.log(`⚠️ User found in ${org.OrgNameAR} but Status = "${userInfo.Status}" (not Active)`);
+      }
+    }
+    
+    // ============================================================
+    // TYPE 2: Super Admin (Charity Owner/Administrator)
+    // Check SECOND - they ARE in Organizations sheet
+    // ============================================================
+    
+    // Check for PENDING setup
     const pendingMatch = orgs.find(r =>
       r && r.SuperAdminEmail &&
       r.SuperAdminEmail.trim().toLowerCase() === _email.trim().toLowerCase() &&
@@ -508,13 +541,14 @@ async function branchCheck() {
     );
     
     if (pendingMatch) {
+      console.log(`✅ SUPER ADMIN (PENDING) found for ${pendingMatch.OrgNameAR}`);
       _orgData = pendingMatch;
       _wizOrg = { ...pendingMatch };
       initWizard();
       return;
     }
     
-    // 3. Check if user is SuperAdmin of a COMPLETED charity
+    // Check for COMPLETED setup
     const superAdminMatch = orgs.find(r =>
       r && r.SuperAdminEmail &&
       r.SuperAdminEmail.trim().toLowerCase() === _email.trim().toLowerCase() &&
@@ -523,36 +557,38 @@ async function branchCheck() {
     );
     
     if (superAdminMatch) {
+      console.log(`✅ SUPER ADMIN (COMPLETED) found for ${superAdminMatch.OrgNameAR}`);
       localStorage.setItem(SPREADSHEET_ID_KEY(_email), superAdminMatch.SpreadsheetId);
-      setStep(t('home.stepUser'));
-      if (await isActiveUserInOrg(superAdminMatch.SpreadsheetId, superAdminMatch.OrgNameAR)) return;
+      
+      // Verify they exist in their own Users sheet (should always be true)
+      const userInfo = await getUserFromCharity(superAdminMatch.SpreadsheetId, _email);
+      if (userInfo && userInfo.Status === 'Active') {
+        showToast(`${t('home.welcomeUser')}، ${userInfo.FullName || _email}`, 'success');
+        setTimeout(() => { window.location.href = 'Dashboard.html'; }, 900);
+        return;
+      } else {
+        console.warn(`⚠️ SuperAdmin ${_email} not found in their own Users sheet!`);
+      }
     }
     
-    // 4. ★ CRITICAL FIX: Check ALL completed charities for this user in their Users sheet
-    //    This is where normal users (non-SuperAdmins) are found!
-    const completedOrgs = orgs.filter(o => 
-      o.SetupStatus === 'Completed' && o.SpreadsheetId
-    );
-    
-    console.log(`Checking ${completedOrgs.length} completed charities for user ${_email}`);
-    
-    for (const org of completedOrgs) {
-      // Skip if we already checked this as SuperAdmin
-      if (superAdminMatch && org.SpreadsheetId === superAdminMatch.SpreadsheetId) continue;
-      
-      const found = await isActiveUserInOrg(org.SpreadsheetId, org.OrgNameAR);
-      if (found) {
-        localStorage.setItem(SPREADSHEET_ID_KEY(_email), org.SpreadsheetId);
+    // ============================================================
+    // Check localStorage fallback
+    // ============================================================
+    const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
+    if (sid) {
+      const userInfo = await getUserFromCharity(sid, _email);
+      if (userInfo && userInfo.Status === 'Active') {
+        console.log(`✅ User found via localStorage fallback`);
+        showToast(`${t('home.welcomeUser')}، ${userInfo.FullName || _email}`, 'success');
+        setTimeout(() => { window.location.href = 'Dashboard.html'; }, 900);
         return;
       }
     }
     
-    // 5. Check saved spreadsheetId from localStorage (fallback)
-    const sid = localStorage.getItem(SPREADSHEET_ID_KEY(_email));
-    if (sid && await isActiveUserInOrg(sid, 'saved')) return;
-    
-    // 6. Nothing found → Show pending screen
-    console.log(`User ${_email} not found in any charity's Users sheet`);
+    // ============================================================
+    // No access found
+    // ============================================================
+    console.log(`❌ User ${_email} has NO access to any charity`);
     document.getElementById('pendingEmail').textContent = _email;
     show('screenPending');
     
@@ -560,6 +596,28 @@ async function branchCheck() {
     console.error('branchCheck error:', e);
     showToast(t('home.errCheck') + ': ' + e.message, 'error');
     show('screenSignIn');
+  }
+}
+
+// Helper function to get user info from a charity's Users sheet
+async function getUserFromCharity(spreadsheetId, email) {
+  if (!spreadsheetId) return null;
+  
+  try {
+    const users = await readSheet(spreadsheetId, 'Users', {
+      includeDeleted: false,
+      email: email,
+      forceRefresh: true
+    });
+    
+    return users.find(u => 
+      u.Email && 
+      u.Email.trim().toLowerCase() === email.trim().toLowerCase()
+    ) || null;
+    
+  } catch (e) {
+    console.error(`Error reading Users sheet for ${spreadsheetId}:`, e.message);
+    return null;
   }
 }
 
